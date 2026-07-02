@@ -1485,7 +1485,6 @@ playBtn.onclick = () => {
 ========================================================= */
 function init(){
   renderKeyboard();
-  state.clicks = 9999999;
   updateStatsDisplay();
   muteBtn.textContent = state.muted ? "🔇" : "🔊";
   volumeSlider.value = Math.round(state.volume * 100);
