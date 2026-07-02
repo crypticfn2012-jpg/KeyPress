@@ -444,9 +444,9 @@ body{
 <div class="gameWrap" id="gameWrap">
   <div class="topbar">
     <div class="stats">
-      <span>Clicks: <b id="statClicks">99999999999999990</b></span>
-      <span>CPS: <b id="statCps">999999</b></span>
-      <span>Total: <b id="statTotal">99999999</b></span>
+      <span>Clicks: <b id="statClicks">0</b></span>
+      <span>CPS: <b id="statCps">0</b></span>
+      <span>Total: <b id="statTotal">0</b></span>
       <span>Boost: <b class="boost" id="statBoost">+0%</b></span>
     </div>
     <div class="topbtns">
@@ -781,7 +781,7 @@ const STORAGE_KEY = "keypress_save_v4";
 
 function defaultState(){
   return {
-    clicks:99999999999,
+    clicks:0,
     totalPresses:0,
     mainKey:null,
     ownedCosmetics:["base"],
