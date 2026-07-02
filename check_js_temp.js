@@ -1,5 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
 
+<!-- Gamplo SDK -->
+<script src="https://gamplo.com/sdk/gamplo.js"></script>
 
+<title>KeyPress</title>
+
+<style>
+:root{
+  --board-frame: #12151c;
+  --underglow: transparent;
+  --underglow-blur: 0px;
+  --tilt: 26deg;
+}
+
+*{box-sizing:border-box;}
+
+body{
+  margin:0;
+  background:radial-gradient(circle at top,#1a1f2a,#0b0d12);
+  color:#fff;
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+  overflow:hidden;
+  height:100vh;
+  -webkit-tap-highlight-color:transparent;
+}
+
+/* ---------- TOP BAR ---------- */
+.topbar{
+  position:fixed;
+  top:0;left:0;right:0;
+  height:52px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:0 14px;
+  background:rgba(10,12,18,0.85);
+  border-bottom:1px solid #222;
+  backdrop-filter:blur(10px);
+  z-index:20;
+  gap:8px;
+}
+
+.stats{font-size:12px;opacity:0.9;display:flex;gap:12px;flex-wrap:wrap;}
+.stats b{color:#00f5ff;font-weight:600;}
+.stats b.boost{color:#2fbf71;}
+
+.topbtns{display:flex;gap:6px;}
+
+.iconbtn{
+  background:#1a2030;
+  border:1px solid #2a3346;
+  color:#fff;
+  border-radius:8px;
+  padding:8px 12px;
+  font-size:12px;
+  cursor:pointer;
+  transition:0.15s;
+}
+.iconbtn:hover{background:#242c42;}
+.iconbtn:active{transform:translateY(1px);}
+
+/* ---------- STAGE / KEYBOARD (real perspective tilt) ---------- */
+.stage{
+  height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding-top:40px;
+  perspective:1500px;
+  perspective-origin:50% 20%;
+}
+
+.boardWrap{
+  position:relative;
+  padding:34px 26px 46px;
+  border-radius:20px;
+  background:linear-gradient(160deg,var(--board-frame),#04050a);
+  box-shadow:
+    0 40px 70px rgba(0,0,0,0.65),
+    inset 0 1px 0 rgba(255,255,255,0.07);
+  transform-style:preserve-3d;
+  transform:rotateX(var(--tilt));
+  transform-origin:center 100%;
+  transition:transform 0.4s ease;
+}
+
+.boardWrap::before{
+  content:"";
+  position:absolute;
+  inset:-16px;
+  border-radius:28px;
+  background:var(--underglow);
+  filter:blur(var(--underglow-blur));
+  z-index:-1;
+  opacity:0.9;
+  transition:0.3s;
+}
+
+.keyboard{
+  display:flex;
+  flex-direction:column;
+  gap:9px;
+  transform-style:preserve-3d;
+}
+
+.row{
+  display:flex;
+  gap:9px;
+  justify-content:center;
+  transform-style:preserve-3d;
+}
+
+/* keySlot = the recessed well the cap sits in (gives real depth via translateZ) */
+.keySlot{
+  position:relative;
+  height:44px;
+  min-width:44px;
+  transform-style:preserve-3d;
+}
+.keySlot.wide{min-width:82px}
+.keySlot.space{min-width:264px}
+
+.keySlot::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  border-radius:7px;
+  background:#030407;
+  box-shadow:inset 0 3px 6px rgba(0,0,0,0.9);
+  transform:translateZ(0px);
+}
+
+/* the actual keycap, floating above the socket via translateZ */
+.key{
+  position:absolute;
+  inset:0;
+  border-radius:7px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:12px;
+  font-weight:700;
+  color:#e7edf6;
+  cursor:pointer;
+  user-select:none;
+  background:linear-gradient(165deg,#3a4252,#1c212b);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.25),
+    inset 0 -8px 10px rgba(0,0,0,0.35),
+    0 2px 3px rgba(0,0,0,0.4);
+  transform:translateZ(14px);
+  transition:transform 0.06s ease-out, box-shadow 0.06s ease-out, background 0.2s;
+  backface-visibility:hidden;
+}
+
+.key.pressed{
+  transform:translateZ(3px);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.15),
+    inset 0 -3px 5px rgba(0,0,0,0.3),
+    0 1px 1px rgba(0,0,0,0.3);
+}
+
+.key.selected{ outline:2px solid #00f5ff; outline-offset:1px; }
+.key.placeTarget{ outline:2px dashed #ffd23f; outline-offset:1px; }
+
+.charmBadge{
+  position:absolute;
+  top:-8px;
+  right:-8px;
+  width:18px;
+  height:18px;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:11px;
+  background:#0e1119;
+  border:2px solid #888;
+  transform:translateZ(2px);
+}
+.charmBadge.common{border-color:#b8c1cf;box-shadow:0 0 4px #b8c1cf;}
+.charmBadge.rare{border-color:#4aa3ff;box-shadow:0 0 6px #4aa3ff;}
+.charmBadge.epic{border-color:#b26cff;box-shadow:0 0 7px #b26cff;}
+.charmBadge.legendary{border-color:#ffb238;box-shadow:0 0 9px #ffb238;}
+
+/* ---------- KEYCAP COSMETICS ---------- */
+.key.glass{
+  background:linear-gradient(165deg,rgba(150,220,255,0.55),rgba(150,220,255,0.08));
+  border:1px solid rgba(200,240,255,0.7);
+  color:#eafcff;
+  box-shadow:inset 0 2px 0 rgba(255,255,255,0.6), inset 0 -8px 10px rgba(100,200,255,0.15), 0 0 12px rgba(150,220,255,0.35);
+}
+.key.neon{
+  background:#050a10; color:#7dfcff; border:1px solid #00f5ff;
+  box-shadow:inset 0 0 10px #00f5ff, 0 0 6px #00f5ff, 0 0 22px #00f5ff88;
+  animation:neonPulse 1.6s ease-in-out infinite;
+}
+@keyframes neonPulse{ 0%,100%{filter:brightness(1);} 50%{filter:brightness(1.35);} }
+.key.metal{
+  background:linear-gradient(165deg,#f2f5f9,#9aa3b0 45%,#5a6270); color:#10131a;
+  box-shadow:inset 0 2px 0 rgba(255,255,255,0.9), inset 0 -6px 8px rgba(0,0,0,0.35), 0 0 8px rgba(255,255,255,0.25);
+}
+.key.rune{
+  background:repeating-linear-gradient(45deg,#2a1f4d,#2a1f4d 4px,#241a44 4px,#241a44 8px);
+  color:#b7a3ff; border:1px solid #7a4bff;
+  box-shadow:inset 0 0 8px #7a4bff, 0 0 14px #7a4bff77;
+}
+.key.pixel{
+  background:conic-gradient(#0f0 90deg,#0c0 90deg 180deg,#0f0 180deg 270deg,#0c0 270deg);
+  background-size:8px 8px; color:#eaffea; border-radius:2px;
+  font-family:"Courier New",monospace; image-rendering:pixelated; border:2px solid #063d06;
+}
+.key.wood{
+  background:repeating-linear-gradient(100deg,#8a5a2e,#8a5a2e 6px,#6b4423 6px,#6b4423 11px,#a9723c 11px,#a9723c 15px);
+  color:#fff2df;
+  box-shadow:inset 0 2px 0 rgba(255,220,180,0.3), inset 0 -8px 10px rgba(0,0,0,0.4);
+}
+.key.gold{
+  background:linear-gradient(165deg,#fff3b0,#ffd23f 40%,#a5720c); color:#3a2a00;
+  box-shadow:inset 0 2px 0 rgba(255,255,255,0.7), inset 0 -8px 10px rgba(90,60,0,0.4), 0 0 16px rgba(255,210,63,0.5);
+}
+.key.slime{
+  background:radial-gradient(circle at 30% 20%, #baff5c, #4caf1f 70%); color:#0c2b00;
+  box-shadow:inset 0 2px 0 rgba(255,255,255,0.4), inset 0 -10px 12px rgba(0,60,0,0.4), 0 0 10px #7cff2a66;
+  animation:slimeGlow 2.4s ease-in-out infinite;
+}
+@keyframes slimeGlow{ 0%,100%{filter:brightness(1) saturate(1);} 50%{filter:brightness(1.15) saturate(1.3);} }
+.key.lava{
+  background:
+    repeating-linear-gradient(45deg,#2b0a00,#2b0a00 6px,#000 6px,#000 10px),
+    radial-gradient(circle at 40% 40%, #ff6a00, #8a0000 80%);
+  background-blend-mode:overlay; color:#ffe2b0;
+  box-shadow:inset 0 0 10px #ff4500, 0 0 14px #ff450088;
+  animation:lavaPulse 1.8s ease-in-out infinite;
+}
+@keyframes lavaPulse{ 0%,100%{filter:brightness(1);} 50%{filter:brightness(1.25);} }
+.key.ice{
+  background:linear-gradient(165deg, rgba(210,240,255,0.9), rgba(140,200,240,0.5));
+  color:#04263d; border:1px solid rgba(255,255,255,0.8);
+  box-shadow:inset 0 2px 0 rgba(255,255,255,0.9), inset 0 -6px 10px rgba(100,180,230,0.4), 0 0 10px rgba(180,220,255,0.5);
+}
+.key.candy{
+  background:repeating-conic-gradient(#ff5c8a 0deg 30deg, #ffffff 30deg 60deg);
+  color:#5c0022;
+  box-shadow:inset 0 2px 0 rgba(255,255,255,0.7), 0 0 8px rgba(255,92,138,0.5);
+}
+.key.camo{
+  background:
+    radial-gradient(circle at 20% 30%, #5a6b3a 0 18%, transparent 19%),
+    radial-gradient(circle at 70% 60%, #3a4a2a 0 22%, transparent 23%),
+    radial-gradient(circle at 50% 15%, #7a8a4a 0 16%, transparent 17%),
+    #4a5a34;
+  color:#e8f0d8;
+}
+.key.circuit{
+  background:#061a12; color:#5cffb0;
+  background-image:linear-gradient(#0f3d2a 1px, transparent 1px), linear-gradient(90deg, #0f3d2a 1px, transparent 1px);
+  background-size:8px 8px;
+  box-shadow:inset 0 0 8px #00ff9d55, 0 0 10px #00ff9d55;
+}
+.key.marble{
+  background:linear-gradient(135deg,#f5f5f5 0%,#dcdcdc 20%,#ffffff 35%,#c9c9c9 55%,#f0f0f0 75%,#d5d5d5 100%);
+  color:#2a2a2a;
+  box-shadow:inset 0 2px 0 rgba(255,255,255,0.8), inset 0 -6px 8px rgba(0,0,0,0.15);
+}
+.key.denim{
+  background:repeating-linear-gradient(100deg,#3a5a8a,#3a5a8a 4px,#325079 4px,#325079 8px);
+  color:#dbe8ff; border:1px dashed rgba(255,255,255,0.4);
+}
+.key.holo{
+  background:linear-gradient(120deg,#ff9ac2,#a0e8ff,#c8ffb0,#ffe29a,#d3a0ff,#ff9ac2);
+  background-size:300% 300%; color:#241033;
+  animation:holoShift 3s linear infinite;
+}
+@keyframes holoShift{ 0%{background-position:0% 50%;} 100%{background-position:300% 50%;} }
+.key.cosmic{
+  background:
+    radial-gradient(circle at 20% 20%, #fff 0 1px, transparent 2px),
+    radial-gradient(circle at 60% 50%, #fff 0 1px, transparent 2px),
+    radial-gradient(circle at 80% 80%, #fff 0 1px, transparent 2px),
+    radial-gradient(circle at 40% 70%, #fff 0 1px, transparent 2px),
+    linear-gradient(165deg,#1a0a3a,#05020f);
+  color:#d0c0ff;
+  box-shadow:inset 0 0 10px #7a4bff88, 0 0 14px #7a4bff55;
+}
+
+/* ---------- START SCREEN ---------- */
+.startScreen{
+  position:fixed; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:18px;
+  background:radial-gradient(circle at center,#1a1f2a,#05060a);
+  z-index:100; transition:opacity 0.5s ease, transform 0.5s ease;
+}
+.startScreen.hidden{ opacity:0; transform:scale(1.05); pointer-events:none; }
+.logo{
+  font-size:52px; font-weight:800; letter-spacing:2px;
+  background:linear-gradient(90deg,#00f5ff,#7a4bff);
+  -webkit-background-clip:text; background-clip:text; color:transparent;
+}
+.tagline{opacity:0.75;font-size:14px;}
+.playBtn{
+  margin-top:10px; padding:14px 42px; font-size:16px; font-weight:700; border-radius:10px; border:none; cursor:pointer;
+  background:linear-gradient(90deg,#00f5ff,#7a4bff); color:#05060a;
+  box-shadow:0 8px 20px rgba(0,245,255,0.25); transition:transform 0.15s;
+}
+.playBtn:hover{transform:translateY(-2px);}
+.playBtn:active{transform:translateY(1px);}
+
+.gameWrap{ opacity:0; transition:opacity 0.5s ease; }
+.gameWrap.visible{opacity:1;}
+
+/* ---------- SHOP ---------- */
+.shop{ position:fixed; inset:0; background:rgba(0,0,0,0.55); display:none; z-index:30; }
+.shop.open{display:block;}
+.shopPanel{
+  position:absolute; right:14px; top:64px; bottom:14px; width:340px; max-width:92vw;
+  background:#121722; border:1px solid #222; border-radius:12px; overflow:auto; padding:14px;
+  display:flex; flex-direction:column; gap:10px;
+}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px;}
+.tab{
+  flex:1; min-width:60px; text-align:center; padding:8px 4px; font-size:10.5px; border-radius:8px;
+  background:#1a2030; cursor:pointer; border:1px solid transparent;
+}
+.tab.active{background:#242c42;border-color:#00f5ff;color:#00f5ff;}
+.section{display:none;flex-direction:column;gap:8px;}
+.section.active{display:flex;}
+.item{
+  padding:10px; background:#1a2030; border-radius:8px; cursor:pointer;
+  display:flex; justify-content:space-between; align-items:center; font-size:12px; border:1px solid transparent;
+}
+.item:hover{background:#222a3d;}
+.item.owned{border-color:#2fbf71;}
+.item.equipped{border-color:#00f5ff;background:#17324a;}
+.item.disabled{opacity:0.4;cursor:not-allowed;}
+.itemName{font-weight:600;}
+.itemSub{opacity:0.6;font-size:10px;margin-top:2px;line-height:1.5;}
+.cost{color:#ffd23f;font-weight:700;white-space:nowrap;}
+.title{font-size:12px;opacity:0.7;margin-bottom:2px;text-transform:uppercase;letter-spacing:1px;}
+
+.boxCard{
+  padding:12px; border-radius:10px; background:linear-gradient(160deg,#2a2050,#140f24);
+  border:1px solid #7a4bff; cursor:pointer;
+}
+.boxCard:hover{background:linear-gradient(160deg,#33266a,#1a1330);}
+.boxCard.disabled{opacity:0.4;cursor:not-allowed;}
+.boxHeader{display:flex;justify-content:space-between;font-weight:700;font-size:13px;margin-bottom:4px;}
+
+.charmGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
+.charmCell{
+  aspect-ratio:1; border-radius:8px; display:flex; align-items:center; justify-content:center;
+  font-size:20px; background:#1a2030; cursor:pointer; position:relative; border:2px solid #333;
+}
+.charmCell.common{border-color:#b8c1cf;}
+.charmCell.rare{border-color:#4aa3ff;box-shadow:0 0 8px #4aa3ff55;}
+.charmCell.epic{border-color:#b26cff;box-shadow:0 0 8px #b26cff55;}
+.charmCell.legendary{border-color:#ffb238;box-shadow:0 0 10px #ffb23877;}
+.charmCell.selected{outline:2px solid #fff;}
+.equippedTag{
+  position:absolute;top:-6px;left:-6px; font-size:9px;background:#00f5ff;color:#05060a;
+  border-radius:4px;padding:1px 3px;font-weight:700;
+}
+.conditionTag{
+  position:absolute;bottom:2px;right:3px;font-size:8px;opacity:0.85;background:rgba(0,0,0,0.5);
+  border-radius:3px;padding:0 2px;
+}
+.empty{opacity:0.5;font-size:12px;text-align:center;padding:20px 0;}
+
+.marketItem{display:flex;align-items:center;gap:10px;background:#1a2030;border-radius:8px;padding:8px;}
+.marketIcon{
+  width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:18px;background:#0e1119;border:2px solid #888;flex-shrink:0;
+}
+.marketIcon.common{border-color:#b8c1cf;}
+.marketIcon.rare{border-color:#4aa3ff;box-shadow:0 0 6px #4aa3ff;}
+.marketIcon.epic{border-color:#b26cff;box-shadow:0 0 6px #b26cff;}
+.marketIcon.legendary{border-color:#ffb238;box-shadow:0 0 8px #ffb238;}
+.marketInfo{flex:1;min-width:0;}
+.sellBtn{background:#2fbf71;border:none;color:#05230f;font-weight:700;border-radius:6px;padding:6px 10px;cursor:pointer;white-space:nowrap;}
+.sellBtn:hover{background:#39d685;}
+.sortRow{display:flex;gap:6px;margin-bottom:4px;}
+.sortRow .iconbtn{flex:1;font-size:10px;padding:6px;}
+.sortRow .iconbtn.active{background:#242c42;border-color:#00f5ff;color:#00f5ff;}
+
+.placeBanner{
+  position:fixed; top:60px; left:50%; transform:translateX(-50%);
+  background:#ffd23f; color:#1a1200; padding:8px 16px; border-radius:8px;
+  font-size:12px; font-weight:700; z-index:40; display:none;
+}
+.placeBanner.show{display:block;}
+
+.revealModal{ position:fixed;inset:0; background:rgba(0,0,0,0.75); display:none; align-items:center; justify-content:center; z-index:50; }
+.revealModal.show{display:flex;}
+.revealCard{
+  width:210px;height:260px; border-radius:16px; background:linear-gradient(160deg,#1a2030,#0a0d14);
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px;
+  border:2px solid #444; animation:shake 0.5s ease; padding:10px; text-align:center;
+}
+.revealCard.common{border-color:#b8c1cf;}
+.revealCard.rare{border-color:#4aa3ff;box-shadow:0 0 24px #4aa3ff55;}
+.revealCard.epic{border-color:#b26cff;box-shadow:0 0 24px #b26cff55;}
+.revealCard.legendary{border-color:#ffb238;box-shadow:0 0 32px #ffb23888;}
+@keyframes shake{
+  0%,100%{transform:rotate(0);} 20%{transform:rotate(-8deg);} 40%{transform:rotate(8deg);}
+  60%{transform:rotate(-5deg);} 80%{transform:rotate(5deg);}
+}
+.revealIcon{font-size:56px;}
+.revealName{font-weight:700;font-size:15px;}
+.revealRarity{font-size:11px;text-transform:uppercase;letter-spacing:1px;opacity:0.8;}
+.revealSub{font-size:10px;opacity:0.7;}
+.closeReveal{
+  margin-top:8px; padding:8px 20px; border-radius:8px; border:none;
+  background:#00f5ff; color:#05060a; font-weight:700; cursor:pointer;
+}
+
+.settingsRow{display:flex;justify-content:space-between;align-items:center;font-size:12px;padding:8px 0;border-bottom:1px solid #222;gap:8px;}
+.dangerBtn{background:#3a1a1a;border:1px solid #a33;color:#f88;border-radius:8px;padding:6px 12px;cursor:pointer;font-size:11px;}
+.dangerBtn:hover{background:#4a2020;}
+.saveStatus{font-size:10px;opacity:0.6;margin-top:6px;}
+.saveStatus.warn{color:#ff8080;opacity:1;}
+
+@media (max-width:700px){
+  :root{ --tilt: 16deg; }
+  .keyboard{transform:scale(0.6);}
+  .boardWrap{padding:20px 12px 30px;}
+  .stats{font-size:10px;gap:8px;}
+  .logo{font-size:36px;}
+}
+</style>
+</head>
+<body>
+
+<div class="startScreen" id="startScreen">
+  <div class="logo">⌨ KeyPress</div>
+  <div class="tagline">Pick a key, then mash it for clicks!</div>
+  <button class="playBtn" id="playBtn">Play</button>
+</div>
+
+<div class="gameWrap" id="gameWrap">
+  <div class="topbar">
+    <div class="stats">
+      <span>Clicks: <b id="statClicks">0</b></span>
+      <span>CPS: <b id="statCps">0</b></span>
+      <span>Total: <b id="statTotal">0</b></span>
+      <span>Boost: <b class="boost" id="statBoost">+0%</b></span>
+    </div>
+    <div class="topbtns">
+      <button class="iconbtn" id="changeKeyBtn">Change Key</button>
+      <button class="iconbtn" id="muteBtn">🔊</button>
+      <button class="iconbtn" id="shopBtn">Shop (O)</button>
+      <button class="iconbtn" id="settingsBtn">⚙</button>
+    </div>
+  </div>
+
+  <div class="stage">
+    <div class="boardWrap" id="boardWrap">
+      <div class="keyboard" id="keyboard"></div>
+    </div>
+  </div>
+</div>
+
+<div class="placeBanner" id="placeBanner">Click a key to place this charm ✦ (Esc to cancel)</div>
+
+<!-- SHOP -->
+<div class="shop" id="shop">
+  <div class="shopPanel">
+    <div class="tabs">
+      <div class="tab active" data-tab="cosmetics">Keycaps</div>
+      <div class="tab" data-tab="themes">Board</div>
+      <div class="tab" data-tab="boxes">Boxes</div>
+      <div class="tab" data-tab="collection">Charms</div>
+      <div class="tab" data-tab="market">Market</div>
+    </div>
+
+    <div class="section active" id="section-cosmetics">
+      <div class="title">Keycap Cosmetics</div>
+      <div id="cosmeticsList"></div>
+    </div>
+
+    <div class="section" id="section-themes">
+      <div class="title">Board Themes</div>
+      <div id="themesList"></div>
+    </div>
+
+    <div class="section" id="section-boxes">
+      <div class="title">Mystery Boxes</div>
+      <div id="boxesList"></div>
+    </div>
+
+    <div class="section" id="section-collection">
+      <div class="title">Your Charms</div>
+      <div id="collectionList"></div>
+    </div>
+
+    <div class="section" id="section-market">
+      <div class="title">Marketplace — sell your charms</div>
+      <div class="sortRow">
+        <button class="iconbtn active" data-sort="value">By value</button>
+        <button class="iconbtn" data-sort="rarity">By rarity</button>
+        <button class="iconbtn" data-sort="condition">By condition</button>
+      </div>
+      <div id="marketList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- SETTINGS -->
+<div class="shop" id="settingsModal">
+  <div class="shopPanel" style="width:280px;">
+    <div class="title">Settings</div>
+    <div class="settingsRow">
+      <span>Sound Volume</span>
+      <input type="range" id="volumeSlider" min="0" max="100" value="50" />
+    </div>
+    <div class="settingsRow">
+      <span>Back up save (download file)</span>
+      <button class="iconbtn" id="exportBtn">Export</button>
+    </div>
+    <div class="settingsRow">
+      <span>Restore save from file</span>
+      <label class="iconbtn" style="cursor:pointer;">
+        Import
+        <input type="file" id="importInput" accept="application/json" style="display:none;" />
+      </label>
+    </div>
+    <div class="settingsRow">
+      <span>Reset all progress</span>
+      <button class="dangerBtn" id="resetBtn">Reset</button>
+    </div>
+    <div class="saveStatus" id="saveStatus">Saved locally in this browser.</div>
+    <button class="iconbtn" id="closeSettingsBtn" style="margin-top:10px;">Close</button>
+  </div>
+</div>
+
+<!-- REVEAL MODAL -->
+<div class="revealModal" id="revealModal">
+  <div class="revealCard" id="revealCard">
+    <div class="revealIcon" id="revealIcon"></div>
+    <div class="revealName" id="revealName"></div>
+    <div class="revealRarity" id="revealRarity"></div>
+    <div class="revealSub" id="revealSub"></div>
+    <button class="closeReveal" id="closeRevealBtn">Nice!</button>
+  </div>
+</div>
+
+<script>
   async function submitScore(score) {
     const player = Gamplo.getPlayer();
 
@@ -232,8 +781,8 @@ const STORAGE_KEY = "keypress_save_v4";
 
 function defaultState(){
   return {
-    clicks:9999999,
-    totalPresses:99999999999,
+    clicks:0,
+    totalPresses:0,
     mainKey:null,
     ownedCosmetics:["base"],
     equippedCosmetic:"base",
@@ -1005,7 +1554,14 @@ function triggerVerification() {
             <input id="verifyInput" autocomplete="off"/>
         </div>
     `;
+if (DEV_MODE) {
+    state.coins = 0;
 
+    setTimeout(() => {
+        Gamplo.unlockAchievement("100_clicks").catch(() => {});
+        Gamplo.unlockAchievement("200_click").catch(() => {});
+    }, 500);
+}
     document.body.appendChild(box);
 
     const input = document.getElementById("verifyInput");
@@ -1027,3 +1583,6 @@ function triggerVerification() {
         }
     });
 }
+</script>
+</body>
+</html>
