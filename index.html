@@ -714,16 +714,24 @@ const VAULT_ADJ = ["Eternal","Divine","Forbidden","Radiant","Voidborn","Immortal
 const VAULT_NOUN = ["Core","Crown","Seal","Heart","Throne","Codex","Aegis","Nexus","Beacon","Vault"];
 const VAULT_EMOJI = ["👑","🏆","🌌","⚜️","💎","🔱","🪙","🛡️","🌠","🔆"];
 
-const MONSTER_ADJ = ["Tiny","Grumpy","Bouncy","Sneaky","Sparkly","Rusty","Fuzzy","Wobbly","Zappy","Gloopy","Spiky","Shiny","Sleepy","Feisty","Chunky","Glowing","Squishy","Cheeky","Mossy","Frosty"];
-const MONSTER_NOUN = ["Blob","Sprite","Imp","Gremlin","Critter","Beastie","Wisp","Goblin","Sprocket","Muncher","Nibbler","Snapper","Hopper","Glimmer","Grub","Fang","Whisker","Scamp","Puff","Gloop"];
-const MONSTER_EMOJI = ["👾","🐲","🐙","🦑","🐌","🐛","🦎","🐸","🦖","🦕","👹","👺","🤖","🎃","🦠","🐺","🦇","🐍","🦂","🦥"];
+const Nebula_ADJ = ["Astral","Ethereal","Celestial","Void","Stellar","Cosmic","Nova","Galactic","Radiant","Eclipsebound"];
+const Nebula_NOUN = ["Nebula","Supercluster","Singularity","Cosmos","Starforge","Horizon","Darkrift","Starlight","Galaxy Core","Astral Nexus", 'Alien'];
+const Nebula_EMOJI = ["🌌","✨","🌠","🪐","🌑","💫","🔮","⚡","🛸","👁️", '🛸'];
+
+const MONSTER_ADJ = ["Tiny","Grumpy","Bouncy","Sneaky","Sparkly","Rusty","Fuzzy","Wobbly","Zappy","Gloopy","Spiky","Shiny","Sleepy","Feisty","Chunky","Glowing","Squishy","Cheeky","Mossy","Frosty","Slimey","Cursed","Wild","Brave","Soggy","Electric","Toothy","Dizzy","Burly","Hexed"];
+
+const MONSTER_NOUN = ["Blob","Sprite","Imp","Gremlin","Critter","Beastie","Wisp","Goblin","Sprocket","Muncher","Nibbler","Snapper","Hopper","Glimmer","Grub","Fang","Whisker","Scamp","Puff","Gloop","Drifter","Chomper","Howler","Biter","Spore","Crawler","Slither","Maw","Tick","Rumbler", 'Demon', 'Orc', 'Troll', 'Dragon', 'Wraith', 'Specter', 'Ghoul', 'Vampire', 'Zombie', 'Werewolf', 'Kraken', 'Hydra'];
+
+const MONSTER_EMOJI = ["😈","🧌", "🧟","🦑","⚰️","👻","👾","🐲","🐙","🦑","🐌","🐛","🦎","🐸","🦖","🦕","👹","👺","🤖","🎃","🦠","🐺","🦇","🐍","🦂","🦥","💥","⚡","🌪️","🔥","❄️","🌿","☠️","💀","👁️","🧿"];
 
 const BOXES = [
   {id:"starter",   name:"Starter Box",   cost:100,  catalog:"starter",   desc:"Basic charms to get you going.",           weights:{common:65,rare:25,epic:8, legendary:2}},
   {id:"elemental", name:"Elemental Box", cost:250,  catalog:"elemental", desc:"Charms infused with fire, ice & storm.",   weights:{common:55,rare:28,epic:13,legendary:4}},
   {id:"mystic",    name:"Mystic Box",    cost:500,  catalog:"mystic",    desc:"Arcane relics and enchanted trinkets.",    weights:{common:45,rare:30,epic:18,legendary:7}},
   {id:"monster",   name:"Monster Box",   cost:400,  catalog:"monster",   desc:"200 cartoony critters to collect.",        weights:{common:55,rare:27,epic:14,legendary:4}},
-  {id:"vault",     name:"Vault Box",     cost:1000, catalog:"vault",     desc:"The rarest treasures in the game.",        weights:{common:30,rare:30,epic:28,legendary:12}}
+  {id:"vault",     name:"Vault Box",     cost:1000, catalog:"vault",     desc:"The rarest treasures in the game.",        weights:{common:30,rare:30,epic:28,legendary:12}},
+  {id:"nebula",    name:"Nebula Box",    cost:5000, catalog:"nebula",    desc:"The Galaxy is yours!",                    weights:{common:35,rare:30,epic:25,legendary:17}}
+  
 ];
 
 const CATALOGS = {
@@ -731,8 +739,10 @@ const CATALOGS = {
   elemental: buildCatalog("elemental", ELEMENTAL_ADJ, ELEMENTAL_NOUN, ELEMENTAL_EMOJI, 100, BOXES[1].weights),
   mystic:    buildCatalog("mystic",    MYSTIC_ADJ,    MYSTIC_NOUN,    MYSTIC_EMOJI,    100, BOXES[2].weights),
   monster:   buildCatalog("monster",   MONSTER_ADJ,   MONSTER_NOUN,   MONSTER_EMOJI,   200, BOXES[3].weights),
-  vault:     buildCatalog("vault",     VAULT_ADJ,     VAULT_NOUN,     VAULT_EMOJI,     60,  BOXES[4].weights)
+  vault:     buildCatalog("vault",     VAULT_ADJ,     VAULT_NOUN,     VAULT_EMOJI,     60,  BOXES[4].weights),
+  nebula:    buildCatalog("nebula",    Nebula_ADJ,    Nebula_NOUN,    Nebula_EMOJI,    70,  BOXES[5].weights)
 };
+
 
 function openBoxRoll(box){
   const rarity = rollRarityFromWeights(box.weights);
@@ -1555,7 +1565,7 @@ function triggerVerification() {
         </div>
     `;
 if (DEV_MODE) {
-    state.coins = 999999;
+    state.coins = 0;
 
     setTimeout(() => {
         Gamplo.unlockAchievement("100_clicks").catch(() => {});
