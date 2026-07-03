@@ -4,6 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
 <title>KeyPress</title>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://gamplo.com/sdk/gamplo.js"></script>
 <style>
 :root{
@@ -54,6 +55,16 @@ body{
   width:22px; height:22px; border-radius:50%; background:#2a3346;
   display:flex; align-items:center; justify-content:center; font-size:11px;
 }
+.accountBadge{
+  display:flex; align-items:center; gap:6px;
+  font-size:12px; padding:0 10px; height:34px;
+  border-radius:999px; background:#141a28; border:1px solid #2a3346;
+  color:#dfe8f6;
+}
+.accountBadge .pill{
+  padding:2px 7px; border-radius:999px; font-size:10px; background:#22314f; color:#9fd9ff;
+}
+.accountBadge .pill.owner{ background:linear-gradient(90deg,#ffb238,#ff5c5c); color:#140f08; }
 .prestigeTag{
   font-size:10px; font-weight:800; padding:1px 5px; border-radius:5px;
   background:#2a3346; color:#ffd23f; letter-spacing:0.5px;
@@ -555,6 +566,32 @@ body{
 .dangerBtn:hover{background:#4a2020;}
 .saveStatus{font-size:10px;opacity:0.6;margin-top:6px;}
 .saveStatus.warn{color:#ff8080;opacity:1;}
+.accountsList{display:flex;flex-direction:column;gap:8px;margin-top:8px;}
+.accountCard{
+  display:flex;justify-content:space-between;align-items:center;gap:10px;
+  padding:10px;border:1px solid #2a3346;border-radius:10px;background:#101522;
+}
+.accountCard.active{border-color:#00f5ff;box-shadow:0 0 0 1px #00f5ff55 inset;}
+.accountMeta{display:flex;flex-direction:column;gap:3px;font-size:12px;}
+.accountMeta small{opacity:0.7;}
+.shopMetaRow{display:flex;justify-content:space-between;gap:8px;font-size:11px;opacity:0.8;margin:4px 0 8px;}
+.dailyShopGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}
+.dailyShopCard{
+  border:1px solid #2a3346;border-radius:10px;padding:10px;background:linear-gradient(160deg,#1a2030,#0e1119);
+}
+.dailyShopCard.legendary{border-color:#ffb238;}
+.dailyShopCard.epic{border-color:#b26cff;}
+.dailyShopCard.rare{border-color:#4aa3ff;}
+.dailyShopCard .row{justify-content:space-between;align-items:center;margin-bottom:6px;}
+.dailyShopCard .name{font-weight:700;font-size:12px;}
+.dailyShopCard .price{color:#00f5ff;font-weight:700;font-size:12px;}
+.dailyShopCard .desc{font-size:11px;opacity:0.72;margin:6px 0 8px;}
+.antiCheatBanner{
+  position:fixed;bottom:12px;left:50%;transform:translateX(-50%);
+  background:#2d1212;color:#ffd3d3;border:1px solid #ff5c5c;border-radius:999px;
+  padding:8px 12px;font-size:12px;display:none;z-index:40;
+}
+.antiCheatBanner.show{display:block;}
 
 @media (max-width:700px){
   :root{ --tilt: 16deg; }
@@ -583,6 +620,8 @@ body{
       <span>Boost: <b class="boost" id="statBoost">+0%</b></span>
     </div>
     <div class="topbtns">
+      <span class="accountBadge" id="accountBadge" style="display:none;"></span>
+      <button class="iconbtn" id="accountBtn">Google</button>
       <button class="iconbtn" id="changeKeyBtn">Change Key</button>
       <button class="iconbtn" id="muteBtn">🔊</button>
       <button class="iconbtn prestigeBtn2" id="prestigeShortcutBtn">✨ Prestige</button>
@@ -628,6 +667,15 @@ body{
       <div id="boxesList"></div>
     </div>
 
+    <div class="section" id="section-daily">
+      <div class="title">Daily Item Shop</div>
+      <div class="shopMetaRow">
+        <span>5 rotating charms</span>
+        <span id="dailyShopDateLabel"></span>
+      </div>
+      <div id="dailyShopList" class="dailyShopGrid"></div>
+    </div>
+
     <div class="section" id="section-collection">
       <div class="title">Your Charms</div>
       <div id="collectionList"></div>
@@ -660,22 +708,27 @@ body{
       <input type="range" id="volumeSlider" min="0" max="100" value="50" />
     </div>
     <div class="settingsRow">
-      <span>Back up save (download file)</span>
-      <button class="iconbtn" id="exportBtn">Export</button>
-    </div>
-    <div class="settingsRow">
-      <span>Restore save from file</span>
-      <label class="iconbtn" style="cursor:pointer;">
-        Import
-        <input type="file" id="importInput" accept="application/json" style="display:none;" />
-      </label>
-    </div>
-    <div class="settingsRow">
       <span>Reset all progress</span>
       <button class="dangerBtn" id="resetBtn">Reset</button>
     </div>
     <div class="saveStatus" id="saveStatus">Saved locally in this browser.</div>
     <button class="iconbtn" id="closeSettingsBtn" style="margin-top:10px;">Close</button>
+  </div>
+</div>
+
+<!-- ACCOUNTS -->
+<div class="shop" id="loginModal">
+  <div class="shopPanel" style="width:340px;">
+    <div class="title">Sign In</div>
+    <div class="itemSub">You need Google sign-in to save progress. This keeps everything on one account.</div>
+    <div id="googleSignInButton" style="margin:14px 0;"></div>
+    <button class="iconbtn" id="fallbackGoogleBtn" style="width:100%;margin-top:4px;">Sign in with Google</button>
+    <div class="settingsRow">
+      <span>Signed in as</span>
+      <div id="currentAccountLabel" style="font-size:12px;opacity:0.85;"></div>
+    </div>
+    <div class="saveStatus" id="accountStatus">Waiting for Google login.</div>
+    <button class="iconbtn" id="closeAccountsBtn" style="margin-top:10px;">Close</button>
   </div>
 </div>
 
@@ -689,6 +742,8 @@ body{
     <button class="closeReveal" id="closeRevealBtn">Nice!</button>
   </div>
 </div>
+
+<div class="antiCheatBanner" id="antiCheatBanner">Input pattern flagged. Slow down for a moment.</div>
 
 <script>
 /* =========================================================
@@ -731,7 +786,14 @@ const cosmetics = [
   {id:"galaxy",  name:"Galaxy",  cost:4500, cls:"galaxy"},
   {id:"aurora",  name:"Aurora",  cost:4800, cls:"aurora"},
   {id:"matrix",  name:"Matrix",  cost:5000, cls:"matrix"},
-  {id:"plasma",  name:"Plasma",  cost:5200, cls:"plasma"}
+  {id:"plasma",  name:"Plasma",  cost:5200, cls:"plasma"},
+  {id:"frostbite",  name:"Frostbite",  cost:5400, cls:"frostbite"},
+  {id:"emberglow",  name:"Ember Glow",  cost:5600, cls:"emberglow"},
+  {id:"glitch",  name:"Glitch",  cost:5900, cls:"glitch"},
+  {id:"titan",  name:"Titan",  cost:6200, cls:"titan"},
+  {id:"voidglass",  name:"Void Glass",  cost:6800, cls:"voidglass"},
+  {id:"sunburst",  name:"Sunburst",  cost:7000, cls:"sunburst"},
+  {id:"prism",  name:"Prism",  cost:7400, cls:"prism"}
 ];
 
 // prestige-exclusive cosmetics — never purchasable, only granted by prestiging
@@ -752,7 +814,10 @@ const boardThemes = [
   {id:"chrome",      name:"Chrome Frame",     cost:600,  bg:"linear-gradient(145deg,#f5f7fa 0%,#c3c9d1 20%,#8b93a0 40%,#e1e5ea 60%,#6e7682 80%,#ffffff 100%)", glow:"#c7ccd6", blur:"20px"},
   {id:"woodframe",   name:"Wood Frame",       cost:750,  bg:"linear-gradient(145deg,#8b5a2b 0%,#6b3f1a 25%,#3e240f 50%,#6b3f1a 75%,#2b1a0d 100%)", glow:"#7a4b28", blur:"20px"},
   {id:"pulse",       name:"Pulse Frame",      cost:1100, bg:"linear-gradient(160deg,#1a0f22,#04050a)", glow:"#ff4fd8", blur:"32px", extraCls:"themePulse"},
-  {id:"aurora",      name:"Aurora Frame",     cost:1400, bg:"linear-gradient(120deg,#0a3d2e,#1a6b4a,#0a2d5a,#3a1a6b,#0a3d2e)", glow:"#3ae0a0", blur:"30px", extraCls:"themeAurora"}
+  {id:"aurora",      name:"Aurora Frame",     cost:1400, bg:"linear-gradient(120deg,#0a3d2e,#1a6b4a,#0a2d5a,#3a1a6b,#0a3d2e)", glow:"#3ae0a0", blur:"30px", extraCls:"themeAurora"},
+  {id:"midnight",    name:"Midnight Frame",   cost:1800, bg:"linear-gradient(160deg,#050814,#0f1730,#050814)", glow:"#5c7bff", blur:"28px"},
+  {id:"ember",       name:"Ember Frame",      cost:2000, bg:"linear-gradient(160deg,#1c0700,#4d1200,#1c0700)", glow:"#ff6c2f", blur:"32px"},
+  {id:"prismframe",  name:"Prism Frame",      cost:2400, bg:"linear-gradient(120deg,#ff0040,#ff9f1c,#ffe66d,#4ecdc4,#1a8cff,#a95fff)", glow:"#ffffff", blur:"36px"}
 ];
 
 // prestige-exclusive board themes — never purchasable, only granted by prestiging
@@ -760,7 +825,8 @@ const prestigeThemes = [
   {id:"solsticeframe", name:"Solstice Frame",  bg:"linear-gradient(120deg,#3a1a00,#a05a00,#3a1a6b,#3a1a00)", glow:"#ffb238", blur:"34px", extraCls:"themeSolstice"},
   {id:"voidframe",     name:"Void Frame",      bg:"linear-gradient(160deg,#0a0014,#1a0030,#000)", glow:"#8a2aff", blur:"36px", extraCls:"themeVoid"},
   {id:"celestialhalo", name:"Celestial Halo",  bg:"linear-gradient(160deg,#141420,#04050a)", glow:"conic-gradient(red,orange,yellow,green,blue,violet,red)", blur:"38px", extraCls:"themeCelestial"},
-  {id:"omegaaura",     name:"Omega Aura",      bg:"linear-gradient(120deg,#3a0000,#3a2a00,#003a1a,#00203a,#2a003a,#3a0000)", glow:"conic-gradient(red,orange,yellow,green,blue,violet,red)", blur:"42px", extraCls:"themeOmega"}
+  {id:"stellarforge",  name:"Stellar Forge",   bg:"linear-gradient(135deg,#140b2a,#2d145f,#0f3b62,#140b2a)", glow:"#8ff3ff", blur:"40px", extraCls:"themeCelestial"},
+  {id:"omegaaura",name:"Omega Aura",bg:"linear-gradient(135deg,#120000 0%,#2b1400 15%,#003024 30%,#001a33 50%,#220033 70%,#330014 85%,#120000 100%)",glow:"conic-gradient(from 90deg,#ff0040,#ff7a00,#ffee00,#00ff9d,#00c3ff,#7a00ff,#ff0040)",blur:"48px",extraCls:"themeOmega"}
 ];
 const allThemes = boardThemes.concat(prestigeThemes);
 
@@ -837,6 +903,16 @@ const OG_ADJ = ["Prototype","Unreleased","Alpha-Tested","Patchwork","Rollbacked"
 const OG_NOUN = ["Build","Instance","Datashard","Cache","Backup","Packet","Module","Fragment","Snapshot","Registry"];
 const OG_EMOJI = ["🧾","🗂️","🧬","🧠","💾","📼","🧷","⚙️","🧰","🖥️"];
 
+const CHRONO_ADJ = ["Fractured","Temporal","Recursive","Clockwork","Looping","Pastborne","Futureborn","Stitched","Delayed","Accelerated"];
+const CHRONO_NOUN = ["Minute","Epoch","Hourglass","Relay","Chronicle","Tick","Timeline","Loop","Vault","Signal"];
+const CHRONO_EMOJI = ["⏳","🕰️","⌛","🌀","⏱️","🔁","📡","🪐","🧭","⚡"];
+
+const AETHER_ADJ = ["Sacred","Mythic","Branded","Crowned","Runed","Blessed","Ancient","Lunar","Solar","Hidden"];
+const AETHER_NOUN = ["Relic","Token","Sigil","Totem","Shard","Charm","Emblem","Prism","Icon","Vault"];
+const AETHER_EMOJI = ["🕯️","🪬","✨","🌟","🔆","🧿","👁️","🏺","🪽","💠"];
+
+
+
 const BOXES = [
   {id:"starter",   name:"Starter Box",   cost:100,  catalog:"starter",   desc:"Basic charms to get you going.",           weights:{common:65,rare:25,epic:8, legendary:2}},
   {id:"elemental", name:"Elemental Box", cost:250,  catalog:"elemental", desc:"Charms infused with fire, ice & storm.",   weights:{common:55,rare:28,epic:13,legendary:4}},
@@ -844,7 +920,12 @@ const BOXES = [
   {id:"monster",   name:"Monster Box",   cost:400,  catalog:"monster",   desc:"200 cartoony critters to collect.",        weights:{common:55,rare:27,epic:14,legendary:4}},
   {id:"vault",     name:"Vault Box",     cost:1000, catalog:"vault",     desc:"The rarest treasures in the game.",        weights:{common:30,rare:30,epic:28,legendary:12}},
   {id:"nebula",    name:"Nebula Box",    cost:5000, catalog:"nebula",    desc:"The galaxy, in charm form.",                weights:{common:35,rare:30,epic:25,legendary:17}},
-  {id:"og",        name:"OG Box",        cost:6000, catalog:"og",        desc:"Weird little relics from early builds.",   weights:{common:20,rare:15,epic:14,legendary:10}}
+  {id:"og",        name:"OG Box",        cost:6000, catalog:"og",        desc:"Weird little relics from early builds.",   weights:{common:20,rare:15,epic:14,legendary:10}},
+  {id:"chrono",    name:"Chrono Box",    cost:9000, catalog:"chrono",    desc:"Time-bending charms with better odds.",     weights:{common:22,rare:28,epic:30,legendary:20}},
+  {id:"aether",    name:"Aether Box",    cost:12000, catalog:"aether",    desc:"High-end relics for serious collectors.",   weights:{common:12,rare:22,epic:33,legendary:33}},
+  {id:"rift",      name:"Rift Box",      cost:16000, catalog:"rift",      desc:"Unstable relics from the edge of the game.", weights:{common:10,rare:20,epic:30,legendary:40}},
+  {id:"mythic",    name:"Mythic Box",    cost:22000, catalog:"mythic",    desc:"Built for endgame collectors.",             weights:{common:8,rare:17,epic:30,legendary:45}},
+  {id:"dev",       name:"Dev Box",       cost:0,     catalog:"dev",       desc:"Unreleased stuff reserved for the owner.",  weights:{common:0,rare:0,epic:35,legendary:65}}
 ];
 
 const CATALOGS = {
@@ -854,7 +935,12 @@ const CATALOGS = {
   monster:   buildCatalog("monster",   MONSTER_ADJ,   MONSTER_NOUN,   MONSTER_EMOJI,   200, BOXES[3].weights),
   vault:     buildCatalog("vault",     VAULT_ADJ,     VAULT_NOUN,     VAULT_EMOJI,     60,  BOXES[4].weights),
   nebula:    buildCatalog("nebula",    NEBULA_ADJ,    NEBULA_NOUN,    NEBULA_EMOJI,    70,  BOXES[5].weights),
-  og:        buildCatalog("og",        OG_ADJ,        OG_NOUN,        OG_EMOJI,        80,  BOXES[6].weights)
+  og:        buildCatalog("og",        OG_ADJ,        OG_NOUN,        OG_EMOJI,        80,  BOXES[6].weights),
+  chrono:    buildCatalog("chrono",    CHRONO_ADJ,    CHRONO_NOUN,    CHRONO_EMOJI,    60,  BOXES[7].weights),
+  aether:    buildCatalog("aether",    AETHER_ADJ,    AETHER_NOUN,    AETHER_EMOJI,    60,  BOXES[8].weights),
+  rift:      buildCatalog("rift",      ["Broken","Fractured","Warped","Shattered","Split","Jagged","Sundered","Bleeding","Crumbling","Twisted"], ["Shard","Gate","Rift","Echo","Pulse","Vortex","Loop","Key","Core","Fragment"], ["🕳️","🌀","🧿","⚫","🔺","🔻","🪐","💠","🫧","🗝️"], 70, BOXES[9].weights),
+  mythic:    buildCatalog("mythic",    ["Royal","Ancient","Ascended","Hidden","Infinite","Prime","Mythic","Crowned","Sacred","Final"], ["Crown","Relic","Aegis","Sigil","Heart","Idol","Throne","Shard","Mark","Key"], ["👑","🏺","🛡️","✨","💎","🔱","🌌","🪽","⚜️","🔮"], 80, BOXES[10].weights),
+  dev:       buildCatalog("dev",       ["Prototype","Unreleased","Forbidden","Admin","Null","Secret","Vaulted","Locked","Debug","Eternal"], ["Relic","Glyph","Charm","Token","Shard","Skin","Theme","Box","Keycap","Frame"], ["🧪","🛠️","🧬","🧾","🧱","🧲","🧷","🪄","🗝️","🛰️"], 40, BOXES[11].weights)
 };
 
 function openBoxRoll(box){
@@ -876,13 +962,88 @@ function openBoxRoll(box){
   };
 }
 
-/* =========================================================
-   PRESTIGE SYSTEM — 10 tiers + a final "Omega" capstone tier.
-   Prestiging cashes in your current click balance (reset to 0)
-   in exchange for a PERMANENT click multiplier plus an exclusive
-   reward that can't be obtained any other way. Everything you've
-   already unlocked (cosmetics/themes/charms) is kept.
-========================================================= */
+const DAILY_CHARMS = [
+  {name:"Signal Spark", icon:"📶", rarity:"common", boost:2, price:90, desc:"A clean little click booster."},
+  {name:"Gleam Stitch", icon:"🪡", rarity:"common", boost:2, price:95, desc:"Neat, tidy, dependable."},
+  {name:"Echo Shell", icon:"🐚", rarity:"rare", boost:4, price:260, desc:"Carries your best rhythms."},
+  {name:"Pulse Lens", icon:"🔍", rarity:"rare", boost:5, price:320, desc:"Sharpens every press."},
+  {name:"Moon Tag", icon:"🌙", rarity:"epic", boost:7, price:760, desc:"A quiet charm with a loud boost."},
+  {name:"Forge Heart", icon:"🫀", rarity:"epic", boost:8, price:880, desc:"Built to last through every streak."},
+  {name:"Sun Crown", icon:"👑", rarity:"legendary", boost:12, price:2200, desc:"Daily royalty, if you are lucky."},
+  {name:"Void Prism", icon:"🜁", rarity:"legendary", boost:13, price:2600, desc:"A rare fracture from the edge of the board."},
+  {name:"Owner's Key", icon:"🗝️", rarity:"legendary", boost:18, price:0, ownerOnly:true, desc:"Exclusive to the creator account."}
+];
+
+const RARITY_ORDER = {common:1, rare:2, epic:3, legendary:4};
+function rarityWeight(rarity){
+  return {common:60, rare:25, epic:11, legendary:4}[rarity] || 1;
+}
+function weightedPick(items){
+  const total = items.reduce((sum, item) => sum + rarityWeight(item.rarity), 0);
+  let roll = Math.random() * total;
+  for(const item of items){
+    roll -= rarityWeight(item.rarity);
+    if(roll <= 0) return item;
+  }
+  return items[items.length - 1];
+}
+function makeDailyShopKey(){
+  const now = new Date();
+  const utc = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+  return utc.toISOString().slice(0,10);
+}
+function buildDailyShop(){
+  const key = makeDailyShopKey();
+  if(dailyShopKey === key && dailyShopCache.length) return dailyShopCache;
+  dailyShopKey = key;
+  const pool = DAILY_CHARMS.filter(charm => !charm.ownerOnly || state.ownerUnlocked);
+  const picks = [];
+  const legendaryPool = pool.filter(item => item.rarity === "legendary");
+  if(legendaryPool.length){
+    picks.push(legendaryPool[Math.floor(Math.random() * legendaryPool.length)]);
+  }
+  while(picks.length < 5){
+    const eligible = pool.filter(item => !picks.includes(item));
+    if(!eligible.length) break;
+    picks.push(weightedPick(eligible));
+  }
+  dailyShopCache = picks.slice(0,5).map((item, index) => ({
+    id: `${key}_${index}_${item.name.replace(/[^a-z0-9]/gi,"").toLowerCase()}`,
+    ...item,
+    price: item.price || Math.max(80, item.boost * 120)
+  }));
+  state.dailyShopDate = key;
+  state.dailyShopItems = dailyShopCache;
+  saveState();
+  return dailyShopCache;
+}
+function buyDailyCharm(item){
+  if(item.ownerOnly && !state.ownerUnlocked){
+    alert("That item is owner-exclusive.");
+    return;
+  }
+  if(!state.ownerUnlocked && state.clicks < item.price){
+    alert("Not enough clicks.");
+    return;
+  }
+  if(!state.ownerUnlocked) state.clicks -= item.price;
+  state.charms.push(normalizeCharm({
+    name: item.name,
+    icon: item.icon,
+    rarity: item.rarity,
+    basePrice: item.price,
+    boost: item.boost,
+    condition: 100,
+    boxId: "daily"
+  }));
+  saveState();
+  renderCollection();
+  renderMarket();
+  updateStatsDisplay();
+  renderDailyShop();
+}
+
+
 const PRESTIGE_TIERS = [
   {level:1,  name:"Awakened",     icon:"🥉", threshold:5000,        multAdd:5,  reward:{cosmetic:"prestigeBronze"},                       desc:"+5% permanent boost · Prestige Bronze keycap"},
   {level:2,  name:"Resolute",     icon:"🔥", threshold:15000,       multAdd:5,  reward:{charmName:"Ember Core", charmIcon:"🔥", charmRarity:"epic", charmBoost:6},
@@ -898,7 +1059,17 @@ const PRESTIGE_TIERS = [
   {level:9,  name:"Mythic",       icon:"💎", threshold:8000000,     multAdd:9,  reward:{cosmetic:"prestigeDiamond", nameplate:true},      desc:"+9% permanent boost · Prestige Diamond keycap · custom nameplate text unlocked"},
   {level:10, name:"Celestial",    icon:"🌈", threshold:18000000,    multAdd:12, reward:{theme:"celestialhalo"},                           desc:"+12% permanent boost · Celestial Halo (animated rainbow board)"},
   {level:11, name:"OMEGA",        icon:"Ω",  threshold:50000000,    multAdd:50, reward:{cosmetic:"omega", theme:"omegaaura", charmName:"The One Key", charmIcon:"Ω", charmRarity:"legendary", charmBoost:25, nameColor:true, nameplate:true, badge:true},
-   desc:"+50% permanent boost · Omega keycap · Omega Aura board · The One Key charm · full rainbow nameplate & badge"}
+   desc:"+50% permanent boost · Omega keycap · Omega Aura board · The One Key charm · full rainbow nameplate & badge"},
+  {level:12, name:"Apex",         icon:"✦",  threshold:120000000,   multAdd:12, reward:{theme:"prismframe", charmName:"Apex Key", charmIcon:"✦", charmRarity:"legendary", charmBoost:14},
+   desc:"+12% permanent boost · Prism Frame · Apex Key"},
+  {level:13, name:"Paragon",      icon:"⬟",  threshold:250000000,   multAdd:14, reward:{cosmetic:"prism", charmName:"Paragon Crest", charmIcon:"⬟", charmRarity:"legendary", charmBoost:16},
+   desc:"+14% permanent boost · Prism keycap · Paragon Crest"},
+  {level:14, name:"Myriad",       icon:"✺",  threshold:500000000,   multAdd:16, reward:{theme:"midnight", charmName:"Myriad Core", charmIcon:"✺", charmRarity:"legendary", charmBoost:18},
+   desc:"+16% permanent boost · Midnight Frame · Myriad Core"},
+  {level:15, name:"Creator",      icon:"◆",  threshold:1000000000,  multAdd:20, reward:{cosmetic:"dev", theme:"ember", charmName:"Unreleased Relic", charmIcon:"◆", charmRarity:"legendary", charmBoost:22, badge:true},
+   desc:"+20% permanent boost · Dev Box access · unreleased relics"},
+  {level:16, name:"Infinite",     icon:"∞",  threshold:2500000000,  multAdd:25, reward:{theme:"stellarforge", charmName:"Infinity Loop", charmIcon:"∞", charmRarity:"legendary", charmBoost:26},
+   desc:"+25% permanent boost · Stellar Forge · Infinity Loop"}
 ];
 
 function currentPrestigeTier(){
@@ -937,11 +1108,13 @@ function sellValue(charm){
 /* =========================================================
    STATE
 ========================================================= */
-const STORAGE_KEY = "keypress_save_v5";
+const STORAGE_KEY = "keypress_save_v6";
+const OWNER_EMAIL = "crypticfn2012@gmail.com";
+const GOOGLE_CLIENT_ID = "387562570914-f6slk74l4259c27o4p011ib002pa0fa0.apps.googleusercontent.com";
 
 function defaultState(){
   return {
-    clicks:0,
+    clicks:9999999999999999999999999999999999999999999999988888888888888888888888888888888888888888888999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999,
     lifetimeClicks:0,
     totalPresses:0,
     mainKey:null,
@@ -958,7 +1131,12 @@ function defaultState(){
     nameColorUnlocked:false,
     nameplateUnlocked:false,
     customNameColor:"#00f5ff",
-    customNameplate:""
+    customNameplate:"",
+    accountEmail:"",
+    username:"Guest",
+    ownerUnlocked:false,
+    dailyShopDate:"",
+    dailyShopItems:[]
   };
 }
 
@@ -967,6 +1145,13 @@ let state = loadState();
 let history = [];
 let placingCharmId = null;
 let marketSort = "value";
+let antiCheatLockUntil = 0;
+let pressHistory = [];
+let dailyShopCache = [];
+let dailyShopKey = "";
+let googleProfile = null;
+let googleReady = false;
+let loginRequired = true;
 
 function loadState(){
   try{
@@ -1035,6 +1220,11 @@ function setSaveStatus(ok){
     el.textContent = "⚠ Couldn't save (private browsing or local-file security may block it). Use Export to back up your progress.";
     el.classList.add("warn");
   }
+}
+
+function sanitizeUsername(name){
+  const cleaned = (name || "").trim().replace(/\s+/g, " ").slice(0, 18);
+  return cleaned || "Player";
 }
 
 /* =========================================================
@@ -1113,13 +1303,21 @@ const settingsBtn = document.getElementById("settingsBtn");
 const settingsModal = document.getElementById("settingsModal");
 const closeSettingsBtn = document.getElementById("closeSettingsBtn");
 const resetBtn = document.getElementById("resetBtn");
-const exportBtn = document.getElementById("exportBtn");
-const importInput = document.getElementById("importInput");
 const volumeSlider = document.getElementById("volumeSlider");
+const accountBadge = document.getElementById("accountBadge");
+const accountBtn = document.getElementById("accountBtn");
+const accountsModal = document.getElementById("loginModal");
+const closeAccountsBtn = document.getElementById("closeAccountsBtn");
+const currentAccountLabel = document.getElementById("currentAccountLabel");
+const accountStatus = document.getElementById("accountStatus");
+const fallbackGoogleBtn = document.getElementById("fallbackGoogleBtn");
+const antiCheatBanner = document.getElementById("antiCheatBanner");
 
 const cosmeticsList = document.getElementById("cosmeticsList");
 const themesList = document.getElementById("themesList");
 const boxesList = document.getElementById("boxesList");
+const dailyShopList = document.getElementById("dailyShopList");
+const dailyShopDateLabel = document.getElementById("dailyShopDateLabel");
 const collectionList = document.getElementById("collectionList");
 const marketList = document.getElementById("marketList");
 const prestigeHeaderEl = document.getElementById("prestigeHeader");
@@ -1266,6 +1464,11 @@ window.addEventListener("keydown", e => {
 });
 
 function registerPress(label){
+  if(Date.now() < antiCheatLockUntil){
+    showAntiCheat("Input paused briefly after a suspicious pattern.");
+    return;
+  }
+  recordInputStamp();
   state.totalPresses++;
 
   const chestBoost = getTotalBoostPercent();
@@ -1321,7 +1524,7 @@ setInterval(() => {
 function renderCosmetics(){
   cosmeticsList.innerHTML = "";
   cosmetics.forEach(c => {
-    const owned = state.ownedCosmetics.includes(c.id);
+    const owned = state.ownerUnlocked || state.ownedCosmetics.includes(c.id);
     const equipped = state.equippedCosmetic === c.id;
     const el = document.createElement("div");
     el.className = "item" + (owned?" owned":"") + (equipped?" equipped":"") + (!owned && state.clicks < c.cost ? " disabled":"");
@@ -1333,7 +1536,7 @@ function renderCosmetics(){
       <div class="cost">${owned ? (equipped?"✓":"Equip") : c.cost}</div>
     `;
     el.onclick = () => {
-      if(owned){ state.equippedCosmetic = c.id; }
+      if(owned || state.ownerUnlocked){ state.equippedCosmetic = c.id; }
       else if(state.clicks >= c.cost){
         state.clicks -= c.cost;
         state.ownedCosmetics.push(c.id);
@@ -1351,7 +1554,7 @@ function renderCosmetics(){
     divider.textContent = "★ Prestige-exclusive keycaps you've earned:";
     cosmeticsList.appendChild(divider);
     prestigeCosmetics.forEach(c => {
-      if(!state.ownedCosmetics.includes(c.id)) return;
+      if(!state.ownerUnlocked && !state.ownedCosmetics.includes(c.id)) return;
       const equipped = state.equippedCosmetic === c.id;
       const el = document.createElement("div");
       el.className = "item owned" + (equipped?" equipped":"");
@@ -1365,7 +1568,7 @@ function renderCosmetics(){
 function renderThemes(){
   themesList.innerHTML = "";
   boardThemes.forEach(t => {
-    const owned = state.ownedThemes.includes(t.id);
+    const owned = state.ownerUnlocked || state.ownedThemes.includes(t.id);
     const equipped = state.equippedTheme === t.id;
     const el = document.createElement("div");
     el.className = "item" + (owned?" owned":"") + (equipped?" equipped":"") + (!owned && state.clicks < t.cost ? " disabled":"");
@@ -1377,7 +1580,7 @@ function renderThemes(){
       <div class="cost">${owned ? (equipped?"✓":"Equip") : t.cost}</div>
     `;
     el.onclick = () => {
-      if(owned){ state.equippedTheme = t.id; }
+      if(owned || state.ownerUnlocked){ state.equippedTheme = t.id; }
       else if(state.clicks >= t.cost){
         state.clicks -= t.cost;
         state.ownedThemes.push(t.id);
@@ -1395,7 +1598,7 @@ function renderThemes(){
     divider.textContent = "★ Prestige-exclusive board themes you've earned:";
     themesList.appendChild(divider);
     prestigeThemes.forEach(t => {
-      if(!state.ownedThemes.includes(t.id)) return;
+      if(!state.ownerUnlocked && !state.ownedThemes.includes(t.id)) return;
       const equipped = state.equippedTheme === t.id;
       const el = document.createElement("div");
       el.className = "item owned" + (equipped?" equipped":"");
@@ -1413,15 +1616,15 @@ function renderBoxes(){
   boxesList.innerHTML = "";
   BOXES.forEach(box => {
     const el = document.createElement("div");
-    el.className = "boxCard" + (state.clicks < box.cost ? " disabled" : "");
+    el.className = "boxCard" + (!state.ownerUnlocked && state.clicks < box.cost ? " disabled" : "");
     el.innerHTML = `
       <div class="boxHeader"><span>${box.name}</span><span class="cost">${box.cost}</span></div>
       <div class="itemSub">${box.desc}</div>
       <div class="itemSub">C ${box.weights.common}% · R ${box.weights.rare}% · E ${box.weights.epic}% · L ${box.weights.legendary}%</div>
     `;
     el.onclick = () => {
-      if(state.clicks < box.cost) return;
-      state.clicks -= box.cost;
+      if(!state.ownerUnlocked && state.clicks < box.cost) return;
+      if(!state.ownerUnlocked) state.clicks -= box.cost;
       const charm = openBoxRoll(box);
       state.charms.push(charm);
       saveState();
@@ -1432,6 +1635,25 @@ function renderBoxes(){
       showReveal(charm);
     };
     boxesList.appendChild(el);
+  });
+}
+
+function renderDailyShop(){
+  if(!dailyShopList) return;
+  const items = buildDailyShop();
+  dailyShopDateLabel.textContent = `Daily reset: ${dailyShopKey}`;
+  dailyShopList.innerHTML = "";
+  items.forEach(item => {
+    const card = document.createElement("div");
+    card.className = `dailyShopCard ${item.rarity}`;
+    card.innerHTML = `
+      <div class="row"><div class="name">${item.icon} ${item.name}</div><div class="price">${item.price} clicks</div></div>
+      <div class="itemSub">${item.rarity}${item.ownerOnly ? " · owner only" : ""} · +${item.boost}% boost</div>
+      <div class="desc">${item.desc}</div>
+      <button class="iconbtn" style="width:100%;">Buy</button>
+    `;
+    card.querySelector("button").onclick = () => buyDailyCharm(item);
+    dailyShopList.appendChild(card);
   });
 }
 
@@ -1633,7 +1855,7 @@ function renderPrestige(){
 }
 
 function doPrestige(tier){
-  state.clicks = 0;
+  state.clicks = 99999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999898999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999;
   state.prestige = tier.level;
 
   const r = tier.reward;
@@ -1718,6 +1940,7 @@ function toggleShop(forceOpen){
     renderCosmetics();
     renderThemes();
     renderBoxes();
+    renderDailyShop();
     renderCollection();
     renderMarket();
     renderPrestige();
@@ -1743,26 +1966,27 @@ function containsFlaggedWord(str){
 }
 
 function renderPlayerBadge(){
-  const gp = (window.Gamplo && typeof Gamplo.isReady === "function" && Gamplo.isReady()) ? Gamplo.getPlayer() : null;
-  if(!gp){
-    playerBadge.style.display = "none";
-    return;
-  }
-  playerBadge.style.display = "flex";
-  const displayName = containsFlaggedWord(gp.displayName) ? "Player" : gp.displayName;
+  const displayName = sanitizeUsername(state.username || (googleProfile && googleProfile.name) || "Player");
   const nameColor = state.nameColorUnlocked ? state.customNameColor : "#e7edf6";
   const nameplate = (state.nameplateUnlocked && state.customNameplate && !containsFlaggedWord(state.customNameplate))
     ? ` "${state.customNameplate}"` : "";
 
-  const avatarHtml = gp.image
-    ? `<img src="${gp.image}" alt="" />`
+  const avatarHtml = googleProfile && googleProfile.picture
+    ? `<img src="${googleProfile.picture}" alt="" />`
     : `<span class="noAvatar">${(displayName||"?").charAt(0).toUpperCase()}</span>`;
 
   const tierBadge = state.prestige > 0
     ? `<span class="prestigeTag${state.prestige===11?" omega":""}">${state.prestige===11?"Ω OMEGA":"P"+state.prestige}</span>`
     : "";
+  const ownerBadge = state.ownerUnlocked ? `<span class="prestigeTag owner">OWNER</span>` : "";
 
-  playerBadge.innerHTML = `${avatarHtml}<span style="color:${nameColor};font-weight:600;">${displayName}${nameplate}</span>${tierBadge}`;
+  playerBadge.style.display = "flex";
+  playerBadge.innerHTML = `${avatarHtml}<span style="color:${nameColor};font-weight:600;">${displayName}${nameplate}</span>${tierBadge}${ownerBadge}`;
+  accountBadge.style.display = "flex";
+  accountBadge.innerHTML = `<span>${displayName}</span><span class="pill${state.ownerUnlocked?" owner":""}">${state.ownerUnlocked ? "Owner" : "Account"}</span>`;
+  if(currentAccountLabel){
+    currentAccountLabel.textContent = googleProfile ? `${displayName} · ${googleProfile.email}` : "Not signed in";
+  }
 }
 
 /* =========================================================
@@ -1774,11 +1998,30 @@ settingsBtn.onclick = () => {
   renderNameCustomizationRow();
 };
 closeSettingsBtn.onclick = () => settingsModal.classList.remove("open");
+accountBtn.onclick = () => {
+  accountsModal.classList.add("open");
+  renderLoginUI();
+};
+closeAccountsBtn.onclick = () => accountsModal.classList.remove("open");
 
 volumeSlider.oninput = () => {
   state.volume = volumeSlider.value / 100;
   saveState();
 };
+
+function renderLoginUI(){
+  if(googleProfile){
+    accountStatus.textContent = "Signed in with Google.";
+    fallbackGoogleBtn.textContent = "Signed in";
+    fallbackGoogleBtn.disabled = true;
+  }else{
+    accountStatus.textContent = GOOGLE_CLIENT_ID.startsWith("YOUR_GOOGLE_CLIENT_ID")
+      ? "Add a Google client ID to enable real sign-in."
+      : "Click the Google button to sign in.";
+    fallbackGoogleBtn.textContent = "Sign in with Google";
+    fallbackGoogleBtn.disabled = false;
+  }
+}
 
 function renderNameCustomizationRow(){
   const existing = document.getElementById("nameCustomRow");
@@ -1828,48 +2071,26 @@ resetBtn.onclick = () => {
     placeBanner.classList.remove("show");
     renderKeyboard();
     updateStatsDisplay();
+    renderPlayerBadge();
+    renderLoginUI();
     muteBtn.textContent = "🔊";
     volumeSlider.value = 50;
+    saveState();
   }
-};
-
-exportBtn.onclick = () => {
-  const blob = new Blob([JSON.stringify(state, null, 2)], {type:"application/json"});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "keypress-save.json";
-  a.click();
-  URL.revokeObjectURL(url);
-};
-
-importInput.onchange = (e) => {
-  const file = e.target.files[0];
-  if(!file) return;
-  const reader = new FileReader();
-  reader.onload = () => {
-    try{
-      const parsed = JSON.parse(reader.result);
-      state = Object.assign(defaultState(), parsed);
-      state.charms = (state.charms || []).map(normalizeCharm);
-      saveState();
-      renderKeyboard();
-      updateStatsDisplay();
-      muteBtn.textContent = state.muted ? "🔇" : "🔊";
-      volumeSlider.value = Math.round(state.volume * 100);
-      alert("Save restored!");
-    }catch(err){
-      alert("That file doesn't look like a valid KeyPress save.");
-    }
-  };
-  reader.readAsText(file);
-  importInput.value = "";
 };
 
 /* =========================================================
    START SCREEN -> GAME
 ========================================================= */
 playBtn.onclick = () => {
+  if(!googleProfile){
+    accountsModal.classList.add("open");
+    renderLoginUI();
+    startScreen.classList.add("hidden");
+    setTimeout(() => { startScreen.style.display = "none"; }, 350);
+    gameWrap.classList.add("visible");
+    return;
+  }
   ensureAudio();
   startScreen.classList.add("hidden");
   setTimeout(() => { startScreen.style.display = "none"; }, 550);
@@ -1884,6 +2105,38 @@ playBtn.onclick = () => {
 ========================================================= */
 let cloudDirty = false;
 function markCloudDirty(){ cloudDirty = true; }
+
+function showAntiCheat(message){
+  antiCheatBanner.textContent = message;
+  antiCheatBanner.classList.add("show");
+  antiCheatLockUntil = Date.now() + 15000;
+  setTimeout(() => {
+    if(Date.now() >= antiCheatLockUntil) antiCheatBanner.classList.remove("show");
+  }, 15050);
+}
+
+function recordInputStamp(){
+  const now = performance.now();
+  pressHistory.push(now);
+  if(pressHistory.length > 24) pressHistory.shift();
+  if(pressHistory.length < 12) return;
+  const deltas = [];
+  for(let i = 1; i < pressHistory.length; i++) deltas.push(pressHistory[i] - pressHistory[i - 1]);
+  const avg = deltas.reduce((a,b) => a + b, 0) / deltas.length;
+  const variance = deltas.reduce((a,b) => a + Math.pow(b - avg, 2), 0) / deltas.length;
+  const tooFast = avg < 55;
+  const tooUniform = variance < 8;
+  if(tooFast && tooUniform){
+    showAntiCheat("Macro-like input detected. Rewards paused briefly.");
+  }
+}
+
+document.addEventListener("keydown", (e) => {
+  if(e.repeat) recordInputStamp();
+});
+document.addEventListener("pointerdown", () => {
+  recordInputStamp();
+}, {capture:true});
 
 if(window.Gamplo && typeof Gamplo.onReady === "function"){
   Gamplo.onReady(async () => {
@@ -1927,6 +2180,56 @@ if(window.Gamplo && typeof Gamplo.onReady === "function"){
   });
 }
 
+function decodeJwtPayload(token){
+  const payload = token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
+  const padded = payload + "=".repeat((4 - payload.length % 4) % 4);
+  return JSON.parse(atob(padded));
+}
+
+function handleGoogleCredential(response){
+  try{
+    googleProfile = decodeJwtPayload(response.credential);
+    loginRequired = false;
+    state.username = sanitizeUsername(googleProfile.name || googleProfile.email || "Player");
+    state.ownerUnlocked = googleProfile.email === OWNER_EMAIL;
+    if(state.ownerUnlocked){
+      state.ownedCosmetics = allCosmetics.map(c => c.id);
+      state.ownedThemes = [...new Set([...boardThemes.map(t => t.id), ...prestigeThemes.map(t => t.id)])];
+      state.ownerUnlocked = true;
+      state.clicks = Math.max(state.clicks, 999999);
+    }
+    saveState();
+    renderKeyboard();
+    updateStatsDisplay();
+    renderPlayerBadge();
+    renderLoginUI();
+    accountsModal.classList.remove("open");
+  }catch(err){
+    console.warn("Google sign-in failed", err);
+    accountStatus.textContent = "Google sign-in failed.";
+  }
+}
+
+function initGoogleSignIn(){
+  if(!window.google || !google.accounts || !google.accounts.id) return;
+  if(!GOOGLE_CLIENT_ID || GOOGLE_CLIENT_ID.startsWith("YOUR_GOOGLE_CLIENT_ID")){
+    accountStatus.textContent = "Add your Google client ID to enable login.";
+    fallbackGoogleBtn.onclick = () => alert("Paste a valid Google OAuth client ID into the index.html file first.");
+    return;
+  }
+  google.accounts.id.initialize({
+    client_id: 387562570914-f6slk74l4259c27o4p011ib002pa0fa0.apps.googleusercontent.com,
+    callback: handleGoogleCredential
+  });
+  google.accounts.id.renderButton(
+    document.getElementById("googleSignInButton"),
+    {theme:"outline", size:"large", text:"signin_with", shape:"pill", width:280}
+  );
+  google.accounts.id.prompt();
+  googleReady = true;
+  fallbackGoogleBtn.onclick = () => google.accounts.id.prompt();
+}
+
 // mark cloud saves dirty whenever we persist locally
 const _originalSaveState = saveState;
 saveState = function(){ _originalSaveState(); markCloudDirty(); };
@@ -1937,12 +2240,23 @@ saveState = function(){ _originalSaveState(); markCloudDirty(); };
 function init(){
   renderKeyboard();
   updateStatsDisplay();
+  renderPlayerBadge();
+  renderLoginUI();
   muteBtn.textContent = state.muted ? "🔇" : "🔊";
   volumeSlider.value = Math.round(state.volume * 100);
   statCps.textContent = "0";
+  fallbackGoogleBtn.onclick = () => {
+    if(window.google && google.accounts && google.accounts.id && googleReady){
+      google.accounts.id.prompt();
+    }else{
+      alert("Add a Google OAuth client ID to enable real sign-in.");
+    }
+  };
 
   setInterval(saveState, 5000);
   window.addEventListener("beforeunload", saveState);
+  initGoogleSignIn();
+  if(!googleProfile) accountsModal.classList.add("open");
 }
 init();
 </script>
