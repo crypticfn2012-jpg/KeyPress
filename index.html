@@ -608,7 +608,6 @@ body{
   <div class="logo">⌨ KeyPress</div>
   <div class="tagline">Pick a key, then mash it for clicks!</div>
   <button class="playBtn" id="playBtn">Play</button>
-  <button class="iconbtn" id="startShopBtn" style="padding:12px 20px;font-size:14px;">Shop</button>
 </div>
 
 <div class="gameWrap" id="gameWrap">
@@ -623,6 +622,8 @@ body{
     <div class="topbtns">
       <span class="accountBadge" id="accountBadge" style="display:none;"></span>
       <button class="iconbtn" id="accountBtn">Google</button>
+      <button class="iconbtn" id="changeKeyBtn">Change Key</button>
+      <button class="iconbtn" id="muteBtn">🔊</button>
       <button class="iconbtn prestigeBtn2" id="prestigeShortcutBtn">✨ Prestige</button>
       <button class="iconbtn" id="shopBtn">Shop (O)</button>
       <button class="iconbtn" id="settingsBtn">⚙</button>
@@ -677,12 +678,6 @@ body{
 
     <div class="section" id="section-collection">
       <div class="title">Your Charms</div>
-      <div class="sortRow">
-        <button class="iconbtn active" data-view="best">Best</button>
-        <button class="iconbtn" data-view="rarity">Rarity</button>
-        <button class="iconbtn" data-view="value">Value</button>
-        <button class="iconbtn" data-view="name">Name</button>
-      </div>
       <div id="collectionList"></div>
     </div>
 
@@ -713,14 +708,6 @@ body{
       <input type="range" id="volumeSlider" min="0" max="100" value="50" />
     </div>
     <div class="settingsRow">
-      <span>Change main key</span>
-      <button class="iconbtn" id="changeKeyBtn">Change</button>
-    </div>
-    <div class="settingsRow">
-      <span>Sound</span>
-      <button class="iconbtn" id="muteBtn">🔊</button>
-    </div>
-    <div class="settingsRow">
       <span>Reset all progress</span>
       <button class="dangerBtn" id="resetBtn">Reset</button>
     </div>
@@ -741,10 +728,6 @@ body{
       <input type="email" id="emailLoginInput" placeholder="you@example.com" style="width:160px;background:#0e1119;border:1px solid #2a3346;color:#fff;border-radius:6px;padding:4px 6px;" />
     </div>
     <button class="iconbtn" id="emailLoginBtn" style="width:100%;margin-top:6px;">Use Email Login</button>
-    <div class="settingsRow" style="margin-top:10px;">
-      <span>Guest/save</span>
-      <button class="iconbtn" id="guestContinueBtn">Continue</button>
-    </div>
     <div class="settingsRow">
       <span>Signed in as</span>
       <div id="currentAccountLabel" style="font-size:12px;opacity:0.85;"></div>
@@ -946,7 +929,8 @@ const BOXES = [
   {id:"chrono",    name:"Chrono Box",    cost:9000, catalog:"chrono",    desc:"Time-bending charms with better odds.",     weights:{common:22,rare:28,epic:30,legendary:20}},
   {id:"aether",    name:"Aether Box",    cost:12000, catalog:"aether",    desc:"High-end relics for serious collectors.",   weights:{common:12,rare:22,epic:33,legendary:33}},
   {id:"rift",      name:"Rift Box",      cost:16000, catalog:"rift",      desc:"Unstable relics from the edge of the game.", weights:{common:10,rare:20,epic:30,legendary:40}},
-  {id:"mythic",    name:"Mythic Box",    cost:22000, catalog:"mythic",    desc:"Built for endgame collectors.",             weights:{common:8,rare:17,epic:30,legendary:45}}
+  {id:"mythic",    name:"Mythic Box",    cost:22000, catalog:"mythic",    desc:"Built for endgame collectors.",             weights:{common:8,rare:17,epic:30,legendary:45}},
+  {id:"prestige",  name:"Prestige Box",  cost:0,     catalog:"mythic",    desc:"Exclusive charms for those who prestige.",  weights:{common:0,rare:0,epic:0,legendary:100}}
 ];
 
 const CATALOGS = {
@@ -960,7 +944,7 @@ const CATALOGS = {
   chrono:    buildCatalog("chrono",    CHRONO_ADJ,    CHRONO_NOUN,    CHRONO_EMOJI,    60,  BOXES[7].weights),
   aether:    buildCatalog("aether",    AETHER_ADJ,    AETHER_NOUN,    AETHER_EMOJI,    60,  BOXES[8].weights),
   rift:      buildCatalog("rift",      ["Broken","Fractured","Warped","Shattered","Split","Jagged","Sundered","Bleeding","Crumbling","Twisted"], ["Shard","Gate","Rift","Echo","Pulse","Vortex","Loop","Key","Core","Fragment"], ["🕳️","🌀","🧿","⚫","🔺","🔻","🪐","💠","🫧","🗝️"], 70, BOXES[9].weights),
-  mythic:    buildCatalog("mythic",    ["Royal","Ancient","Ascended","Hidden","Infinite","Prime","Mythic","Crowned","Sacred","Final"], ["Crown","Relic","Aegis","Sigil","Heart","Idol","Throne","Shard","Mark","Key"], ["👑","🏺","🛡️","✨","💎","🔱","🌌","🪽","⚜️","🔮"], 80, BOXES[10].weights)
+  mythic:    buildCatalog("mythic",    ["Royal","Ancient","Ascended","Hidden","Infinite","Prime","Mythic","Crowned","Sacred","Final"], ["Crown","Relic","Aegis","Sigil","Heart","Idol","Throne","Shard","Mark","Key"], ["👑","🏺","🛡️","✨","💎","🔱","🌌","🪽","⚜️","🔮"], 80, BOXES[10].weights),
 };
 
 function openBoxRoll(box){
@@ -1180,14 +1164,6 @@ function loadState(){
     const parsed = JSON.parse(raw);
     const merged = Object.assign(defaultState(), parsed);
     merged.charms = (merged.charms || []).map(normalizeCharm);
-    if(merged.accountEmail){
-      googleProfile = {
-        email: merged.accountEmail,
-        name: merged.username || merged.accountEmail.split("@")[0],
-        picture: ""
-      };
-      loginRequired = false;
-    }
     return merged;
   }catch(e){
     console.warn("KeyPress: could not load save", e);
@@ -1228,9 +1204,6 @@ function normalizeCharm(c){
 
 function saveState(){
   try{
-    if(googleProfile && googleProfile.email){
-      state.accountEmail = googleProfile.email;
-    }
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     storageAvailable = true;
     setSaveStatus(true);
@@ -1315,7 +1288,6 @@ function playClickSound(){
 const startScreen = document.getElementById("startScreen");
 const gameWrap = document.getElementById("gameWrap");
 const playBtn = document.getElementById("playBtn");
-const startShopBtn = document.getElementById("startShopBtn");
 const keyboardEl = document.getElementById("keyboard");
 const boardWrap = document.getElementById("boardWrap");
 
@@ -1345,11 +1317,7 @@ const accountStatus = document.getElementById("accountStatus");
 const fallbackGoogleBtn = document.getElementById("fallbackGoogleBtn");
 const emailLoginInput = document.getElementById("emailLoginInput");
 const emailLoginBtn = document.getElementById("emailLoginBtn");
-const guestContinueBtn = document.getElementById("guestContinueBtn");
 const antiCheatBanner = document.getElementById("antiCheatBanner");
-
-const charmViewModes = ["best","rarity","value","name"];
-let charmViewMode = "best";
 
 const cosmeticsList = document.getElementById("cosmeticsList");
 const themesList = document.getElementById("themesList");
@@ -1716,37 +1684,27 @@ function renderCollection(){
     collectionList.innerHTML = "<div class='empty'>No charms yet — open a box!</div>";
     return;
   }
-  const grouped = new Map();
-  state.charms.forEach(charm => {
-    const key = `${charm.name}|${charm.icon}|${charm.rarity}|${charm.basePrice}|${charm.boost}`;
-    if(!grouped.has(key)) grouped.set(key, []);
-    grouped.get(key).push(charm);
-  });
-
-  const stacks = Array.from(grouped.values()).map(items => ({
-    charm: items[0],
-    items,
-    count: items.length,
-    avgCondition: items.reduce((sum, item) => sum + item.condition, 0) / items.length
-  }));
-  const order = {legendary:0, epic:1, rare:2, common:3};
-  stacks.sort((a,b) => {
-    if(charmViewMode === "rarity") return order[a.charm.rarity] - order[b.charm.rarity];
-    if(charmViewMode === "value") return sellValue(b.charm) - sellValue(a.charm);
-    if(charmViewMode === "name") return a.charm.name.localeCompare(b.charm.name);
-    return (sellValue(b.charm) * b.count) - (sellValue(a.charm) * a.count);
-  });
-
   const grid = document.createElement("div");
   grid.className = "charmGrid";
 
-  stacks.forEach(stack => {
-    const charm = stack.charm;
+  state.charms.forEach(charm => {
     const equippedKey = Object.keys(state.keyCharms).find(k => state.keyCharms[k] === charm.instanceId);
     const cell = document.createElement("div");
     cell.className = "charmCell " + charm.rarity + (placingCharmId === charm.instanceId ? " selected" : "");
-    cell.title = `${charm.name} x${stack.count} (${charm.rarity})\nValue each: ${sellValue(charm)} clicks\nBoost: +${charm.boost}%\nCondition: ${Math.round(stack.avgCondition)}% (${conditionLabel(stack.avgCondition)})`;
-    cell.innerHTML = `<div style="font-size:18px;line-height:1;">${charm.icon}</div><div class="itemSub" style="font-size:10px;">x${stack.count}</div><div class="itemSub" style="font-size:10px;">${Math.round(stack.avgCondition)}%</div>`;
+    cell.title = `${charm.name} (${charm.rarity})\nValue: ${sellValue(charm)} clicks\nBoost: +${charm.boost}%\nCondition: ${Math.round(charm.condition)}% (${conditionLabel(charm.condition)})`;
+    cell.textContent = charm.icon;
+
+    if(equippedKey){
+      const tag = document.createElement("div");
+      tag.className = "equippedTag";
+      tag.textContent = equippedKey;
+      cell.appendChild(tag);
+    }
+    const cond = document.createElement("div");
+    cond.className = "conditionTag";
+    cond.textContent = Math.round(charm.condition) + "%";
+    cell.appendChild(cond);
+
     cell.onclick = () => {
       if(equippedKey){
         delete state.keyCharms[equippedKey];
@@ -1768,7 +1726,7 @@ function renderCollection(){
   const hint = document.createElement("div");
   hint.className = "itemSub";
   hint.style.marginTop = "6px";
-  hint.textContent = "Stacks compress duplicates into one tile. Tap a stack to place it on a key.";
+  hint.textContent = "Tap a charm to place it on a key (boosts your click earnings). Tap an equipped charm to remove it.";
   collectionList.appendChild(hint);
 }
 
@@ -1832,21 +1790,10 @@ function sellCharm(instanceId){
 
 document.querySelectorAll(".sortRow .iconbtn").forEach(btn => {
   btn.onclick = () => {
-    const parent = btn.parentElement;
-    if(parent && parent.previousElementSibling && parent.previousElementSibling.classList.contains("title")) return;
-    document.querySelectorAll("#section-market .sortRow .iconbtn").forEach(b => b.classList.remove("active"));
+    document.querySelectorAll(".sortRow .iconbtn").forEach(b => b.classList.remove("active"));
     btn.classList.add("active");
     marketSort = btn.dataset.sort;
     renderMarket();
-  };
-});
-
-document.querySelectorAll("#section-collection .sortRow .iconbtn").forEach(btn => {
-  btn.onclick = () => {
-    document.querySelectorAll("#section-collection .sortRow .iconbtn").forEach(b => b.classList.remove("active"));
-    btn.classList.add("active");
-    charmViewMode = btn.dataset.view;
-    renderCollection();
   };
 });
 
@@ -2285,7 +2232,6 @@ function handleLocalEmailLogin(){
   };
   loginRequired = false;
   state.username = sanitizeUsername(googleProfile.name);
-  state.accountEmail = googleProfile.email;
   state.ownerUnlocked = email === OWNER_EMAIL;
   if(state.ownerUnlocked){
     state.ownedCosmetics = allCosmetics.map(c => c.id);
