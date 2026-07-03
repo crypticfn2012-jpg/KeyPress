@@ -278,17 +278,8 @@ body{
   animation:holoShift 3s linear infinite;
 }
 .key.liminal{
-  color:#5a5430;
   font-family:monospace;
-
-  /* layered wallpaper effect */
-  background-blend-mode:multiply;
-
-  box-shadow:
-    inset 0 0 10px #44402c,
-    inset 0 0 25px #a59c6a;
-
-  filter:saturate(0.9) contrast(1.05);
+  color:#5a4f2a;
 }
 .key.galaxy{background:linear-gradient(120deg,#0b0f2a,#1b1f5a,#3a0ca3,#7209b7,#f72585,#4cc9f0,#0b0f2a);background-size:400% 400%;color:#e0e6ff;animation:galaxyShift 6s ease infinite;box-shadow:0 0 12px rgba(114,9,183,0.6),0 0 24px rgba(76,201,240,0.4);}
 @keyframes holoShift{ 0%{background-position:0% 50%;} 100%{background-position:300% 50%;} }
@@ -664,7 +655,7 @@ const cosmetics = [
   {id:"holo",    name:"Holographic", cost:2800, cls:"holo"},
   {id:"cosmic",  name:"Cosmic",  cost:3400, cls:"cosmic"},
   {id:"galaxy",  name:"Galaxy",  cost:4500, cls:"galaxy"},
-  {id:"liminal",name:"Liminal",cost:5000,frame:"repeating-linear-gradient(0deg,#cfc77a 0px,#cfc77a 22px,#c7bf70 22px,#c7bf70 44px),repeating-linear-gradient(90deg,rgba(0,0,0,0.035) 0px,transparent 2px,transparent 18px),radial-gradient(circle at 50% 30%,#cfc77a 0px,#cfc77a 2px,transparent 3px),radial-gradient(circle at 50% 70%,#c7bf70 0px,#c7bf70 2px,transparent 3px);background-blend-mode:multiply;box-shadow:inset 0 0 10px #44402c,inset 0 0 25px #a59c6a;filter:saturate(0.9) contrast(1.05);color:#5a5430;animation:liminalFlicker 6s infinite;"}
+ {id:"liminal",name:"Liminal",cost:5000,frame:"linear-gradient(180deg,#e3da8f,#d8cf7e,#d0c66f),repeating-linear-gradient(90deg,rgba(120,110,60,0.06) 0px,transparent 4px,transparent 18px)",glow:"0 0 10px rgba(255,235,140,0.25),inset 0 0 10px rgba(90,80,40,0.15)",blur:"0px",cls:"liminal"}
 ];
 
 const boardThemes = [
