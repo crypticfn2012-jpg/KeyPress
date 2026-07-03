@@ -3,15 +3,11 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
-
-<!-- Gamplo SDK -->
-<script src="https://gamplo.com/sdk/gamplo.js"></script>
-
 <title>KeyPress</title>
-
+<script src="https://gamplo.com/sdk/gamplo.js"></script>
 <style>
 :root{
-  --board-frame: #12151c;
+  --board-bg: linear-gradient(160deg,#12151c,#04050a);
   --underglow: transparent;
   --underglow-blur: 0px;
   --tilt: 26deg;
@@ -29,7 +25,7 @@ body{
   -webkit-tap-highlight-color:transparent;
 }
 
-
+/* ---------- TOP BAR ---------- */
 .topbar{
   position:fixed;
   top:0;left:0;right:0;
@@ -45,9 +41,38 @@ body{
   gap:8px;
 }
 
-.stats{font-size:12px;opacity:0.9;display:flex;gap:12px;flex-wrap:wrap;}
+.stats{font-size:12px;opacity:0.9;display:flex;gap:12px;flex-wrap:wrap;align-items:center;}
 .stats b{color:#00f5ff;font-weight:600;}
 .stats b.boost{color:#2fbf71;}
+
+.playerBadge{
+  display:flex; align-items:center; gap:7px;
+  font-size:12px; opacity:0.95; padding-right:10px; border-right:1px solid #2a3346; margin-right:2px;
+}
+.playerBadge img{ width:22px; height:22px; border-radius:50%; object-fit:cover; border:1px solid #2a3346; }
+.playerBadge .noAvatar{
+  width:22px; height:22px; border-radius:50%; background:#2a3346;
+  display:flex; align-items:center; justify-content:center; font-size:11px;
+}
+.prestigeTag{
+  font-size:10px; font-weight:800; padding:1px 5px; border-radius:5px;
+  background:#2a3346; color:#ffd23f; letter-spacing:0.5px;
+}
+.prestigeTag.omega{
+  background:linear-gradient(90deg,#ff5c5c,#ffd23f,#5cff8a,#5cd2ff,#b26cff,#ff5c5c);
+  background-size:300% 100%;
+  color:#05060a;
+  animation:omegaTagShift 3s linear infinite;
+}
+@keyframes omegaTagShift{ 0%{background-position:0% 50%;} 100%{background-position:300% 50%;} }
+
+.guestBanner{
+  position:fixed; top:60px; left:50%; transform:translateX(-50%);
+  background:#1a2030; border:1px solid #2a3346; color:#c7d2e6;
+  padding:8px 14px; border-radius:8px; font-size:12px; z-index:25;
+  display:none; align-items:center; gap:10px;
+}
+.guestBanner.show{display:flex;}
 
 .topbtns{display:flex;gap:6px;}
 
@@ -63,8 +88,9 @@ body{
 }
 .iconbtn:hover{background:#242c42;}
 .iconbtn:active{transform:translateY(1px);}
+.iconbtn.prestigeBtn{background:linear-gradient(90deg,#2a2050,#140f24);border-color:#7a4bff;}
 
-
+/* ---------- STAGE / KEYBOARD (real perspective tilt) ---------- */
 .stage{
   height:100vh;
   display:flex;
@@ -79,14 +105,14 @@ body{
   position:relative;
   padding:34px 26px 46px;
   border-radius:20px;
-  background:linear-gradient(160deg,var(--board-frame),#04050a);
+  background:var(--board-bg);
   box-shadow:
     0 40px 70px rgba(0,0,0,0.65),
     inset 0 1px 0 rgba(255,255,255,0.07);
   transform-style:preserve-3d;
   transform:rotateX(var(--tilt));
   transform-origin:center 100%;
-  transition:transform 0.4s ease;
+  transition:transform 0.4s ease, background 0.4s ease;
 }
 
 .boardWrap::before{
@@ -101,52 +127,50 @@ body{
   transition:0.3s;
 }
 
-.keyboard{
-  display:flex;
-  flex-direction:column;
-  gap:9px;
-  transform-style:preserve-3d;
-}
+/* animated board theme variants */
+.boardWrap.themeRgb::before{ animation:rgbRotate 4s linear infinite; }
+@keyframes rgbRotate{ from{filter:blur(var(--underglow-blur)) hue-rotate(0deg);} to{filter:blur(var(--underglow-blur)) hue-rotate(360deg);} }
 
-.row{
-  display:flex;
-  gap:9px;
-  justify-content:center;
-  transform-style:preserve-3d;
-}
+.boardWrap.themePulse::before{ animation:pulseGlow 2.2s ease-in-out infinite; }
+@keyframes pulseGlow{ 0%,100%{opacity:0.5;transform:scale(0.97);} 50%{opacity:1;transform:scale(1.05);} }
 
-.keySlot{
-  position:relative;
-  height:44px;
-  min-width:44px;
-  transform-style:preserve-3d;
-}
+.boardWrap.themeAurora{ animation:auroraFrame 6s ease infinite; background-size:300% 300%; }
+.boardWrap.themeAurora::before{ animation:pulseGlow 3s ease-in-out infinite; }
+@keyframes auroraFrame{ 0%{background-position:0% 50%;} 50%{background-position:100% 50%;} 100%{background-position:0% 50%;} }
+
+.boardWrap.themeSolstice{ animation:auroraFrame 5s ease infinite; background-size:300% 300%; }
+.boardWrap.themeSolstice::before{ animation:pulseGlow 2.4s ease-in-out infinite; }
+
+.boardWrap.themeVoid{ animation:voidSwirl 8s linear infinite; background-size:250% 250%; }
+@keyframes voidSwirl{ 0%{background-position:0% 0%;} 100%{background-position:200% 200%;} }
+.boardWrap.themeVoid::before{ animation:pulseGlow 3.5s ease-in-out infinite; }
+
+.boardWrap.themeCelestial::before{ animation:rgbRotate 3s linear infinite; }
+.boardWrap.themeCelestial{ animation:pulseGlow 4s ease-in-out infinite; }
+
+.boardWrap.themeOmega{ animation:auroraFrame 3s ease infinite; background-size:300% 300%; }
+.boardWrap.themeOmega::before{ animation:rgbRotate 2s linear infinite, pulseGlow 1.6s ease-in-out infinite; }
+
+.keyboard{ display:flex; flex-direction:column; gap:9px; transform-style:preserve-3d; }
+.row{ display:flex; gap:9px; justify-content:center; transform-style:preserve-3d; }
+
+.keySlot{ position:relative; height:44px; min-width:44px; transform-style:preserve-3d; }
 .keySlot.wide{min-width:82px}
 .keySlot.space{min-width:264px}
 
 .keySlot::before{
   content:"";
-  position:absolute;
-  inset:0;
-  border-radius:7px;
+  position:absolute; inset:0; border-radius:7px;
   background:#030407;
   box-shadow:inset 0 3px 6px rgba(0,0,0,0.9);
   transform:translateZ(0px);
 }
 
-/* the actual keycap, floating above the socket via translateZ */
 .key{
-  position:absolute;
-  inset:0;
-  border-radius:7px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:12px;
-  font-weight:700;
-  color:#e7edf6;
-  cursor:pointer;
-  user-select:none;
+  position:absolute; inset:0; border-radius:7px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:12px; font-weight:700; color:#e7edf6;
+  cursor:pointer; user-select:none;
   background:linear-gradient(165deg,#3a4252,#1c212b);
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,0.25),
@@ -169,30 +193,19 @@ body{
 .key.placeTarget{ outline:2px dashed #ffd23f; outline-offset:1px; }
 
 .charmBadge{
-  position:absolute;
-  top:-8px;
-  right:-8px;
-  width:18px;
-  height:18px;
-  border-radius:50%;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:11px;
-  background:#0e1119;
-  border:2px solid #888;
-  transform:translateZ(2px);
+  position:absolute; top:-8px; right:-8px; width:18px; height:18px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center; font-size:11px;
+  background:#0e1119; border:2px solid #888; transform:translateZ(2px);
 }
-.charmBadge.common{border-color:#666666;box-shadow:0 0 4px #989899;}
+.charmBadge.common{border-color:#b8c1cf;box-shadow:0 0 4px #b8c1cf;}
 .charmBadge.rare{border-color:#4aa3ff;box-shadow:0 0 6px #4aa3ff;}
-.charmBadge.epic{border-color:#482072;box-shadow:0 0 7px #b26cff;}
-.charmBadge.legendary{border-color:#ee9a13;box-shadow:0 0 9px #ffb238;}
+.charmBadge.epic{border-color:#b26cff;box-shadow:0 0 7px #b26cff;}
+.charmBadge.legendary{border-color:#ffb238;box-shadow:0 0 9px #ffb238;}
 
-
+/* ---------- KEYCAP COSMETICS ---------- */
 .key.glass{
   background:linear-gradient(165deg,rgba(150,220,255,0.55),rgba(150,220,255,0.08));
-  border:1px solid rgba(200,240,255,0.7);
-  color:#eafcff;
+  border:1px solid rgba(200,240,255,0.7); color:#eafcff;
   box-shadow:inset 0 2px 0 rgba(255,255,255,0.6), inset 0 -8px 10px rgba(100,200,255,0.15), 0 0 12px rgba(150,220,255,0.35);
 }
 .key.neon{
@@ -262,7 +275,9 @@ body{
   background-image:linear-gradient(#0f3d2a 1px, transparent 1px), linear-gradient(90deg, #0f3d2a 1px, transparent 1px);
   background-size:8px 8px;
   box-shadow:inset 0 0 8px #00ff9d55, 0 0 10px #00ff9d55;
+  animation:circuitPulse 2s ease-in-out infinite;
 }
+@keyframes circuitPulse{ 0%,100%{box-shadow:inset 0 0 8px #00ff9d55, 0 0 10px #00ff9d55;} 50%{box-shadow:inset 0 0 12px #00ff9d99, 0 0 18px #00ff9d99;} }
 .key.marble{
   background:linear-gradient(135deg,#f5f5f5 0%,#dcdcdc 20%,#ffffff 35%,#c9c9c9 55%,#f0f0f0 75%,#d5d5d5 100%);
   color:#2a2a2a;
@@ -277,11 +292,6 @@ body{
   background-size:300% 300%; color:#241033;
   animation:holoShift 3s linear infinite;
 }
-.key.liminal{
-  font-family:monospace;
-  color:#5a4f2a;
-}
-.key.galaxy{background:linear-gradient(120deg,#0b0f2a,#1b1f5a,#3a0ca3,#7209b7,#f72585,#4cc9f0,#0b0f2a);background-size:400% 400%;color:#e0e6ff;animation:galaxyShift 6s ease infinite;box-shadow:0 0 12px rgba(114,9,183,0.6),0 0 24px rgba(76,201,240,0.4);}
 @keyframes holoShift{ 0%{background-position:0% 50%;} 100%{background-position:300% 50%;} }
 .key.cosmic{
   background:
@@ -292,16 +302,94 @@ body{
     linear-gradient(165deg,#1a0a3a,#05020f);
   color:#d0c0ff;
   box-shadow:inset 0 0 10px #7a4bff88, 0 0 14px #7a4bff55;
+  animation:cosmicTwinkle 4s ease-in-out infinite;
+}
+@keyframes cosmicTwinkle{ 0%,100%{filter:brightness(1);} 50%{filter:brightness(1.2);} }
+.key.galaxy{
+  background:linear-gradient(120deg,#0b0f2a,#1b1f5a,#3a0ca3,#7209b7,#f72585,#4cc9f0,#0b0f2a);
+  background-size:400% 400%; color:#e0e6ff;
+  animation:galaxyShift 6s ease infinite;
+  box-shadow:0 0 12px rgba(114,9,183,0.6), 0 0 24px rgba(76,201,240,0.4);
+}
+@keyframes galaxyShift{ 0%{background-position:0% 50%;} 50%{background-position:100% 50%;} 100%{background-position:0% 50%;} }
+
+/* Liminal — Backrooms: damp mustard-yellow wallpaper, water stains, dying fluorescent flicker */
+.key.liminal{
+  background:
+    repeating-linear-gradient(90deg, rgba(110,95,35,0.16) 0px, rgba(110,95,35,0.16) 2px, transparent 2px, transparent 20px),
+    radial-gradient(ellipse 50px 34px at 22% 82%, rgba(80,66,18,0.35), transparent 70%),
+    radial-gradient(ellipse 40px 26px at 78% 18%, rgba(80,66,18,0.28), transparent 70%),
+    radial-gradient(ellipse 36px 50px at 85% 70%, rgba(70,58,16,0.22), transparent 70%),
+    linear-gradient(175deg, #ddc96a 0%, #cbb958 45%, #a99638 100%);
+  color:#463c16;
+  font-family:"Courier New",monospace;
+  text-shadow:0 1px 0 rgba(255,250,210,0.35);
+  box-shadow:
+    inset 0 2px 0 rgba(255,250,210,0.3),
+    inset 0 -9px 13px rgba(55,45,10,0.4),
+    0 0 9px rgba(180,160,60,0.3);
+  animation:liminalFlicker 5.5s infinite;
 }
 @keyframes liminalFlicker{
-  0%,100%{filter:brightness(1);}
-  50%{filter:brightness(0.92);}
+  0%,19%,21%,52%,54%,100%{ filter:brightness(1); }
+  20%{ filter:brightness(0.7); }
+  53%{ filter:brightness(1.2); }
+  70%{ filter:brightness(0.85); }
+  71%{ filter:brightness(1); }
 }
 
-.key.liminal{
-  animation:liminalFlicker 6s infinite;
+/* new animated cosmetics */
+.key.aurora{
+  background:linear-gradient(120deg,#0a3d2e,#1a6b4a,#0a2d5a,#3a1a6b,#0a3d2e);
+  background-size:300% 300%; color:#d0ffe8;
+  animation:auroraShift 5s ease infinite;
+  box-shadow:0 0 14px rgba(50,220,150,0.4), inset 0 0 10px rgba(50,220,150,0.25);
 }
-@keyframes galaxyShift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+@keyframes auroraShift{ 0%{background-position:0% 50%;} 50%{background-position:100% 50%;} 100%{background-position:0% 50%;} }
+.key.matrix{
+  background:#020805; color:#7cff9c;
+  background-image:repeating-linear-gradient(180deg, rgba(50,255,120,0.18) 0px, rgba(50,255,120,0.18) 2px, transparent 2px, transparent 10px);
+  background-size:100% 40px;
+  font-family:"Courier New",monospace;
+  box-shadow:inset 0 0 10px rgba(50,255,120,0.35), 0 0 12px rgba(50,255,120,0.3);
+  animation:matrixRain 1.4s linear infinite;
+}
+@keyframes matrixRain{ 0%{background-position:0 0;} 100%{background-position:0 40px;} }
+.key.plasma{
+  background:radial-gradient(circle at 50% 50%, #ff6cf0, #6c2fd8 55%, #1a0a2e 100%);
+  color:#ffe0ff;
+  box-shadow:0 0 16px rgba(255,108,240,0.55), inset 0 0 14px rgba(255,108,240,0.35);
+  animation:plasmaPulse 2.4s ease-in-out infinite;
+}
+@keyframes plasmaPulse{ 0%,100%{filter:brightness(1) saturate(1);} 50%{filter:brightness(1.3) saturate(1.4);} }
+
+/* prestige-exclusive cosmetics */
+.key.prestigeBronze{
+  background:linear-gradient(165deg,#d99a63,#8a5426 60%,#5a3414); color:#fff0dc;
+  box-shadow:inset 0 2px 0 rgba(255,220,180,0.4), 0 0 10px rgba(200,130,60,0.4);
+}
+.key.prestigeSilver{
+  background:linear-gradient(165deg,#f0f2f5,#b8c0cc 50%,#7a8494); color:#161a20;
+  box-shadow:inset 0 2px 0 rgba(255,255,255,0.8), 0 0 12px rgba(200,210,225,0.55);
+}
+.key.prestigeGold{
+  background:linear-gradient(165deg,#fff6c9,#ffd23f 45%,#8a5c00); color:#3a2600;
+  box-shadow:inset 0 2px 0 rgba(255,255,255,0.8), 0 0 18px rgba(255,210,63,0.6);
+  animation:neonPulse 2s ease-in-out infinite;
+}
+.key.prestigeDiamond{
+  background:linear-gradient(165deg,#e8fbff,#9be8ff 45%,#2aa5cc); color:#062533;
+  box-shadow:inset 0 2px 0 rgba(255,255,255,0.9), 0 0 20px rgba(150,230,255,0.7);
+  animation:cosmicTwinkle 2.4s ease-in-out infinite;
+}
+.key.omega{
+  background:linear-gradient(120deg,#ff5c5c,#ffd23f,#5cff8a,#5cd2ff,#b26cff,#ff5c5c);
+  background-size:400% 400%; color:#05060a; font-weight:900;
+  box-shadow:0 0 22px rgba(255,255,255,0.5), inset 0 0 14px rgba(255,255,255,0.4);
+  animation:omegaShift 2.5s linear infinite;
+}
+@keyframes omegaShift{ 0%{background-position:0% 50%;} 100%{background-position:400% 50%;} }
+
 /* ---------- START SCREEN ---------- */
 .startScreen{
   position:fixed; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:18px;
@@ -336,7 +424,7 @@ body{
 }
 .tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px;}
 .tab{
-  flex:1; min-width:60px; text-align:center; padding:8px 4px; font-size:10.5px; border-radius:8px;
+  flex:1; min-width:56px; text-align:center; padding:8px 4px; font-size:10px; border-radius:8px;
   background:#1a2030; cursor:pointer; border:1px solid transparent;
 }
 .tab.active{background:#242c42;border-color:#00f5ff;color:#00f5ff;}
@@ -399,6 +487,34 @@ body{
 .sortRow .iconbtn{flex:1;font-size:10px;padding:6px;}
 .sortRow .iconbtn.active{background:#242c42;border-color:#00f5ff;color:#00f5ff;}
 
+/* prestige tab */
+.prestigeHeader{
+  padding:14px; border-radius:10px; background:linear-gradient(160deg,#2a2050,#140f24);
+  border:1px solid #7a4bff; text-align:center;
+}
+.prestigeHeader .bigIcon{font-size:34px;}
+.prestigeHeader .name{font-weight:800;font-size:15px;margin-top:4px;}
+.prestigeHeader .mult{color:#2fbf71;font-size:12px;margin-top:2px;}
+.progressBarOuter{ background:#0e1119; border-radius:6px; height:10px; overflow:hidden; margin-top:10px; }
+.progressBarInner{ background:linear-gradient(90deg,#00f5ff,#7a4bff); height:100%; transition:width 0.3s; }
+.progressLabel{ font-size:10px; opacity:0.7; margin-top:4px; }
+.prestigeBtn{
+  width:100%; margin-top:12px; padding:12px; border-radius:8px; border:none; cursor:pointer;
+  background:linear-gradient(90deg,#00f5ff,#7a4bff); color:#05060a; font-weight:800; font-size:13px;
+}
+.prestigeBtn:disabled{ opacity:0.35; cursor:not-allowed; }
+.tierRow{
+  display:flex; gap:10px; align-items:center; padding:9px; border-radius:8px; background:#1a2030;
+  border:1px solid transparent; font-size:11px;
+}
+.tierRow.claimed{border-color:#2fbf71;}
+.tierRow.current{border-color:#00f5ff;background:#17324a;}
+.tierRow .tIcon{font-size:20px;width:26px;text-align:center;}
+.tierRow .tBody{flex:1;}
+.tierRow .tName{font-weight:700;font-size:12px;}
+.tierRow .tReward{opacity:0.65;font-size:10px;margin-top:2px;}
+.tierRow .tThresh{opacity:0.5;font-size:9px;white-space:nowrap;}
+
 .placeBanner{
   position:fixed; top:60px; left:50%; transform:translateX(-50%);
   background:#ffd23f; color:#1a1200; padding:8px 16px; border-radius:8px;
@@ -409,14 +525,18 @@ body{
 .revealModal{ position:fixed;inset:0; background:rgba(0,0,0,0.75); display:none; align-items:center; justify-content:center; z-index:50; }
 .revealModal.show{display:flex;}
 .revealCard{
-  width:210px;height:260px; border-radius:16px; background:linear-gradient(160deg,#1a2030,#0a0d14);
+  width:220px;min-height:260px; border-radius:16px; background:linear-gradient(160deg,#1a2030,#0a0d14);
   display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px;
-  border:2px solid #444; animation:shake 0.5s ease; padding:10px; text-align:center;
+  border:2px solid #444; animation:shake 0.5s ease; padding:14px; text-align:center;
 }
 .revealCard.common{border-color:#b8c1cf;}
 .revealCard.rare{border-color:#4aa3ff;box-shadow:0 0 24px #4aa3ff55;}
 .revealCard.epic{border-color:#b26cff;box-shadow:0 0 24px #b26cff55;}
 .revealCard.legendary{border-color:#ffb238;box-shadow:0 0 32px #ffb23888;}
+.revealCard.prestige{
+  border-color:#ffd23f;
+  box-shadow:0 0 40px rgba(255,210,63,0.6);
+}
 @keyframes shake{
   0%,100%{transform:rotate(0);} 20%{transform:rotate(-8deg);} 40%{transform:rotate(8deg);}
   60%{transform:rotate(-5deg);} 80%{transform:rotate(5deg);}
@@ -445,10 +565,7 @@ body{
 }
 </style>
 </head>
-
-  <body>
-
-
+<body>
 
 <div class="startScreen" id="startScreen">
   <div class="logo">⌨ KeyPress</div>
@@ -459,6 +576,7 @@ body{
 <div class="gameWrap" id="gameWrap">
   <div class="topbar">
     <div class="stats">
+      <span class="playerBadge" id="playerBadge" style="display:none;"></span>
       <span>Clicks: <b id="statClicks">0</b></span>
       <span>CPS: <b id="statCps">0</b></span>
       <span>Total: <b id="statTotal">0</b></span>
@@ -467,6 +585,7 @@ body{
     <div class="topbtns">
       <button class="iconbtn" id="changeKeyBtn">Change Key</button>
       <button class="iconbtn" id="muteBtn">🔊</button>
+      <button class="iconbtn prestigeBtn2" id="prestigeShortcutBtn">✨ Prestige</button>
       <button class="iconbtn" id="shopBtn">Shop (O)</button>
       <button class="iconbtn" id="settingsBtn">⚙</button>
     </div>
@@ -480,6 +599,7 @@ body{
 </div>
 
 <div class="placeBanner" id="placeBanner">Click a key to place this charm ✦ (Esc to cancel)</div>
+<div class="guestBanner" id="guestBanner"><span>Playing as guest — progress only saves to this browser.</span></div>
 
 <!-- SHOP -->
 <div class="shop" id="shop">
@@ -490,6 +610,7 @@ body{
       <div class="tab" data-tab="boxes">Boxes</div>
       <div class="tab" data-tab="collection">Charms</div>
       <div class="tab" data-tab="market">Market</div>
+      <div class="tab" data-tab="prestige">Prestige</div>
     </div>
 
     <div class="section active" id="section-cosmetics">
@@ -520,6 +641,12 @@ body{
         <button class="iconbtn" data-sort="condition">By condition</button>
       </div>
       <div id="marketList"></div>
+    </div>
+
+    <div class="section" id="section-prestige">
+      <div class="title">Prestige</div>
+      <div id="prestigeHeader"></div>
+      <div id="prestigeTierList" style="display:flex;flex-direction:column;gap:6px;margin-top:8px;"></div>
     </div>
   </div>
 </div>
@@ -564,60 +691,6 @@ body{
 </div>
 
 <script>
-
-  async function submitScore(score) {
-    const player = Gamplo.getPlayer();
-
-    if (!player) return;
-
-    await fetch("https://your-server.com/leaderboard/submit", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-            playerId: player.id,
-            name: player.displayName,
-            avatar: player.image,
-            score: score
-        })
-    });
-}
-async function loadLeaderboard() {
-    try {
-        const res = await fetch("https://your-server.com/leaderboard/top");
-        const data = await res.json();
-        renderLeaderboard(data);
-    } catch (err) {
-        console.warn("Unable to load leaderboard", err);
-    }
-}
-function applyFrame(frameObj){
-  const key = document.querySelector(".key.active") || document.querySelector(".key");
-
-  if(!key) return;
-
-  key.style.background = frameObj.frame;
-  key.style.boxShadow = frameObj.glow;
-  key.style.backdropFilter = `blur(${frameObj.blur})`;
-}
-function renderLeaderboard(data) {
-    const box = document.getElementById("leaderboard");
-    if (!box) return;
-    box.innerHTML = "";
-
-    data.forEach((p, i) => {
-        const el = document.createElement("div");
-        el.className = "lb-row";
-        el.innerHTML = `
-            <span>#${i + 1}</span>
-            <img src="${p.avatar || ''}" width="24"/>
-            <b>${p.name}</b>
-            <span>${p.score}</span>
-        `;
-        box.appendChild(el);
-    });
-}
 /* =========================================================
    KEYBOARD LAYOUT
 ========================================================= */
@@ -654,24 +727,45 @@ const cosmetics = [
   {id:"circuit", name:"Circuit", cost:2100, cls:"circuit"},
   {id:"holo",    name:"Holographic", cost:2800, cls:"holo"},
   {id:"cosmic",  name:"Cosmic",  cost:3400, cls:"cosmic"},
+  {id:"liminal", name:"Liminal", cost:2600, cls:"liminal"},
   {id:"galaxy",  name:"Galaxy",  cost:4500, cls:"galaxy"},
- {id:"liminal",name:"Liminal",cost:5000,frame:"linear-gradient(180deg,#e3da8f,#d8cf7e,#d0c66f),repeating-linear-gradient(90deg,rgba(120,110,60,0.06) 0px,transparent 4px,transparent 18px)",glow:"0 0 10px rgba(255,235,140,0.25),inset 0 0 10px rgba(90,80,40,0.15)",blur:"0px",cls:"liminal"}
+  {id:"aurora",  name:"Aurora",  cost:4800, cls:"aurora"},
+  {id:"matrix",  name:"Matrix",  cost:5000, cls:"matrix"},
+  {id:"plasma",  name:"Plasma",  cost:5200, cls:"plasma"}
 ];
 
-const boardThemes = [
-  {id:"default",      name:"Default",          cost:0,   frame:"#12151c", glow:"transparent", blur:"0px"},
-  {id:"rgb",          name:"RGB Backlight",   cost:800, frame:"#141414", glow:"conic-gradient(red,yellow,lime,cyan,blue,magenta,red)", blur:"26px"},
-  {id:"underblue",    name:"Blue Underglow",  cost:400, frame:"#0c1420", glow:"#2a6bff", blur:"30px"},
-  {id:"underpurple",  name:"Purple Underglow",cost:400, frame:"#170c26", glow:"#8a2aff", blur:"30px"},
-  {id:"chrome",       name:"Chrome Frame",cost:600,frame:"linear-gradient(145deg,#f5f7fa 0%,#c3c9d1 20%,#8b93a0 40%,#e1e5ea 60%,#6e7682 80%,#ffffff 100%)",glow:"0 0 10px rgba(200,210,230,0.6),inset 0 0 6px rgba(255,255,255,0.8)",blur:"0px"},
-  {id:"woodframe",    name:"Wood Frame",      cost:750, frame:"linear-gradient(145deg,#8b5a2b 0%,#6b3f1a 25%,#3e240f 50%,#6b3f1a 75%,#2b1a0d 100%)",glow:"0 0 8px rgba(120,72,30,0.4),inset 0 0 6px rgba(255,200,120,0.15)",blur:"0px"}
+// prestige-exclusive cosmetics — never purchasable, only granted by prestiging
+const prestigeCosmetics = [
+  {id:"prestigeBronze",  name:"Prestige Bronze",  cls:"prestigeBronze"},
+  {id:"prestigeSilver",  name:"Prestige Silver",  cls:"prestigeSilver"},
+  {id:"prestigeGold",    name:"Prestige Gold",    cls:"prestigeGold"},
+  {id:"prestigeDiamond", name:"Prestige Diamond", cls:"prestigeDiamond"},
+  {id:"omega",           name:"Omega",            cls:"omega"}
 ];
+const allCosmetics = cosmetics.concat(prestigeCosmetics);
+
+const boardThemes = [
+  {id:"default",     name:"Default",          cost:0,    bg:"linear-gradient(160deg,#12151c,#04050a)", glow:"transparent", blur:"0px"},
+  {id:"rgb",         name:"RGB Backlight",    cost:800,  bg:"linear-gradient(160deg,#141414,#04050a)", glow:"conic-gradient(red,yellow,lime,cyan,blue,magenta,red)", blur:"26px", extraCls:"themeRgb"},
+  {id:"underblue",   name:"Blue Underglow",   cost:400,  bg:"linear-gradient(160deg,#0c1420,#04050a)", glow:"#2a6bff", blur:"30px"},
+  {id:"underpurple", name:"Purple Underglow", cost:400,  bg:"linear-gradient(160deg,#170c26,#04050a)", glow:"#8a2aff", blur:"30px"},
+  {id:"chrome",      name:"Chrome Frame",     cost:600,  bg:"linear-gradient(145deg,#f5f7fa 0%,#c3c9d1 20%,#8b93a0 40%,#e1e5ea 60%,#6e7682 80%,#ffffff 100%)", glow:"#c7ccd6", blur:"20px"},
+  {id:"woodframe",   name:"Wood Frame",       cost:750,  bg:"linear-gradient(145deg,#8b5a2b 0%,#6b3f1a 25%,#3e240f 50%,#6b3f1a 75%,#2b1a0d 100%)", glow:"#7a4b28", blur:"20px"},
+  {id:"pulse",       name:"Pulse Frame",      cost:1100, bg:"linear-gradient(160deg,#1a0f22,#04050a)", glow:"#ff4fd8", blur:"32px", extraCls:"themePulse"},
+  {id:"aurora",      name:"Aurora Frame",     cost:1400, bg:"linear-gradient(120deg,#0a3d2e,#1a6b4a,#0a2d5a,#3a1a6b,#0a3d2e)", glow:"#3ae0a0", blur:"30px", extraCls:"themeAurora"}
+];
+
+// prestige-exclusive board themes — never purchasable, only granted by prestiging
+const prestigeThemes = [
+  {id:"solsticeframe", name:"Solstice Frame",  bg:"linear-gradient(120deg,#3a1a00,#a05a00,#3a1a6b,#3a1a00)", glow:"#ffb238", blur:"34px", extraCls:"themeSolstice"},
+  {id:"voidframe",     name:"Void Frame",      bg:"linear-gradient(160deg,#0a0014,#1a0030,#000)", glow:"#8a2aff", blur:"36px", extraCls:"themeVoid"},
+  {id:"celestialhalo", name:"Celestial Halo",  bg:"linear-gradient(160deg,#141420,#04050a)", glow:"conic-gradient(red,orange,yellow,green,blue,violet,red)", blur:"38px", extraCls:"themeCelestial"},
+  {id:"omegaaura",     name:"Omega Aura",      bg:"linear-gradient(120deg,#3a0000,#3a2a00,#003a1a,#00203a,#2a003a,#3a0000)", glow:"conic-gradient(red,orange,yellow,green,blue,violet,red)", blur:"42px", extraCls:"themeOmega"}
+];
+const allThemes = boardThemes.concat(prestigeThemes);
 
 /* =========================================================
    CHARM CATALOG — generated once at load from theme word-lists.
-   Each box has its own catalog so drop pools stay distinct.
-   Every charm template gets a fixed rarity, a unique-ish price
-   (jittered around its rarity's base) and a cash-boost %.
 ========================================================= */
 const RARITY_BASE_PRICE = {common:20, rare:60, epic:150, legendary:400};
 const RARITY_BOOST      = {common:1,  rare:2,  epic:4,   legendary:8};
@@ -683,27 +777,6 @@ function shuffleArr(arr){
   }
   return arr;
 }
-function createAIPlayer(difficulty){
-  return {
-    cps: 4 + Math.random()*difficulty, // base speed
-    variance: 0.5 + Math.random()*1.5,
-    score: 0
-  };
-}
-
-function updateAI(ai, dt){
-  const fluctuation = (Math.random()-0.5) * ai.variance;
-  ai.score += Math.max(0, ai.cps + fluctuation) * dt;
-}
-function checkTiming() {
-    const now = Date.now();
-
-    if (lastClickTime && now - lastClickTime < 15) {
-        triggerVerification();
-    }
-
-    lastClickTime = now;
-}
 function rollRarityFromWeights(w){
   const total = w.common + w.rare + w.epic + w.legendary;
   let r = Math.random()*total;
@@ -714,7 +787,6 @@ function rollRarityFromWeights(w){
   if(r < w.epic) return "epic";
   return "legendary";
 }
-
 function buildCatalog(prefix, adjectives, nouns, emojis, count, weights){
   const combos = [];
   adjectives.forEach(a => nouns.forEach(n => combos.push(a+" "+n)));
@@ -742,10 +814,10 @@ const STARTER_NOUN = ["Star","Droplet","Clover","Orb","Spark","Pebble","Leaf","B
 const STARTER_EMOJI = ["⭐","💧","🍀","🔵","✨","🪨","🍃","🔴"];
 
 const ELEMENTAL_ADJ = ["Blazing","Frozen","Storming","Rooted","Charged","Radiant","Shadowed","Lunar","Solar","Molten","Crystalline","Windswept","Volcanic","Glacial","Thundering"];
-const ELEMENTAL_NOUN = ["Ember","Droplet","Gust","Boulder","Spark","Sprout","Shard","Eclipse","Flare","Cinder","Frost","Gale","Quake","Tide","Bolt", 'Inferno', 'Tempest', 'Avalanche', 'Tsunami', 'Volcano'];
+const ELEMENTAL_NOUN = ["Ember","Droplet","Gust","Boulder","Spark","Sprout","Shard","Eclipse","Flare","Cinder","Frost","Gale","Quake","Tide","Bolt","Inferno","Tempest","Avalanche","Tsunami","Volcano"];
 const ELEMENTAL_EMOJI = ["🔥","💧","🌪️","🪨","⚡","🌿","❄️","☀️","🌑","🌋","🧊","🍂","🌊","🌈","🌤️"];
 
-const MYSTIC_ADJ = ["Arcane","Enchanted","Ancient","Cursed","Blessed","Ethereal","Runic","Celestial","Forbidden","Sacred","Whispering","Hidden","Astral","Ghostly","Timeworn", 'Occult','Mystical','Divine','Shadowy','Eldritch'];
+const MYSTIC_ADJ = ["Arcane","Enchanted","Ancient","Cursed","Blessed","Ethereal","Runic","Celestial","Forbidden","Sacred","Whispering","Hidden","Astral","Ghostly","Timeworn","Occult","Mystical","Divine","Shadowy","Eldritch"];
 const MYSTIC_NOUN = ["Orb","Ward","Rune","Sigil","Relic","Talisman","Charm","Amulet","Grimoire","Idol","Totem","Vial","Scroll","Crystal","Seal"];
 const MYSTIC_EMOJI = ["🔮","💫","✨","🌟","🪄","🧿","🕯️","📿","⚱️","🪬","📜","🔯","🧪","🗝️","💠"];
 
@@ -753,32 +825,17 @@ const VAULT_ADJ = ["Eternal","Divine","Forbidden","Radiant","Voidborn","Immortal
 const VAULT_NOUN = ["Core","Crown","Seal","Heart","Throne","Codex","Aegis","Nexus","Beacon","Vault"];
 const VAULT_EMOJI = ["👑","🏆","🌌","⚜️","💎","🔱","🪙","🛡️","🌠","🔆"];
 
-const Nebula_ADJ = ["Astral","Ethereal","Celestial","Void","Stellar","Cosmic","Nova","Galactic","Radiant","Eclipsebound", 'Quantum', 'Interstellar', 'Nebulous', 'Luminous', 'Darkmatter', 'Supernova', 'Wormhole', 'Pulsar', 'Quasar', 'Exoplanet'];
-const Nebula_NOUN = ["Nebula","Supercluster","Astroid","Cosmos","Starforge","Horizon","Darkrift","Starlight","Galaxy","Astral Nexus", 'Alien', 'Wormhole', 'Quasar', 'Pulsar', 'Black Hole', 'White Dwarf', 'Red Giant', 'Neutron Star', 'Exoplanet', 'Comet', 'Meteorite'];
-const Nebula_EMOJI = ["🌌","✨","🌠","🪐","🌑","💫","🔮","⚡","🛸","👁️", '🛸'];
+const NEBULA_ADJ = ["Astral","Ethereal","Celestial","Void","Stellar","Cosmic","Nova","Galactic","Radiant","Eclipsebound","Quantum","Interstellar","Nebulous","Luminous","Darkmatter","Supernova","Wormhole","Pulsar","Quasar","Exoplanet"];
+const NEBULA_NOUN = ["Nebula","Supercluster","Asteroid","Cosmos","Starforge","Horizon","Darkrift","Starlight","Galaxy","Nexus","Comet","Meteorite","Black Hole","White Dwarf","Red Giant","Neutron Star","Void Rift","Star Cluster","Ring System","Solar Flare"];
+const NEBULA_EMOJI = ["🌌","✨","🌠","🪐","🌑","💫","🔮","⚡","🛸","👁️"];
 
-const MONSTER_ADJ = ["Tiny","Grumpy","Bouncy","Sneaky","Sparkly","Rusty","Fuzzy","Wobbly","Zappy","Gloopy","Spiky","Shiny","Sleepy","Feisty","Chunky","Glowing","Squishy","Cheeky","Mossy","Frosty","Slimey","Cursed","Wild","Brave","Soggy","Electric","Toothy","Dizzy","Burly","Hexed", 'Evil', 'Dark', 'Feral', 'Savage', 'Vicious', 'Malevolent', 'Sinister', 'Monstrous', 'Terrifying', 'Dreadful', 'Nightmarish'];
+const MONSTER_ADJ = ["Tiny","Grumpy","Bouncy","Sneaky","Sparkly","Rusty","Fuzzy","Wobbly","Zappy","Gloopy","Spiky","Shiny","Sleepy","Feisty","Chunky","Glowing","Squishy","Cheeky","Mossy","Frosty","Slimy","Wild","Brave","Soggy","Electric","Toothy","Dizzy","Burly"];
+const MONSTER_NOUN = ["Blob","Sprite","Imp","Gremlin","Critter","Beastie","Wisp","Goblin","Sprocket","Muncher","Nibbler","Snapper","Hopper","Glimmer","Grub","Fang","Whisker","Scamp","Puff","Gloop","Drifter","Chomper","Howler","Biter","Spore","Crawler","Slither","Tick","Rumbler"];
+const MONSTER_EMOJI = ["👾","🐲","🐙","🦑","🐌","🐛","🦎","🐸","🦖","🦕","👹","👺","🤖","🎃","🦠","🐺","🦇","🐍","🦂","🦥"];
 
-const MONSTER_NOUN = ["Blob","Sprite","Imp","Gremlin","Critter","Beastie","Wisp","Goblin","Sprocket","Muncher","Nibbler","Snapper","Hopper","Glimmer","Grub","Fang","Whisker","Scamp","Puff","Gloop","Drifter","Chomper","Howler","Biter","Spore","Crawler","Slither","Maw","Tick","Rumbler", 'Demon', 'Orc', 'Troll', 'Dragon', 'Wraith', 'Specter', 'Ghoul', 'Vampire', 'Zombie', 'Werewolf', 'Kraken', 'Hydra'];
-
-const MONSTER_EMOJI = ["😈","🧌", "🧟","🦑","⚰️","👻","👾","🐲","🐙","🦑","🐌","🐛","🦎","🐸","🦖","🦕","👹","👺","🤖","🎃","🦠","🐺","🦇","🐍","🦂","🦥","💥","⚡","🌪️","🔥","❄️","🌿","☠️","💀","👁️","🧿"];
-
-const OG_ADJ = [
-  "Prototype","Unreleased","Alpha-Tested","Dev-Only","Patchwork","Corrupted","Rollbacked","Pre-Launch","Decommissioned","Deprecated",
-  "Glitchbound","System-Lost","Admin-Sealed","Hotfixed","Unrendered","Ghosted","Broken-State","Legacy-Scripted","Beta-Forged","Kernel-Touched",
-  "Archive-Raw","Nullified","Overflowing","Debugged","Hidden-State","Quantum-Shifted","Error-Spawned","Manual-Injected","Time-Sliced","Removed-From-Table"
-];
-
-const OG_NOUN = [
-  "Build","Instance","Relicfile","Datashard","Cache","Backup","Packet","Module","Fragment","Entry","Log","Process","Seed","Trace","Fork",
-  "Branch","Snapshot","Protocol","Registry","Instance-Core","Ghost-File","Runtime","Exception","Overwrite","Memory-Slice","Index","Packet-Core",
-  "System Echo","Deleted Entry","Lost Build","Hidden Object","Root Signal"
-];
-
-const OG_EMOJI = [
-  "🧾","🗂️","🧬","🧠","💾","📼","🧷","🪫","⚙️","🧰","🧪","🧫","📡","🛰️","🖥️","⌨️","🗃️","📁","🧯","🔧",
-  "⚠️","⛓️","🧿","🪬","👁️","💀","☢️","🕳️","🫥","🫧"
-];
+const OG_ADJ = ["Prototype","Unreleased","Alpha-Tested","Patchwork","Rollbacked","Pre-Launch","Retired","Legacy","Hotfixed","Archived"];
+const OG_NOUN = ["Build","Instance","Datashard","Cache","Backup","Packet","Module","Fragment","Snapshot","Registry"];
+const OG_EMOJI = ["🧾","🗂️","🧬","🧠","💾","📼","🧷","⚙️","🧰","🖥️"];
 
 const BOXES = [
   {id:"starter",   name:"Starter Box",   cost:100,  catalog:"starter",   desc:"Basic charms to get you going.",           weights:{common:65,rare:25,epic:8, legendary:2}},
@@ -786,8 +843,8 @@ const BOXES = [
   {id:"mystic",    name:"Mystic Box",    cost:500,  catalog:"mystic",    desc:"Arcane relics and enchanted trinkets.",    weights:{common:45,rare:30,epic:18,legendary:7}},
   {id:"monster",   name:"Monster Box",   cost:400,  catalog:"monster",   desc:"200 cartoony critters to collect.",        weights:{common:55,rare:27,epic:14,legendary:4}},
   {id:"vault",     name:"Vault Box",     cost:1000, catalog:"vault",     desc:"The rarest treasures in the game.",        weights:{common:30,rare:30,epic:28,legendary:12}},
-  {id:"nebula",    name:"Nebula Box",    cost:5000, catalog:"nebula",    desc:"The Galaxy is yours!",                    weights:{common:35,rare:30,epic:25,legendary:17}},
-  {id:"og",    name:"OG Box",    cost:6000, catalog:"og",    desc:"Thanks for being an OG!",                    weights:{common:20,rare:15,epic:14,legendary:10}},
+  {id:"nebula",    name:"Nebula Box",    cost:5000, catalog:"nebula",    desc:"The galaxy, in charm form.",                weights:{common:35,rare:30,epic:25,legendary:17}},
+  {id:"og",        name:"OG Box",        cost:6000, catalog:"og",        desc:"Weird little relics from early builds.",   weights:{common:20,rare:15,epic:14,legendary:10}}
 ];
 
 const CATALOGS = {
@@ -796,16 +853,15 @@ const CATALOGS = {
   mystic:    buildCatalog("mystic",    MYSTIC_ADJ,    MYSTIC_NOUN,    MYSTIC_EMOJI,    100, BOXES[2].weights),
   monster:   buildCatalog("monster",   MONSTER_ADJ,   MONSTER_NOUN,   MONSTER_EMOJI,   200, BOXES[3].weights),
   vault:     buildCatalog("vault",     VAULT_ADJ,     VAULT_NOUN,     VAULT_EMOJI,     60,  BOXES[4].weights),
-  nebula:    buildCatalog("nebula",    Nebula_ADJ,    Nebula_NOUN,    Nebula_EMOJI,    70,  BOXES[5].weights),
+  nebula:    buildCatalog("nebula",    NEBULA_ADJ,    NEBULA_NOUN,    NEBULA_EMOJI,    70,  BOXES[5].weights),
   og:        buildCatalog("og",        OG_ADJ,        OG_NOUN,        OG_EMOJI,        80,  BOXES[6].weights)
 };
-
 
 function openBoxRoll(box){
   const rarity = rollRarityFromWeights(box.weights);
   const catalog = CATALOGS[box.catalog];
   let candidates = catalog.filter(c => c.rarity === rarity);
-  if(candidates.length === 0) candidates = catalog; // safety fallback
+  if(candidates.length === 0) candidates = catalog;
   const template = candidates[Math.floor(Math.random()*candidates.length)];
   return {
     instanceId: "i" + Date.now() + Math.floor(Math.random()*1000000),
@@ -818,6 +874,43 @@ function openBoxRoll(box){
     condition: 100,
     boxId: box.id
   };
+}
+
+/* =========================================================
+   PRESTIGE SYSTEM — 10 tiers + a final "Omega" capstone tier.
+   Prestiging cashes in your current click balance (reset to 0)
+   in exchange for a PERMANENT click multiplier plus an exclusive
+   reward that can't be obtained any other way. Everything you've
+   already unlocked (cosmetics/themes/charms) is kept.
+========================================================= */
+const PRESTIGE_TIERS = [
+  {level:1,  name:"Awakened",     icon:"🥉", threshold:5000,        multAdd:5,  reward:{cosmetic:"prestigeBronze"},                       desc:"+5% permanent boost · Prestige Bronze keycap"},
+  {level:2,  name:"Resolute",     icon:"🔥", threshold:15000,       multAdd:5,  reward:{charmName:"Ember Core", charmIcon:"🔥", charmRarity:"epic", charmBoost:6},
+   desc:"+5% permanent boost · guaranteed Ember Core charm"},
+  {level:3,  name:"Ascendant",    icon:"🥈", threshold:40000,       multAdd:5,  reward:{cosmetic:"prestigeSilver"},                       desc:"+5% permanent boost · Prestige Silver keycap"},
+  {level:4,  name:"Vanguard",     icon:"☀️", threshold:100000,      multAdd:6,  reward:{theme:"solsticeframe"},                           desc:"+6% permanent boost · Solstice Frame (animated board)"},
+  {level:5,  name:"Luminous",     icon:"🌠", threshold:250000,      multAdd:6,  reward:{charmName:"Starfall Shard", charmIcon:"🌠", charmRarity:"legendary", charmBoost:10, nameColor:true},
+   desc:"+6% permanent boost · guaranteed Starfall Shard · custom name colour unlocked"},
+  {level:6,  name:"Ethereal",     icon:"🏵️", threshold:600000,      multAdd:7,  reward:{cosmetic:"prestigeGold"},                         desc:"+7% permanent boost · Prestige Gold keycap"},
+  {level:7,  name:"Sovereign",    icon:"🌀", threshold:1500000,     multAdd:7,  reward:{theme:"voidframe"},                               desc:"+7% permanent boost · Void Frame (animated board)"},
+  {level:8,  name:"Transcendent", icon:"🦅", threshold:3500000,     multAdd:8,  reward:{charmName:"Phoenix Heart", charmIcon:"🦅", charmRarity:"legendary", charmBoost:12},
+   desc:"+8% permanent boost · guaranteed Phoenix Heart charm"},
+  {level:9,  name:"Mythic",       icon:"💎", threshold:8000000,     multAdd:9,  reward:{cosmetic:"prestigeDiamond", nameplate:true},      desc:"+9% permanent boost · Prestige Diamond keycap · custom nameplate text unlocked"},
+  {level:10, name:"Celestial",    icon:"🌈", threshold:18000000,    multAdd:12, reward:{theme:"celestialhalo"},                           desc:"+12% permanent boost · Celestial Halo (animated rainbow board)"},
+  {level:11, name:"OMEGA",        icon:"Ω",  threshold:50000000,    multAdd:50, reward:{cosmetic:"omega", theme:"omegaaura", charmName:"The One Key", charmIcon:"Ω", charmRarity:"legendary", charmBoost:25, nameColor:true, nameplate:true, badge:true},
+   desc:"+50% permanent boost · Omega keycap · Omega Aura board · The One Key charm · full rainbow nameplate & badge"}
+];
+
+function currentPrestigeTier(){
+  return PRESTIGE_TIERS.find(t => t.level === state.prestige) || null;
+}
+function nextPrestigeTier(){
+  return PRESTIGE_TIERS.find(t => t.level === state.prestige + 1) || null;
+}
+function getPrestigeMultiplierPercent(){
+  let total = 0;
+  PRESTIGE_TIERS.forEach(t => { if(t.level <= state.prestige) total += t.multAdd; });
+  return total;
 }
 
 /* =========================================================
@@ -844,21 +937,28 @@ function sellValue(charm){
 /* =========================================================
    STATE
 ========================================================= */
-const STORAGE_KEY = "keypress_save_v4";
+const STORAGE_KEY = "keypress_save_v5";
 
 function defaultState(){
   return {
     clicks:0,
+    lifetimeClicks:0,
     totalPresses:0,
     mainKey:null,
     ownedCosmetics:["base"],
     equippedCosmetic:"base",
     ownedThemes:["default"],
     equippedTheme:"default",
-    charms:[],        // {instanceId, templateKey, name, icon, rarity, basePrice, boost, condition, boxId}
-    keyCharms:{},      // keyLabel -> charm instanceId
+    charms:[],
+    keyCharms:{},
     muted:false,
-    volume:0.5
+    volume:0.5,
+    unlockedFlags:{},
+    prestige:0,
+    nameColorUnlocked:false,
+    nameplateUnlocked:false,
+    customNameColor:"#00f5ff",
+    customNameplate:""
   };
 }
 
@@ -867,9 +967,6 @@ let state = loadState();
 let history = [];
 let placingCharmId = null;
 let marketSort = "value";
-let clicks = [];
-let flagged = false;
-let lastClickTime = 0;
 
 function loadState(){
   try{
@@ -886,16 +983,15 @@ function loadState(){
   }
 }
 
-// pulls forward a save from an earlier version of the game if present, so
-// upgrading the game doesn't wipe anyone's progress
 function migrateOldSave(){
   try{
-    for(const key of ["keypress_save_v3","keypress_save_v2","keypress_save_v1"]){
+    for(const key of ["keypress_save_v4","keypress_save_v3","keypress_save_v2","keypress_save_v1"]){
       const raw = localStorage.getItem(key);
       if(raw){
         const parsed = JSON.parse(raw);
         const merged = Object.assign(defaultState(), parsed);
         merged.charms = (merged.charms || []).map(normalizeCharm);
+        if(!merged.lifetimeClicks) merged.lifetimeClicks = merged.clicks || 0;
         return merged;
       }
     }
@@ -949,7 +1045,6 @@ function ensureAudio(){
   if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   if(audioCtx.state === "suspended") audioCtx.resume();
 }
-
 function playClickSound(){
   if(state.muted) return;
   ensureAudio();
@@ -1000,16 +1095,20 @@ const startScreen = document.getElementById("startScreen");
 const gameWrap = document.getElementById("gameWrap");
 const playBtn = document.getElementById("playBtn");
 const keyboardEl = document.getElementById("keyboard");
+const boardWrap = document.getElementById("boardWrap");
 
 const statClicks = document.getElementById("statClicks");
 const statCps = document.getElementById("statCps");
 const statTotal = document.getElementById("statTotal");
 const statBoost = document.getElementById("statBoost");
+const playerBadge = document.getElementById("playerBadge");
+const guestBanner = document.getElementById("guestBanner");
 
 const shop = document.getElementById("shop");
 const shopBtn = document.getElementById("shopBtn");
 const changeKeyBtn = document.getElementById("changeKeyBtn");
 const muteBtn = document.getElementById("muteBtn");
+const prestigeShortcutBtn = document.getElementById("prestigeShortcutBtn");
 const settingsBtn = document.getElementById("settingsBtn");
 const settingsModal = document.getElementById("settingsModal");
 const closeSettingsBtn = document.getElementById("closeSettingsBtn");
@@ -1023,6 +1122,8 @@ const themesList = document.getElementById("themesList");
 const boxesList = document.getElementById("boxesList");
 const collectionList = document.getElementById("collectionList");
 const marketList = document.getElementById("marketList");
+const prestigeHeaderEl = document.getElementById("prestigeHeader");
+const prestigeTierList = document.getElementById("prestigeTierList");
 
 const placeBanner = document.getElementById("placeBanner");
 const revealModal = document.getElementById("revealModal");
@@ -1115,20 +1216,23 @@ function refreshKeyVisuals(){
 ========================================================= */
 function applyCosmetic(){
   document.querySelectorAll(".key").forEach(k => {
-    cosmetics.forEach(c => k.classList.remove(c.cls));
-    const c = cosmetics.find(c => c.id === state.equippedCosmetic);
+    allCosmetics.forEach(c => k.classList.remove(c.cls));
+    const c = allCosmetics.find(c => c.id === state.equippedCosmetic);
     if(c) k.classList.add(c.cls);
   });
 }
 function applyTheme(){
-  const theme = boardThemes.find(t => t.id === state.equippedTheme) || boardThemes[0];
-  document.documentElement.style.setProperty("--board-frame", theme.frame);
+  const theme = allThemes.find(t => t.id === state.equippedTheme) || allThemes[0];
+  document.documentElement.style.setProperty("--board-bg", theme.bg);
   document.documentElement.style.setProperty("--underglow", theme.glow);
   document.documentElement.style.setProperty("--underglow-blur", theme.blur);
+
+  boardWrap.classList.remove("themeRgb","themePulse","themeAurora","themeSolstice","themeVoid","themeCelestial","themeOmega");
+  if(theme.extraCls) boardWrap.classList.add(theme.extraCls);
 }
 
 /* =========================================================
-   CASH BOOST from equipped charms
+   CASH BOOST from equipped charms + prestige multiplier
 ========================================================= */
 function getTotalBoostPercent(){
   const equippedIds = new Set(Object.values(state.keyCharms));
@@ -1161,65 +1265,48 @@ window.addEventListener("keydown", e => {
   registerPress(label);
 });
 
-function registerPress(label) {
-    state.totalPresses++;
+function registerPress(label){
+  state.totalPresses++;
 
-    const boostMultiplier = 1 + getTotalBoostPercent() / 100;
-    state.clicks = parseFloat((state.clicks + 1 * boostMultiplier).toFixed(2));
+  const chestBoost = getTotalBoostPercent();
+  const prestigeBoost = getPrestigeMultiplierPercent();
+  const gain = 1 * (1 + chestBoost/100) * (1 + prestigeBoost/100);
+  state.clicks = parseFloat((state.clicks + gain).toFixed(2));
+  state.lifetimeClicks = parseFloat((state.lifetimeClicks + gain).toFixed(2));
 
-    const now = Date.now();
+  history.push(Date.now());
+  playClickSound();
 
-    // ---- CLICK TRACKER ----
-    clicks.push(now);
+  const charmId = state.keyCharms[label];
+  if(charmId){
+    const charm = state.charms.find(c => c.instanceId === charmId);
+    if(charm) charm.condition = Math.max(0, charm.condition - Math.random()*0.35);
+  }
 
-    // keep only last 1 second
-    clicks = clicks.filter(t => now - t < 1000);
-
-    // detect unnatural CPS
-    if (clicks.length > 22 && !flagged) {
-        triggerVerification();
-        flagged = true;
+  document.querySelectorAll(".key").forEach(el => {
+    if(el.dataset.key === label){
+      el.classList.add("pressed");
+      setTimeout(() => el.classList.remove("pressed"), 70);
     }
+  });
 
-    // timing anti-macro check
-    checkTiming();
+  // legitimate Gamplo achievement hooks (create matching keys in your Gamplo dashboard)
+  if(window.Gamplo && typeof Gamplo.isReady === "function" && Gamplo.isReady() && Gamplo.getPlayer()){
+    if(state.totalPresses === 1) Gamplo.unlockAchievement("first_press").catch(()=>{});
+    if(state.totalPresses === 100) Gamplo.unlockAchievement("100_clicks").catch(()=>{});
+    if(state.totalPresses === 1000) Gamplo.unlockAchievement("1000_clicks").catch(()=>{});
+  }
 
-    // Gamplo Achievements
-    if (window.Gamplo && typeof Gamplo.isReady === 'function' && Gamplo.isReady()) {
-        if (state.totalPresses >= 100) {
-            Gamplo.unlockAchievement("100_clicks").catch(() => {});
-        }
-
-        if (state.totalPresses >= 200) {
-            Gamplo.unlockAchievement("200_click").catch(() => {});
-        }
-    }
-
-    history.push(Date.now());
-    playClickSound();
-
-    // wear down a charm if one is equipped on the key being pressed
-    const charmId = state.keyCharms[label];
-    if(charmId){
-      const charm = state.charms.find(c => c.instanceId === charmId);
-      if(charm) charm.condition = Math.max(0, charm.condition - Math.random()*0.35);
-    }
-
-    document.querySelectorAll(".key").forEach(el => {
-      if(el.dataset.key === label){
-        el.classList.add("pressed");
-        setTimeout(() => el.classList.remove("pressed"), 70);
-      }
-    });
-
-    updateStatsDisplay();
-    saveState();
+  updateStatsDisplay();
+  saveState();
 }
 
 function updateStatsDisplay(){
   statClicks.textContent = Math.floor(state.clicks);
   statTotal.textContent = state.totalPresses;
-  statBoost.textContent = "+" + getTotalBoostPercent().toFixed(1) + "%";
+  statBoost.textContent = "+" + (getTotalBoostPercent() + getPrestigeMultiplierPercent()).toFixed(1) + "%";
+  renderPlayerBadge();
+  updatePrestigeShortcut();
 }
 
 setInterval(() => {
@@ -1256,6 +1343,23 @@ function renderCosmetics(){
     };
     cosmeticsList.appendChild(el);
   });
+
+  if(state.prestige > 0){
+    const divider = document.createElement("div");
+    divider.className = "itemSub";
+    divider.style.marginTop = "6px";
+    divider.textContent = "★ Prestige-exclusive keycaps you've earned:";
+    cosmeticsList.appendChild(divider);
+    prestigeCosmetics.forEach(c => {
+      if(!state.ownedCosmetics.includes(c.id)) return;
+      const equipped = state.equippedCosmetic === c.id;
+      const el = document.createElement("div");
+      el.className = "item owned" + (equipped?" equipped":"");
+      el.innerHTML = `<div><div class="itemName">${c.name}</div><div class="itemSub">${equipped?"Equipped":"Owned"}</div></div><div class="cost">${equipped?"✓":"Equip"}</div>`;
+      el.onclick = () => { state.equippedCosmetic = c.id; saveState(); applyCosmetic(); updateStatsDisplay(); renderCosmetics(); };
+      cosmeticsList.appendChild(el);
+    });
+  }
 }
 
 function renderThemes(){
@@ -1283,6 +1387,23 @@ function renderThemes(){
     };
     themesList.appendChild(el);
   });
+
+  if(state.prestige > 0){
+    const divider = document.createElement("div");
+    divider.className = "itemSub";
+    divider.style.marginTop = "6px";
+    divider.textContent = "★ Prestige-exclusive board themes you've earned:";
+    themesList.appendChild(divider);
+    prestigeThemes.forEach(t => {
+      if(!state.ownedThemes.includes(t.id)) return;
+      const equipped = state.equippedTheme === t.id;
+      const el = document.createElement("div");
+      el.className = "item owned" + (equipped?" equipped":"");
+      el.innerHTML = `<div><div class="itemName">${t.name}</div><div class="itemSub">${equipped?"Equipped":"Owned"}</div></div><div class="cost">${equipped?"✓":"Equip"}</div>`;
+      el.onclick = () => { state.equippedTheme = t.id; saveState(); applyTheme(); updateStatsDisplay(); renderThemes(); };
+      themesList.appendChild(el);
+    });
+  }
 }
 
 /* =========================================================
@@ -1314,12 +1435,14 @@ function renderBoxes(){
   });
 }
 
-function showReveal(charm){
-  revealCard.className = "revealCard " + charm.rarity;
+function showReveal(charm, isPrestige){
+  revealCard.className = "revealCard " + (isPrestige ? "prestige" : charm.rarity);
   revealIcon.textContent = charm.icon;
   revealName.textContent = charm.name;
-  revealRarity.textContent = charm.rarity;
-  revealSub.textContent = "Worth " + charm.basePrice + " clicks · +" + charm.boost + "% boost";
+  revealRarity.textContent = isPrestige ? "prestige reward" : charm.rarity;
+  revealSub.textContent = isPrestige
+    ? (charm.sub || "")
+    : "Worth " + charm.basePrice + " clicks · +" + charm.boost + "% boost";
   revealModal.classList.add("show");
 }
 closeRevealBtn.onclick = () => revealModal.classList.remove("show");
@@ -1447,28 +1570,160 @@ document.querySelectorAll(".sortRow .iconbtn").forEach(btn => {
 });
 
 /* =========================================================
+   SHOP: PRESTIGE
+========================================================= */
+function renderPrestige(){
+  const tier = currentPrestigeTier();
+  const next = nextPrestigeTier();
+  const mult = getPrestigeMultiplierPercent();
+
+  prestigeHeaderEl.innerHTML = "";
+  const header = document.createElement("div");
+  header.className = "prestigeHeader";
+
+  if(!next){
+    header.innerHTML = `
+      <div class="bigIcon">Ω</div>
+      <div class="name">OMEGA — Max Prestige</div>
+      <div class="mult">Permanent boost: +${mult}%</div>
+      <div class="progressLabel" style="margin-top:8px;">You've reached the final prestige. Nothing left to cash in — just flex it.</div>
+    `;
+  } else {
+    const progress = Math.min(100, (state.lifetimeClicks / next.threshold) * 100);
+    const canPrestige = state.lifetimeClicks >= next.threshold;
+    header.innerHTML = `
+      <div class="bigIcon">${tier ? tier.icon : "🔹"}</div>
+      <div class="name">${tier ? tier.name : "No Prestige Yet"}</div>
+      <div class="mult">Permanent boost: +${mult}%</div>
+      <div class="progressBarOuter"><div class="progressBarInner" style="width:${progress}%;"></div></div>
+      <div class="progressLabel">${Math.floor(state.lifetimeClicks).toLocaleString()} / ${next.threshold.toLocaleString()} lifetime clicks toward ${next.name}</div>
+      <button class="prestigeBtn" id="doPrestigeBtn" ${canPrestige ? "" : "disabled"}>
+        ${canPrestige ? "✨ Prestige to " + next.name : "Locked"}
+      </button>
+    `;
+  }
+  prestigeHeaderEl.appendChild(header);
+
+  const doBtn = document.getElementById("doPrestigeBtn");
+  if(doBtn){
+    doBtn.onclick = () => {
+      if(!confirm(`Prestige to ${next.name}? This resets your spendable clicks to 0 (your cosmetics, themes, and charms are kept) in exchange for a permanent +${next.multAdd}% click boost and an exclusive reward. Continue?`)){
+        return;
+      }
+      doPrestige(next);
+    };
+  }
+
+  prestigeTierList.innerHTML = "";
+  PRESTIGE_TIERS.forEach(t => {
+    const claimed = t.level <= state.prestige;
+    const isCurrentTarget = !claimed && next && t.level === next.level;
+    const row = document.createElement("div");
+    row.className = "tierRow" + (claimed ? " claimed" : "") + (isCurrentTarget ? " current" : "");
+    row.innerHTML = `
+      <div class="tIcon">${t.icon}</div>
+      <div class="tBody">
+        <div class="tName">${t.level === 11 ? "Final — " : "Prestige " + t.level + " — "}${t.name} ${claimed ? "✓" : ""}</div>
+        <div class="tReward">${t.desc}</div>
+      </div>
+      <div class="tThresh">${t.threshold.toLocaleString()}</div>
+    `;
+    prestigeTierList.appendChild(row);
+  });
+}
+
+function doPrestige(tier){
+  state.clicks = 0;
+  state.prestige = tier.level;
+
+  const r = tier.reward;
+  let rewardSub = "";
+
+  if(r.cosmetic){
+    if(!state.ownedCosmetics.includes(r.cosmetic)) state.ownedCosmetics.push(r.cosmetic);
+    state.equippedCosmetic = r.cosmetic;
+    rewardSub += allCosmetics.find(c=>c.id===r.cosmetic).name + " keycap unlocked. ";
+  }
+  if(r.theme){
+    if(!state.ownedThemes.includes(r.theme)) state.ownedThemes.push(r.theme);
+    state.equippedTheme = r.theme;
+    rewardSub += allThemes.find(t=>t.id===r.theme).name + " board unlocked. ";
+  }
+  if(r.charmName){
+    const charm = {
+      instanceId: "i" + Date.now() + Math.floor(Math.random()*1000000),
+      templateKey: "prestige_" + tier.level,
+      name: r.charmName,
+      icon: r.charmIcon,
+      rarity: r.charmRarity,
+      basePrice: RARITY_BASE_PRICE[r.charmRarity] * 4,
+      boost: r.charmBoost,
+      condition: 100,
+      boxId: "prestige"
+    };
+    state.charms.push(charm);
+    rewardSub += r.charmName + " charm granted. ";
+  }
+  if(r.nameColor) state.nameColorUnlocked = true;
+  if(r.nameplate) state.nameplateUnlocked = true;
+
+  saveState();
+  applyCosmetic();
+  applyTheme();
+  renderKeyboard();
+  updateStatsDisplay();
+  renderCosmetics();
+  renderThemes();
+  renderCollection();
+  renderMarket();
+  renderPrestige();
+
+  showReveal({icon: tier.icon, name: tier.name + "!", sub: rewardSub || ("+" + tier.multAdd + "% permanent boost")}, true);
+
+  if(window.Gamplo && typeof Gamplo.isReady === "function" && Gamplo.isReady() && Gamplo.getPlayer()){
+    Gamplo.unlockAchievement("prestige_" + tier.level).catch(()=>{});
+    if(tier.level === 11) Gamplo.unlockAchievement("prestige_omega").catch(()=>{});
+  }
+}
+
+function updatePrestigeShortcut(){
+  const next = nextPrestigeTier();
+  if(next && state.lifetimeClicks >= next.threshold){
+    prestigeShortcutBtn.style.display = "inline-block";
+    prestigeShortcutBtn.textContent = "✨ Prestige!";
+  } else if(state.prestige > 0){
+    prestigeShortcutBtn.style.display = "inline-block";
+    prestigeShortcutBtn.textContent = (currentPrestigeTier()||{}).icon + " P" + state.prestige;
+  } else {
+    prestigeShortcutBtn.style.display = "none";
+  }
+}
+prestigeShortcutBtn.onclick = () => { toggleShop(true); switchTab("prestige"); };
+
+/* =========================================================
    SHOP TABS / TOGGLES
 ========================================================= */
+function switchTab(tabId){
+  document.querySelectorAll(".tab").forEach(t => t.classList.toggle("active", t.dataset.tab === tabId));
+  document.querySelectorAll(".section").forEach(s => s.classList.toggle("active", s.id === "section-" + tabId));
+}
 document.querySelectorAll(".tab").forEach(tab => {
-  tab.onclick = () => {
-    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
-    document.querySelectorAll(".section").forEach(s => s.classList.remove("active"));
-    tab.classList.add("active");
-    document.getElementById("section-" + tab.dataset.tab).classList.add("active");
-  };
+  tab.onclick = () => switchTab(tab.dataset.tab);
 });
 
-function toggleShop(){
-  shop.classList.toggle("open");
+function toggleShop(forceOpen){
+  if(forceOpen){ shop.classList.add("open"); }
+  else{ shop.classList.toggle("open"); }
   if(shop.classList.contains("open")){
     renderCosmetics();
     renderThemes();
     renderBoxes();
     renderCollection();
     renderMarket();
+    renderPrestige();
   }
 }
-shopBtn.onclick = toggleShop;
+shopBtn.onclick = () => toggleShop();
 
 changeKeyBtn.onclick = () => { awaitingKeySelectMode = true; };
 
@@ -1478,9 +1733,45 @@ muteBtn.onclick = () => {
   saveState();
 };
 
+/* =========================================================
+   PLAYER BADGE (Gamplo identity)
+========================================================= */
+const BASIC_FILTER_WORDS = ["fuck","shit","bitch","nigger","faggot","retard","cunt"];
+function containsFlaggedWord(str){
+  const lower = (str||"").toLowerCase();
+  return BASIC_FILTER_WORDS.some(w => lower.includes(w));
+}
+
+function renderPlayerBadge(){
+  const gp = (window.Gamplo && typeof Gamplo.isReady === "function" && Gamplo.isReady()) ? Gamplo.getPlayer() : null;
+  if(!gp){
+    playerBadge.style.display = "none";
+    return;
+  }
+  playerBadge.style.display = "flex";
+  const displayName = containsFlaggedWord(gp.displayName) ? "Player" : gp.displayName;
+  const nameColor = state.nameColorUnlocked ? state.customNameColor : "#e7edf6";
+  const nameplate = (state.nameplateUnlocked && state.customNameplate && !containsFlaggedWord(state.customNameplate))
+    ? ` "${state.customNameplate}"` : "";
+
+  const avatarHtml = gp.image
+    ? `<img src="${gp.image}" alt="" />`
+    : `<span class="noAvatar">${(displayName||"?").charAt(0).toUpperCase()}</span>`;
+
+  const tierBadge = state.prestige > 0
+    ? `<span class="prestigeTag${state.prestige===11?" omega":""}">${state.prestige===11?"Ω OMEGA":"P"+state.prestige}</span>`
+    : "";
+
+  playerBadge.innerHTML = `${avatarHtml}<span style="color:${nameColor};font-weight:600;">${displayName}${nameplate}</span>${tierBadge}`;
+}
+
+/* =========================================================
+   SETTINGS
+========================================================= */
 settingsBtn.onclick = () => {
   settingsModal.classList.add("open");
   setSaveStatus(storageAvailable);
+  renderNameCustomizationRow();
 };
 closeSettingsBtn.onclick = () => settingsModal.classList.remove("open");
 
@@ -1488,6 +1779,44 @@ volumeSlider.oninput = () => {
   state.volume = volumeSlider.value / 100;
   saveState();
 };
+
+function renderNameCustomizationRow(){
+  const existing = document.getElementById("nameCustomRow");
+  if(existing) existing.remove();
+  if(!state.nameColorUnlocked && !state.nameplateUnlocked) return;
+
+  const row = document.createElement("div");
+  row.id = "nameCustomRow";
+  row.style.padding = "8px 0";
+  row.style.borderBottom = "1px solid #222";
+
+  let html = "";
+  if(state.nameColorUnlocked){
+    html += `<div class="settingsRow"><span>Name colour (Prestige reward)</span><input type="color" id="nameColorInput" value="${state.customNameColor}" /></div>`;
+  }
+  if(state.nameplateUnlocked){
+    html += `<div class="settingsRow"><span>Custom nameplate (Prestige reward)</span><input type="text" id="nameplateInput" maxlength="16" value="${state.customNameplate}" style="width:100px;background:#0e1119;border:1px solid #2a3346;color:#fff;border-radius:6px;padding:4px 6px;" /></div>`;
+  }
+  row.innerHTML = html;
+
+  const dangerRow = document.querySelector("#settingsModal .dangerBtn").closest(".settingsRow");
+  dangerRow.parentNode.insertBefore(row, dangerRow);
+
+  const colorInput = document.getElementById("nameColorInput");
+  if(colorInput) colorInput.oninput = () => { state.customNameColor = colorInput.value; saveState(); renderPlayerBadge(); };
+  const nameplateInput = document.getElementById("nameplateInput");
+  if(nameplateInput) nameplateInput.onchange = () => {
+    const val = nameplateInput.value.trim();
+    if(containsFlaggedWord(val)){
+      alert("That nameplate isn't allowed. Please choose something else.");
+      nameplateInput.value = state.customNameplate;
+      return;
+    }
+    state.customNameplate = val;
+    saveState();
+    renderPlayerBadge();
+  };
+}
 
 resetBtn.onclick = () => {
   if(confirm("Reset all progress? This cannot be undone.")){
@@ -1548,6 +1877,61 @@ playBtn.onclick = () => {
 };
 
 /* =========================================================
+   GAMPLO SDK INTEGRATION
+   (cloud saves are throttled to respect the platform's rate
+   limit of ~10 saves/minute; guests fall back to localStorage
+   only, since guest accounts get 403s on save/achievement calls)
+========================================================= */
+let cloudDirty = false;
+function markCloudDirty(){ cloudDirty = true; }
+
+if(window.Gamplo && typeof Gamplo.onReady === "function"){
+  Gamplo.onReady(async () => {
+    const player = Gamplo.getPlayer();
+
+    if(player){
+      guestBanner.classList.remove("show");
+      try{
+        const cloudSave = await Gamplo.getSave(0);
+        // only adopt the cloud save if this browser has no local progress yet,
+        // to avoid a fresh device silently overwriting real progress
+        if(cloudSave && state.totalPresses === 0){
+          state = Object.assign(defaultState(), cloudSave);
+          state.charms = (state.charms || []).map(normalizeCharm);
+          renderKeyboard();
+          updateStatsDisplay();
+          muteBtn.textContent = state.muted ? "🔇" : "🔊";
+          volumeSlider.value = Math.round(state.volume * 100);
+        }
+      }catch(e){ console.warn("Gamplo: no cloud save yet or failed to load", e); }
+
+      setInterval(async () => {
+        if(!cloudDirty) return;
+        cloudDirty = false;
+        try{ await Gamplo.setSave(state, 0); }catch(e){ console.warn("Gamplo cloud save failed", e); }
+      }, 8000);
+
+      window.addEventListener("beforeunload", () => { Gamplo.setSave(state, 0).catch(()=>{}); });
+    } else {
+      guestBanner.classList.add("show");
+    }
+
+    if(typeof Gamplo.onResize === "function"){
+      Gamplo.onResize((w,h) => {
+        document.body.style.width = w + "px";
+        document.body.style.height = h + "px";
+      });
+    }
+
+    renderPlayerBadge();
+  });
+}
+
+// mark cloud saves dirty whenever we persist locally
+const _originalSaveState = saveState;
+saveState = function(){ _originalSaveState(); markCloudDirty(); };
+
+/* =========================================================
    INIT
 ========================================================= */
 function init(){
@@ -1561,96 +1945,6 @@ function init(){
   window.addEventListener("beforeunload", saveState);
 }
 init();
-// ---------------------------
-// Gamplo Integration
-// ---------------------------
-
-if (window.Gamplo && typeof Gamplo.onReady === 'function') {
-    Gamplo.onReady(async () => {
-        const player = Gamplo.getPlayer();
-
-        if (player) {
-            console.log("Logged in as", player.displayName);
-
-            try {
-                const save = await Gamplo.getSave();
-                if (save) {
-                    state = Object.assign(defaultState(), save);
-                    state.charms = (state.charms || []).map(normalizeCharm);
-                    renderKeyboard();
-                    updateStatsDisplay();
-                    muteBtn.textContent = state.muted ? "🔇" : "🔊";
-                    volumeSlider.value = Math.round(state.volume * 100);
-                }
-            } catch (e) {
-                console.log("Failed to load Gamplo save", e);
-            }
-
-            setInterval(async () => {
-                try {
-                    await Gamplo.setSave(state);
-                } catch (e) {
-                    console.log(e);
-                }
-            }, 30000);
-        } else {
-            console.log("Guest user");
-        }
-    });
-}
-function triggerVerification() {
-    if (document.getElementById("verifyBox")) return;
-
-    const box = document.createElement("div");
-    box.id = "verifyBox";
-
-    box.innerHTML = `
-        <div style="
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: white;
-            padding: 20px;
-            z-index: 9999;
-            text-align: center;
-            border-radius: 10px;
-        ">
-            <h3>Quick verification</h3>
-            <p>Type: <b>human</b></p>
-            <input id="verifyInput" autocomplete="off"/>
-        </div>
-    `;
-if (DEV_MODE) {
-    state.coins = 0;
-
-    setTimeout(() => {
-        Gamplo.unlockAchievement("100_clicks").catch(() => {});
-        Gamplo.unlockAchievement("200_click").catch(() => {});
-    }, 500);
-}
-    document.body.appendChild(box);
-
-    const input = document.getElementById("verifyInput");
-
-    input.focus();
-
-    input.addEventListener("input", () => {
-        const val = input.value.trim().toLowerCase();
-
-        // macro-like spam inside box
-        if (val.length > 30) {
-            location.reload();
-        }
-
-        if (val === "human") {
-            box.remove();
-            flagged = false;
-            clicks = [];
-        }
-    });
-}
 </script>
-<script src="check_js_temp.js"></script>
 </body>
 </html>
