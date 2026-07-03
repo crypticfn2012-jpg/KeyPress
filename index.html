@@ -580,6 +580,15 @@ async function loadLeaderboard() {
         console.warn("Unable to load leaderboard", err);
     }
 }
+function applyFrame(frameObj){
+  const key = document.querySelector(".key.active") || document.querySelector(".key");
+
+  if(!key) return;
+
+  key.style.background = frameObj.frame;
+  key.style.boxShadow = frameObj.glow;
+  key.style.backdropFilter = `blur(${frameObj.blur})`;
+}
 function renderLeaderboard(data) {
     const box = document.getElementById("leaderboard");
     if (!box) return;
