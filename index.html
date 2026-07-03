@@ -1,0 +1,2355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+<title>KeyPress</title>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="https://gamplo.com/sdk/gamplo.js"></script>
+<style>
+:root{
+  --board-bg: linear-gradient(160deg,#12151c,#04050a);
+  --underglow: transparent;
+  --underglow-blur: 0px;
+  --tilt: 26deg;
+}
+
+*{box-sizing:border-box;}
+
+body{
+  margin:0;
+  background:radial-gradient(circle at top,#1a1f2a,#0b0d12);
+  color:#fff;
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+  overflow:hidden;
+  height:100vh;
+  -webkit-tap-highlight-color:transparent;
+}
+
+/* ---------- TOP BAR ---------- */
+.topbar{
+  position:fixed;
+  top:0;left:0;right:0;
+  height:52px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:0 14px;
+  background:rgba(10,12,18,0.85);
+  border-bottom:1px solid #222;
+  backdrop-filter:blur(10px);
+  z-index:20;
+  gap:8px;
+}
+
+.stats{font-size:12px;opacity:0.9;display:flex;gap:12px;flex-wrap:wrap;align-items:center;}
+.stats b{color:#00f5ff;font-weight:600;}
+.stats b.boost{color:#2fbf71;}
+
+.playerBadge{
+  display:flex; align-items:center; gap:7px;
+  font-size:12px; opacity:0.95; padding-right:10px; border-right:1px solid #2a3346; margin-right:2px;
+}
+.playerBadge img{ width:22px; height:22px; border-radius:50%; object-fit:cover; border:1px solid #2a3346; }
+.playerBadge .noAvatar{
+  width:22px; height:22px; border-radius:50%; background:#2a3346;
+  display:flex; align-items:center; justify-content:center; font-size:11px;
+}
+.accountBadge{
+  display:flex; align-items:center; gap:6px;
+  font-size:12px; padding:0 10px; height:34px;
+  border-radius:999px; background:#141a28; border:1px solid #2a3346;
+  color:#dfe8f6;
+}
+.accountBadge .pill{
+  padding:2px 7px; border-radius:999px; font-size:10px; background:#22314f; color:#9fd9ff;
+}
+.accountBadge .pill.owner{ background:linear-gradient(90deg,#ffb238,#ff5c5c); color:#140f08; }
+.prestigeTag{
+  font-size:10px; font-weight:800; padding:1px 5px; border-radius:5px;
+  background:#2a3346; color:#ffd23f; letter-spacing:0.5px;
+}
+.prestigeTag.omega{
+  background:linear-gradient(90deg,#ff5c5c,#ffd23f,#5cff8a,#5cd2ff,#b26cff,#ff5c5c);
+  background-size:300% 100%;
+  color:#05060a;
+  animation:omegaTagShift 3s linear infinite;
+}
+@keyframes omegaTagShift{ 0%{background-position:0% 50%;} 100%{background-position:300% 50%;} }
+
+.guestBanner{
+  position:fixed; top:60px; left:50%; transform:translateX(-50%);
+  background:#1a2030; border:1px solid #2a3346; color:#c7d2e6;
+  padding:8px 14px; border-radius:8px; font-size:12px; z-index:25;
+  display:none; align-items:center; gap:10px;
+}
+.guestBanner.show{display:flex;}
+
+.topbtns{display:flex;gap:6px;}
+
+.iconbtn{
+  background:#1a2030;
+  border:1px solid #2a3346;
+  color:#fff;
+  border-radius:8px;
+  padding:8px 12px;
+  font-size:12px;
+  cursor:pointer;
+  transition:0.15s;
+}
+.iconbtn:hover{background:#242c42;}
+.iconbtn:active{transform:translateY(1px);}
+.iconbtn.prestigeBtn{background:linear-gradient(90deg,#2a2050,#140f24);border-color:#7a4bff;}
+
+/* ---------- STAGE / KEYBOARD (real perspective tilt) ---------- */
+.stage{
+  height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding-top:40px;
+  perspective:1500px;
+  perspective-origin:50% 20%;
+}
+
+.boardWrap{
+  position:relative;
+  padding:34px 26px 46px;
+  border-radius:20px;
+  background:var(--board-bg);
+  box-shadow:
+    0 40px 70px rgba(0,0,0,0.65),
+    inset 0 1px 0 rgba(255,255,255,0.07);
+  transform-style:preserve-3d;
+  transform:rotateX(var(--tilt));
+  transform-origin:center 100%;
+  transition:transform 0.4s ease, background 0.4s ease;
+}
+
+.boardWrap::before{
+  content:"";
+  position:absolute;
+  inset:-16px;
+  border-radius:28px;
+  background:var(--underglow);
+  filter:blur(var(--underglow-blur));
+  z-index:-1;
+  opacity:0.9;
+  transition:0.3s;
+}
+
+/* animated board theme variants */
+.boardWrap.themeRgb::before{ animation:rgbRotate 4s linear infinite; }
+@keyframes rgbRotate{ from{filter:blur(var(--underglow-blur)) hue-rotate(0deg);} to{filter:blur(var(--underglow-blur)) hue-rotate(360deg);} }
+
+.boardWrap.themePulse::before{ animation:pulseGlow 2.2s ease-in-out infinite; }
+@keyframes pulseGlow{ 0%,100%{opacity:0.5;transform:scale(0.97);} 50%{opacity:1;transform:scale(1.05);} }
+
+.boardWrap.themeAurora{ animation:auroraFrame 6s ease infinite; background-size:300% 300%; }
+.boardWrap.themeAurora::before{ animation:pulseGlow 3s ease-in-out infinite; }
+@keyframes auroraFrame{ 0%{background-position:0% 50%;} 50%{background-position:100% 50%;} 100%{background-position:0% 50%;} }
+
+.boardWrap.themeSolstice{ animation:auroraFrame 5s ease infinite; background-size:300% 300%; }
+.boardWrap.themeSolstice::before{ animation:pulseGlow 2.4s ease-in-out infinite; }
+
+.boardWrap.themeVoid{ animation:voidSwirl 8s linear infinite; background-size:250% 250%; }
+@keyframes voidSwirl{ 0%{background-position:0% 0%;} 100%{background-position:200% 200%;} }
+.boardWrap.themeVoid::before{ animation:pulseGlow 3.5s ease-in-out infinite; }
+
+.boardWrap.themeCelestial::before{ animation:rgbRotate 3s linear infinite; }
+.boardWrap.themeCelestial{ animation:pulseGlow 4s ease-in-out infinite; }
+
+.boardWrap.themeOmega{ animation:auroraFrame 3s ease infinite; background-size:300% 300%; }
+.boardWrap.themeOmega::before{ animation:rgbRotate 2s linear infinite, pulseGlow 1.6s ease-in-out infinite; }
+
+.keyboard{ display:flex; flex-direction:column; gap:9px; transform-style:preserve-3d; }
+.row{ display:flex; gap:9px; justify-content:center; transform-style:preserve-3d; }
+
+.keySlot{ position:relative; height:44px; min-width:44px; transform-style:preserve-3d; }
+.keySlot.wide{min-width:82px}
+.keySlot.space{min-width:264px}
+
+.keySlot::before{
+  content:"";
+  position:absolute; inset:0; border-radius:7px;
+  background:#030407;
+  box-shadow:inset 0 3px 6px rgba(0,0,0,0.9);
+  transform:translateZ(0px);
+}
+
+.key{
+  position:absolute; inset:0; border-radius:7px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:12px; font-weight:700; color:#e7edf6;
+  cursor:pointer; user-select:none;
+  background:linear-gradient(165deg,#3a4252,#1c212b);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.25),
+    inset 0 -8px 10px rgba(0,0,0,0.35),
+    0 2px 3px rgba(0,0,0,0.4);
+  transform:translateZ(14px);
+  transition:transform 0.06s ease-out, box-shadow 0.06s ease-out, background 0.2s;
+  backface-visibility:hidden;
+}
+
+.key.pressed{
+  transform:translateZ(3px);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.15),
+    inset 0 -3px 5px rgba(0,0,0,0.3),
+    0 1px 1px rgba(0,0,0,0.3);
+}
+
+.key.selected{ outline:2px solid #00f5ff; outline-offset:1px; }
+.key.placeTarget{ outline:2px dashed #ffd23f; outline-offset:1px; }
+
+.charmBadge{
+  position:absolute; top:-8px; right:-8px; width:18px; height:18px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center; font-size:11px;
+  background:#0e1119; border:2px solid #888; transform:translateZ(2px);
+}
+.charmBadge.common{border-color:#b8c1cf;box-shadow:0 0 4px #b8c1cf;}
+.charmBadge.rare{border-color:#4aa3ff;box-shadow:0 0 6px #4aa3ff;}
+.charmBadge.epic{border-color:#b26cff;box-shadow:0 0 7px #b26cff;}
+.charmBadge.legendary{border-color:#ffb238;box-shadow:0 0 9px #ffb238;}
+
+/* ---------- KEYCAP COSMETICS ---------- */
+.key.glass{
+  background:linear-gradient(165deg,rgba(150,220,255,0.55),rgba(150,220,255,0.08));
+  border:1px solid rgba(200,240,255,0.7); color:#eafcff;
+  box-shadow:inset 0 2px 0 rgba(255,255,255,0.6), inset 0 -8px 10px rgba(100,200,255,0.15), 0 0 12px rgba(150,220,255,0.35);
+}
+.key.neon{
+  background:#050a10; color:#7dfcff; border:1px solid #00f5ff;
+  box-shadow:inset 0 0 10px #00f5ff, 0 0 6px #00f5ff, 0 0 22px #00f5ff88;
+  animation:neonPulse 1.6s ease-in-out infinite;
+}
+@keyframes neonPulse{ 0%,100%{filter:brightness(1);} 50%{filter:brightness(1.35);} }
+.key.metal{
+  background:linear-gradient(165deg,#f2f5f9,#9aa3b0 45%,#5a6270); color:#10131a;
+  box-shadow:inset 0 2px 0 rgba(255,255,255,0.9), inset 0 -6px 8px rgba(0,0,0,0.35), 0 0 8px rgba(255,255,255,0.25);
+}
+.key.rune{
+  background:repeating-linear-gradient(45deg,#2a1f4d,#2a1f4d 4px,#241a44 4px,#241a44 8px);
+  color:#b7a3ff; border:1px solid #7a4bff;
+  box-shadow:inset 0 0 8px #7a4bff, 0 0 14px #7a4bff77;
+}
+.key.pixel{
+  background:conic-gradient(#0f0 90deg,#0c0 90deg 180deg,#0f0 180deg 270deg,#0c0 270deg);
+  background-size:8px 8px; color:#eaffea; border-radius:2px;
+  font-family:"Courier New",monospace; image-rendering:pixelated; border:2px solid #063d06;
+}
+.key.wood{
+  background:repeating-linear-gradient(100deg,#8a5a2e,#8a5a2e 6px,#6b4423 6px,#6b4423 11px,#a9723c 11px,#a9723c 15px);
+  color:#fff2df;
+  box-shadow:inset 0 2px 0 rgba(255,220,180,0.3), inset 0 -8px 10px rgba(0,0,0,0.4);
+}
+.key.gold{
+  background:linear-gradient(165deg,#fff3b0,#ffd23f 40%,#a5720c); color:#3a2a00;
+  box-shadow:inset 0 2px 0 rgba(255,255,255,0.7), inset 0 -8px 10px rgba(90,60,0,0.4), 0 0 16px rgba(255,210,63,0.5);
+}
+.key.slime{
+  background:radial-gradient(circle at 30% 20%, #baff5c, #4caf1f 70%); color:#0c2b00;
+  box-shadow:inset 0 2px 0 rgba(255,255,255,0.4), inset 0 -10px 12px rgba(0,60,0,0.4), 0 0 10px #7cff2a66;
+  animation:slimeGlow 2.4s ease-in-out infinite;
+}
+@keyframes slimeGlow{ 0%,100%{filter:brightness(1) saturate(1);} 50%{filter:brightness(1.15) saturate(1.3);} }
+.key.lava{
+  background:
+    repeating-linear-gradient(45deg,#2b0a00,#2b0a00 6px,#000 6px,#000 10px),
+    radial-gradient(circle at 40% 40%, #ff6a00, #8a0000 80%);
+  background-blend-mode:overlay; color:#ffe2b0;
+  box-shadow:inset 0 0 10px #ff4500, 0 0 14px #ff450088;
+  animation:lavaPulse 1.8s ease-in-out infinite;
+}
+@keyframes lavaPulse{ 0%,100%{filter:brightness(1);} 50%{filter:brightness(1.25);} }
+.key.ice{
+  background:linear-gradient(165deg, rgba(210,240,255,0.9), rgba(140,200,240,0.5));
+  color:#04263d; border:1px solid rgba(255,255,255,0.8);
+  box-shadow:inset 0 2px 0 rgba(255,255,255,0.9), inset 0 -6px 10px rgba(100,180,230,0.4), 0 0 10px rgba(180,220,255,0.5);
+}
+.key.candy{
+  background:repeating-conic-gradient(#ff5c8a 0deg 30deg, #ffffff 30deg 60deg);
+  color:#5c0022;
+  box-shadow:inset 0 2px 0 rgba(255,255,255,0.7), 0 0 8px rgba(255,92,138,0.5);
+}
+.key.camo{
+  background:
+    radial-gradient(circle at 20% 30%, #5a6b3a 0 18%, transparent 19%),
+    radial-gradient(circle at 70% 60%, #3a4a2a 0 22%, transparent 23%),
+    radial-gradient(circle at 50% 15%, #7a8a4a 0 16%, transparent 17%),
+    #4a5a34;
+  color:#e8f0d8;
+}
+.key.circuit{
+  background:#061a12; color:#5cffb0;
+  background-image:linear-gradient(#0f3d2a 1px, transparent 1px), linear-gradient(90deg, #0f3d2a 1px, transparent 1px);
+  background-size:8px 8px;
+  box-shadow:inset 0 0 8px #00ff9d55, 0 0 10px #00ff9d55;
+  animation:circuitPulse 2s ease-in-out infinite;
+}
+@keyframes circuitPulse{ 0%,100%{box-shadow:inset 0 0 8px #00ff9d55, 0 0 10px #00ff9d55;} 50%{box-shadow:inset 0 0 12px #00ff9d99, 0 0 18px #00ff9d99;} }
+.key.marble{
+  background:linear-gradient(135deg,#f5f5f5 0%,#dcdcdc 20%,#ffffff 35%,#c9c9c9 55%,#f0f0f0 75%,#d5d5d5 100%);
+  color:#2a2a2a;
+  box-shadow:inset 0 2px 0 rgba(255,255,255,0.8), inset 0 -6px 8px rgba(0,0,0,0.15);
+}
+.key.denim{
+  background:repeating-linear-gradient(100deg,#3a5a8a,#3a5a8a 4px,#325079 4px,#325079 8px);
+  color:#dbe8ff; border:1px dashed rgba(255,255,255,0.4);
+}
+.key.holo{
+  background:linear-gradient(120deg,#ff9ac2,#a0e8ff,#c8ffb0,#ffe29a,#d3a0ff,#ff9ac2);
+  background-size:300% 300%; color:#241033;
+  animation:holoShift 3s linear infinite;
+}
+@keyframes holoShift{ 0%{background-position:0% 50%;} 100%{background-position:300% 50%;} }
+.key.cosmic{
+  background:
+    radial-gradient(circle at 20% 20%, #fff 0 1px, transparent 2px),
+    radial-gradient(circle at 60% 50%, #fff 0 1px, transparent 2px),
+    radial-gradient(circle at 80% 80%, #fff 0 1px, transparent 2px),
+    radial-gradient(circle at 40% 70%, #fff 0 1px, transparent 2px),
+    linear-gradient(165deg,#1a0a3a,#05020f);
+  color:#d0c0ff;
+  box-shadow:inset 0 0 10px #7a4bff88, 0 0 14px #7a4bff55;
+  animation:cosmicTwinkle 4s ease-in-out infinite;
+}
+@keyframes cosmicTwinkle{ 0%,100%{filter:brightness(1);} 50%{filter:brightness(1.2);} }
+.key.galaxy{
+  background:linear-gradient(120deg,#0b0f2a,#1b1f5a,#3a0ca3,#7209b7,#f72585,#4cc9f0,#0b0f2a);
+  background-size:400% 400%; color:#e0e6ff;
+  animation:galaxyShift 6s ease infinite;
+  box-shadow:0 0 12px rgba(114,9,183,0.6), 0 0 24px rgba(76,201,240,0.4);
+}
+@keyframes galaxyShift{ 0%{background-position:0% 50%;} 50%{background-position:100% 50%;} 100%{background-position:0% 50%;} }
+
+/* Liminal — Backrooms: damp mustard-yellow wallpaper, water stains, dying fluorescent flicker */
+.key.liminal{
+  background:
+    repeating-linear-gradient(90deg, rgba(110,95,35,0.16) 0px, rgba(110,95,35,0.16) 2px, transparent 2px, transparent 20px),
+    radial-gradient(ellipse 50px 34px at 22% 82%, rgba(80,66,18,0.35), transparent 70%),
+    radial-gradient(ellipse 40px 26px at 78% 18%, rgba(80,66,18,0.28), transparent 70%),
+    radial-gradient(ellipse 36px 50px at 85% 70%, rgba(70,58,16,0.22), transparent 70%),
+    linear-gradient(175deg, #ddc96a 0%, #cbb958 45%, #a99638 100%);
+  color:#463c16;
+  font-family:"Courier New",monospace;
+  text-shadow:0 1px 0 rgba(255,250,210,0.35);
+  box-shadow:
+    inset 0 2px 0 rgba(255,250,210,0.3),
+    inset 0 -9px 13px rgba(55,45,10,0.4),
+    0 0 9px rgba(180,160,60,0.3);
+  animation:liminalFlicker 5.5s infinite;
+}
+@keyframes liminalFlicker{
+  0%,19%,21%,52%,54%,100%{ filter:brightness(1); }
+  20%{ filter:brightness(0.7); }
+  53%{ filter:brightness(1.2); }
+  70%{ filter:brightness(0.85); }
+  71%{ filter:brightness(1); }
+}
+
+/* new animated cosmetics */
+.key.aurora{
+  background:linear-gradient(120deg,#0a3d2e,#1a6b4a,#0a2d5a,#3a1a6b,#0a3d2e);
+  background-size:300% 300%; color:#d0ffe8;
+  animation:auroraShift 5s ease infinite;
+  box-shadow:0 0 14px rgba(50,220,150,0.4), inset 0 0 10px rgba(50,220,150,0.25);
+}
+@keyframes auroraShift{ 0%{background-position:0% 50%;} 50%{background-position:100% 50%;} 100%{background-position:0% 50%;} }
+.key.matrix{
+  background:#020805; color:#7cff9c;
+  background-image:repeating-linear-gradient(180deg, rgba(50,255,120,0.18) 0px, rgba(50,255,120,0.18) 2px, transparent 2px, transparent 10px);
+  background-size:100% 40px;
+  font-family:"Courier New",monospace;
+  box-shadow:inset 0 0 10px rgba(50,255,120,0.35), 0 0 12px rgba(50,255,120,0.3);
+  animation:matrixRain 1.4s linear infinite;
+}
+@keyframes matrixRain{ 0%{background-position:0 0;} 100%{background-position:0 40px;} }
+.key.plasma{
+  background:radial-gradient(circle at 50% 50%, #ff6cf0, #6c2fd8 55%, #1a0a2e 100%);
+  color:#ffe0ff;
+  box-shadow:0 0 16px rgba(255,108,240,0.55), inset 0 0 14px rgba(255,108,240,0.35);
+  animation:plasmaPulse 2.4s ease-in-out infinite;
+}
+@keyframes plasmaPulse{ 0%,100%{filter:brightness(1) saturate(1);} 50%{filter:brightness(1.3) saturate(1.4);} }
+
+/* prestige-exclusive cosmetics */
+.key.prestigeBronze{
+  background:linear-gradient(165deg,#d99a63,#8a5426 60%,#5a3414); color:#fff0dc;
+  box-shadow:inset 0 2px 0 rgba(255,220,180,0.4), 0 0 10px rgba(200,130,60,0.4);
+}
+.key.prestigeSilver{
+  background:linear-gradient(165deg,#f0f2f5,#b8c0cc 50%,#7a8494); color:#161a20;
+  box-shadow:inset 0 2px 0 rgba(255,255,255,0.8), 0 0 12px rgba(200,210,225,0.55);
+}
+.key.prestigeGold{
+  background:linear-gradient(165deg,#fff6c9,#ffd23f 45%,#8a5c00); color:#3a2600;
+  box-shadow:inset 0 2px 0 rgba(255,255,255,0.8), 0 0 18px rgba(255,210,63,0.6);
+  animation:neonPulse 2s ease-in-out infinite;
+}
+.key.prestigeDiamond{
+  background:linear-gradient(165deg,#e8fbff,#9be8ff 45%,#2aa5cc); color:#062533;
+  box-shadow:inset 0 2px 0 rgba(255,255,255,0.9), 0 0 20px rgba(150,230,255,0.7);
+  animation:cosmicTwinkle 2.4s ease-in-out infinite;
+}
+.key.omega{
+  background:linear-gradient(120deg,#ff5c5c,#ffd23f,#5cff8a,#5cd2ff,#b26cff,#ff5c5c);
+  background-size:400% 400%; color:#05060a; font-weight:900;
+  box-shadow:0 0 22px rgba(255,255,255,0.5), inset 0 0 14px rgba(255,255,255,0.4);
+  animation:omegaShift 2.5s linear infinite;
+}
+@keyframes omegaShift{ 0%{background-position:0% 50%;} 100%{background-position:400% 50%;} }
+
+/* ---------- START SCREEN ---------- */
+.startScreen{
+  position:fixed; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:18px;
+  background:radial-gradient(circle at center,#1a1f2a,#05060a);
+  z-index:100; transition:opacity 0.5s ease, transform 0.5s ease;
+}
+.startScreen.hidden{ opacity:0; transform:scale(1.05); pointer-events:none; }
+.logo{
+  font-size:52px; font-weight:800; letter-spacing:2px;
+  background:linear-gradient(90deg,#00f5ff,#7a4bff);
+  -webkit-background-clip:text; background-clip:text; color:transparent;
+}
+.tagline{opacity:0.75;font-size:14px;}
+.playBtn{
+  margin-top:10px; padding:14px 42px; font-size:16px; font-weight:700; border-radius:10px; border:none; cursor:pointer;
+  background:linear-gradient(90deg,#00f5ff,#7a4bff); color:#05060a;
+  box-shadow:0 8px 20px rgba(0,245,255,0.25); transition:transform 0.15s;
+}
+.playBtn:hover{transform:translateY(-2px);}
+.playBtn:active{transform:translateY(1px);}
+
+.gameWrap{ opacity:0; transition:opacity 0.5s ease; }
+.gameWrap.visible{opacity:1;}
+
+/* ---------- SHOP ---------- */
+.shop{ position:fixed; inset:0; background:rgba(0,0,0,0.55); display:none; z-index:30; }
+.shop.open{display:block;}
+.shopPanel{
+  position:absolute; right:14px; top:64px; bottom:14px; width:340px; max-width:92vw;
+  background:#121722; border:1px solid #222; border-radius:12px; overflow:auto; padding:14px;
+  display:flex; flex-direction:column; gap:10px;
+}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px;}
+.tab{
+  flex:1; min-width:56px; text-align:center; padding:8px 4px; font-size:10px; border-radius:8px;
+  background:#1a2030; cursor:pointer; border:1px solid transparent;
+}
+.tab.active{background:#242c42;border-color:#00f5ff;color:#00f5ff;}
+.section{display:none;flex-direction:column;gap:8px;}
+.section.active{display:flex;}
+.item{
+  padding:10px; background:#1a2030; border-radius:8px; cursor:pointer;
+  display:flex; justify-content:space-between; align-items:center; font-size:12px; border:1px solid transparent;
+}
+.item:hover{background:#222a3d;}
+.item.owned{border-color:#2fbf71;}
+.item.equipped{border-color:#00f5ff;background:#17324a;}
+.item.disabled{opacity:0.4;cursor:not-allowed;}
+.itemName{font-weight:600;}
+.itemSub{opacity:0.6;font-size:10px;margin-top:2px;line-height:1.5;}
+.cost{color:#ffd23f;font-weight:700;white-space:nowrap;}
+.title{font-size:12px;opacity:0.7;margin-bottom:2px;text-transform:uppercase;letter-spacing:1px;}
+
+.boxCard{
+  padding:12px; border-radius:10px; background:linear-gradient(160deg,#2a2050,#140f24);
+  border:1px solid #7a4bff; cursor:pointer;
+}
+.boxCard:hover{background:linear-gradient(160deg,#33266a,#1a1330);}
+.boxCard.disabled{opacity:0.4;cursor:not-allowed;}
+.boxHeader{display:flex;justify-content:space-between;font-weight:700;font-size:13px;margin-bottom:4px;}
+
+.charmGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
+.charmCell{
+  aspect-ratio:1; border-radius:8px; display:flex; align-items:center; justify-content:center;
+  font-size:20px; background:#1a2030; cursor:pointer; position:relative; border:2px solid #333;
+}
+.charmCell.common{border-color:#b8c1cf;}
+.charmCell.rare{border-color:#4aa3ff;box-shadow:0 0 8px #4aa3ff55;}
+.charmCell.epic{border-color:#b26cff;box-shadow:0 0 8px #b26cff55;}
+.charmCell.legendary{border-color:#ffb238;box-shadow:0 0 10px #ffb23877;}
+.charmCell.selected{outline:2px solid #fff;}
+.equippedTag{
+  position:absolute;top:-6px;left:-6px; font-size:9px;background:#00f5ff;color:#05060a;
+  border-radius:4px;padding:1px 3px;font-weight:700;
+}
+.conditionTag{
+  position:absolute;bottom:2px;right:3px;font-size:8px;opacity:0.85;background:rgba(0,0,0,0.5);
+  border-radius:3px;padding:0 2px;
+}
+.empty{opacity:0.5;font-size:12px;text-align:center;padding:20px 0;}
+
+.marketItem{display:flex;align-items:center;gap:10px;background:#1a2030;border-radius:8px;padding:8px;}
+.marketIcon{
+  width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:18px;background:#0e1119;border:2px solid #888;flex-shrink:0;
+}
+.marketIcon.common{border-color:#b8c1cf;}
+.marketIcon.rare{border-color:#4aa3ff;box-shadow:0 0 6px #4aa3ff;}
+.marketIcon.epic{border-color:#b26cff;box-shadow:0 0 6px #b26cff;}
+.marketIcon.legendary{border-color:#ffb238;box-shadow:0 0 8px #ffb238;}
+.marketInfo{flex:1;min-width:0;}
+.sellBtn{background:#2fbf71;border:none;color:#05230f;font-weight:700;border-radius:6px;padding:6px 10px;cursor:pointer;white-space:nowrap;}
+.sellBtn:hover{background:#39d685;}
+.sortRow{display:flex;gap:6px;margin-bottom:4px;}
+.sortRow .iconbtn{flex:1;font-size:10px;padding:6px;}
+.sortRow .iconbtn.active{background:#242c42;border-color:#00f5ff;color:#00f5ff;}
+
+/* prestige tab */
+.prestigeHeader{
+  padding:14px; border-radius:10px; background:linear-gradient(160deg,#2a2050,#140f24);
+  border:1px solid #7a4bff; text-align:center;
+}
+.prestigeHeader .bigIcon{font-size:34px;}
+.prestigeHeader .name{font-weight:800;font-size:15px;margin-top:4px;}
+.prestigeHeader .mult{color:#2fbf71;font-size:12px;margin-top:2px;}
+.progressBarOuter{ background:#0e1119; border-radius:6px; height:10px; overflow:hidden; margin-top:10px; }
+.progressBarInner{ background:linear-gradient(90deg,#00f5ff,#7a4bff); height:100%; transition:width 0.3s; }
+.progressLabel{ font-size:10px; opacity:0.7; margin-top:4px; }
+.prestigeBtn{
+  width:100%; margin-top:12px; padding:12px; border-radius:8px; border:none; cursor:pointer;
+  background:linear-gradient(90deg,#00f5ff,#7a4bff); color:#05060a; font-weight:800; font-size:13px;
+}
+.prestigeBtn:disabled{ opacity:0.35; cursor:not-allowed; }
+.tierRow{
+  display:flex; gap:10px; align-items:center; padding:9px; border-radius:8px; background:#1a2030;
+  border:1px solid transparent; font-size:11px;
+}
+.tierRow.claimed{border-color:#2fbf71;}
+.tierRow.current{border-color:#00f5ff;background:#17324a;}
+.tierRow .tIcon{font-size:20px;width:26px;text-align:center;}
+.tierRow .tBody{flex:1;}
+.tierRow .tName{font-weight:700;font-size:12px;}
+.tierRow .tReward{opacity:0.65;font-size:10px;margin-top:2px;}
+.tierRow .tThresh{opacity:0.5;font-size:9px;white-space:nowrap;}
+
+.placeBanner{
+  position:fixed; top:60px; left:50%; transform:translateX(-50%);
+  background:#ffd23f; color:#1a1200; padding:8px 16px; border-radius:8px;
+  font-size:12px; font-weight:700; z-index:40; display:none;
+}
+.placeBanner.show{display:block;}
+
+.revealModal{ position:fixed;inset:0; background:rgba(0,0,0,0.75); display:none; align-items:center; justify-content:center; z-index:50; }
+.revealModal.show{display:flex;}
+.revealCard{
+  width:220px;min-height:260px; border-radius:16px; background:linear-gradient(160deg,#1a2030,#0a0d14);
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px;
+  border:2px solid #444; animation:shake 0.5s ease; padding:14px; text-align:center;
+}
+.revealCard.common{border-color:#b8c1cf;}
+.revealCard.rare{border-color:#4aa3ff;box-shadow:0 0 24px #4aa3ff55;}
+.revealCard.epic{border-color:#b26cff;box-shadow:0 0 24px #b26cff55;}
+.revealCard.legendary{border-color:#ffb238;box-shadow:0 0 32px #ffb23888;}
+.revealCard.prestige{
+  border-color:#ffd23f;
+  box-shadow:0 0 40px rgba(255,210,63,0.6);
+}
+@keyframes shake{
+  0%,100%{transform:rotate(0);} 20%{transform:rotate(-8deg);} 40%{transform:rotate(8deg);}
+  60%{transform:rotate(-5deg);} 80%{transform:rotate(5deg);}
+}
+.revealIcon{font-size:56px;}
+.revealName{font-weight:700;font-size:15px;}
+.revealRarity{font-size:11px;text-transform:uppercase;letter-spacing:1px;opacity:0.8;}
+.revealSub{font-size:10px;opacity:0.7;}
+.closeReveal{
+  margin-top:8px; padding:8px 20px; border-radius:8px; border:none;
+  background:#00f5ff; color:#05060a; font-weight:700; cursor:pointer;
+}
+
+.settingsRow{display:flex;justify-content:space-between;align-items:center;font-size:12px;padding:8px 0;border-bottom:1px solid #222;gap:8px;}
+.dangerBtn{background:#3a1a1a;border:1px solid #a33;color:#f88;border-radius:8px;padding:6px 12px;cursor:pointer;font-size:11px;}
+.dangerBtn:hover{background:#4a2020;}
+.saveStatus{font-size:10px;opacity:0.6;margin-top:6px;}
+.saveStatus.warn{color:#ff8080;opacity:1;}
+.accountsList{display:flex;flex-direction:column;gap:8px;margin-top:8px;}
+.accountCard{
+  display:flex;justify-content:space-between;align-items:center;gap:10px;
+  padding:10px;border:1px solid #2a3346;border-radius:10px;background:#101522;
+}
+.accountCard.active{border-color:#00f5ff;box-shadow:0 0 0 1px #00f5ff55 inset;}
+.accountMeta{display:flex;flex-direction:column;gap:3px;font-size:12px;}
+.accountMeta small{opacity:0.7;}
+.shopMetaRow{display:flex;justify-content:space-between;gap:8px;font-size:11px;opacity:0.8;margin:4px 0 8px;}
+.dailyShopGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}
+.dailyShopCard{
+  border:1px solid #2a3346;border-radius:10px;padding:10px;background:linear-gradient(160deg,#1a2030,#0e1119);
+}
+.dailyShopCard.legendary{border-color:#ffb238;}
+.dailyShopCard.epic{border-color:#b26cff;}
+.dailyShopCard.rare{border-color:#4aa3ff;}
+.dailyShopCard .row{justify-content:space-between;align-items:center;margin-bottom:6px;}
+.dailyShopCard .name{font-weight:700;font-size:12px;}
+.dailyShopCard .price{color:#00f5ff;font-weight:700;font-size:12px;}
+.dailyShopCard .desc{font-size:11px;opacity:0.72;margin:6px 0 8px;}
+.antiCheatBanner{
+  position:fixed;bottom:12px;left:50%;transform:translateX(-50%);
+  background:#2d1212;color:#ffd3d3;border:1px solid #ff5c5c;border-radius:999px;
+  padding:8px 12px;font-size:12px;display:none;z-index:40;
+}
+.antiCheatBanner.show{display:block;}
+
+@media (max-width:700px){
+  :root{ --tilt: 16deg; }
+  .keyboard{transform:scale(0.6);}
+  .boardWrap{padding:20px 12px 30px;}
+  .stats{font-size:10px;gap:8px;}
+  .logo{font-size:36px;}
+}
+</style>
+</head>
+<body>
+
+<div class="startScreen" id="startScreen">
+  <div class="logo">⌨ KeyPress</div>
+  <div class="tagline">Pick a key, then mash it for clicks!</div>
+  <button class="playBtn" id="playBtn">Play</button>
+  <button class="iconbtn" id="startShopBtn" style="padding:12px 20px;font-size:14px;">Shop</button>
+</div>
+
+<div class="gameWrap" id="gameWrap">
+  <div class="topbar">
+    <div class="stats">
+      <span class="playerBadge" id="playerBadge" style="display:none;"></span>
+      <span>Clicks: <b id="statClicks">0</b></span>
+      <span>CPS: <b id="statCps">0</b></span>
+      <span>Total: <b id="statTotal">0</b></span>
+      <span>Boost: <b class="boost" id="statBoost">+0%</b></span>
+    </div>
+    <div class="topbtns">
+      <span class="accountBadge" id="accountBadge" style="display:none;"></span>
+      <button class="iconbtn" id="accountBtn">Google</button>
+      <button class="iconbtn prestigeBtn2" id="prestigeShortcutBtn">✨ Prestige</button>
+      <button class="iconbtn" id="shopBtn">Shop (O)</button>
+      <button class="iconbtn" id="settingsBtn">⚙</button>
+    </div>
+  </div>
+
+  <div class="stage">
+    <div class="boardWrap" id="boardWrap">
+      <div class="keyboard" id="keyboard"></div>
+    </div>
+  </div>
+</div>
+
+<div class="placeBanner" id="placeBanner">Click a key to place this charm ✦ (Esc to cancel)</div>
+<div class="guestBanner" id="guestBanner"><span>Playing as guest — progress only saves to this browser.</span></div>
+
+<!-- SHOP -->
+<div class="shop" id="shop">
+  <div class="shopPanel">
+    <div class="tabs">
+      <div class="tab active" data-tab="cosmetics">Keycaps</div>
+      <div class="tab" data-tab="themes">Board</div>
+      <div class="tab" data-tab="boxes">Boxes</div>
+      <div class="tab" data-tab="collection">Charms</div>
+      <div class="tab" data-tab="market">Market</div>
+      <div class="tab" data-tab="prestige">Prestige</div>
+    </div>
+
+    <div class="section active" id="section-cosmetics">
+      <div class="title">Keycap Cosmetics</div>
+      <div id="cosmeticsList"></div>
+    </div>
+
+    <div class="section" id="section-themes">
+      <div class="title">Board Themes</div>
+      <div id="themesList"></div>
+    </div>
+
+    <div class="section" id="section-boxes">
+      <div class="title">Mystery Boxes</div>
+      <div id="boxesList"></div>
+    </div>
+
+    <div class="section" id="section-daily">
+      <div class="title">Daily Item Shop</div>
+      <div class="shopMetaRow">
+        <span>5 rotating charms</span>
+        <span id="dailyShopDateLabel"></span>
+      </div>
+      <div id="dailyShopList" class="dailyShopGrid"></div>
+    </div>
+
+    <div class="section" id="section-collection">
+      <div class="title">Your Charms</div>
+      <div class="sortRow">
+        <button class="iconbtn active" data-view="best">Best</button>
+        <button class="iconbtn" data-view="rarity">Rarity</button>
+        <button class="iconbtn" data-view="value">Value</button>
+        <button class="iconbtn" data-view="name">Name</button>
+      </div>
+      <div id="collectionList"></div>
+    </div>
+
+    <div class="section" id="section-market">
+      <div class="title">Marketplace — sell your charms</div>
+      <div class="sortRow">
+        <button class="iconbtn active" data-sort="value">By value</button>
+        <button class="iconbtn" data-sort="rarity">By rarity</button>
+        <button class="iconbtn" data-sort="condition">By condition</button>
+      </div>
+      <div id="marketList"></div>
+    </div>
+
+    <div class="section" id="section-prestige">
+      <div class="title">Prestige</div>
+      <div id="prestigeHeader"></div>
+      <div id="prestigeTierList" style="display:flex;flex-direction:column;gap:6px;margin-top:8px;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- SETTINGS -->
+<div class="shop" id="settingsModal">
+  <div class="shopPanel" style="width:280px;">
+    <div class="title">Settings</div>
+    <div class="settingsRow">
+      <span>Sound Volume</span>
+      <input type="range" id="volumeSlider" min="0" max="100" value="50" />
+    </div>
+    <div class="settingsRow">
+      <span>Change main key</span>
+      <button class="iconbtn" id="changeKeyBtn">Change</button>
+    </div>
+    <div class="settingsRow">
+      <span>Sound</span>
+      <button class="iconbtn" id="muteBtn">🔊</button>
+    </div>
+    <div class="settingsRow">
+      <span>Reset all progress</span>
+      <button class="dangerBtn" id="resetBtn">Reset</button>
+    </div>
+    <div class="saveStatus" id="saveStatus">Saved locally in this browser.</div>
+    <button class="iconbtn" id="closeSettingsBtn" style="margin-top:10px;">Close</button>
+  </div>
+</div>
+
+<!-- ACCOUNTS -->
+<div class="shop" id="loginModal">
+  <div class="shopPanel" style="width:340px;">
+    <div class="title">Sign In</div>
+    <div class="itemSub">You need Google sign-in to save progress. This keeps everything on one account.</div>
+    <div id="googleSignInButton" style="margin:14px 0;"></div>
+    <button class="iconbtn" id="fallbackGoogleBtn" style="width:100%;margin-top:4px;">Sign in with Google</button>
+    <div class="settingsRow" style="margin-top:10px;">
+      <span>Email</span>
+      <input type="email" id="emailLoginInput" placeholder="you@example.com" style="width:160px;background:#0e1119;border:1px solid #2a3346;color:#fff;border-radius:6px;padding:4px 6px;" />
+    </div>
+    <button class="iconbtn" id="emailLoginBtn" style="width:100%;margin-top:6px;">Use Email Login</button>
+    <div class="settingsRow" style="margin-top:10px;">
+      <span>Guest/save</span>
+      <button class="iconbtn" id="guestContinueBtn">Continue</button>
+    </div>
+    <div class="settingsRow">
+      <span>Signed in as</span>
+      <div id="currentAccountLabel" style="font-size:12px;opacity:0.85;"></div>
+    </div>
+    <div class="saveStatus" id="accountStatus">Waiting for Google login.</div>
+    <button class="iconbtn" id="closeAccountsBtn" style="margin-top:10px;">Close</button>
+  </div>
+</div>
+
+<!-- REVEAL MODAL -->
+<div class="revealModal" id="revealModal">
+  <div class="revealCard" id="revealCard">
+    <div class="revealIcon" id="revealIcon"></div>
+    <div class="revealName" id="revealName"></div>
+    <div class="revealRarity" id="revealRarity"></div>
+    <div class="revealSub" id="revealSub"></div>
+    <button class="closeReveal" id="closeRevealBtn">Nice!</button>
+  </div>
+</div>
+
+<div class="antiCheatBanner" id="antiCheatBanner">Input pattern flagged. Slow down for a moment.</div>
+
+<script>
+/* =========================================================
+   KEYBOARD LAYOUT
+========================================================= */
+const layout = [
+  ["ESC","1","2","3","4","5","6","7","8","9","0","-","=","BACK"],
+  ["TAB","Q","W","E","R","T","Y","U","I","O","P","[","]"],
+  ["CAPS","A","S","D","F","G","H","J","K","L",";","'","ENTER"],
+  ["SHIFT","Z","X","C","V","B","N","M",",",".","/","SHIFT"],
+  ["SPACE"]
+];
+const keyEventMap = {
+  "Escape":"ESC","Backspace":"BACK","Tab":"TAB","CapsLock":"CAPS",
+  "Enter":"ENTER","Shift":"SHIFT"," ":"SPACE"
+};
+
+/* =========================================================
+   KEYCAP COSMETICS & BOARD THEMES
+========================================================= */
+const cosmetics = [
+  {id:"glass",   name:"Glass",   cost:100,  cls:"glass"},
+  {id:"neon",    name:"Neon",    cost:200,  cls:"neon"},
+  {id:"metal",   name:"Metal",   cost:300,  cls:"metal"},
+  {id:"rune",    name:"Rune",    cost:500,  cls:"rune"},
+  {id:"pixel",   name:"Pixel",   cost:700,  cls:"pixel"},
+  {id:"wood",    name:"Wood",    cost:900,  cls:"wood"},
+  {id:"gold",    name:"Gold",    cost:1200, cls:"gold"},
+  {id:"slime",   name:"Slime",   cost:1400, cls:"slime"},
+  {id:"camo",    name:"Camo",    cost:1300, cls:"camo"},
+  {id:"denim",   name:"Denim",   cost:1200, cls:"denim"},
+  {id:"candy",   name:"Candy",   cost:1500, cls:"candy"},
+  {id:"ice",     name:"Ice",     cost:1600, cls:"ice"},
+  {id:"lava",    name:"Lava",    cost:1800, cls:"lava"},
+  {id:"marble",  name:"Marble",  cost:1900, cls:"marble"},
+  {id:"circuit", name:"Circuit", cost:2100, cls:"circuit"},
+  {id:"holo",    name:"Holographic", cost:2800, cls:"holo"},
+  {id:"cosmic",  name:"Cosmic",  cost:3400, cls:"cosmic"},
+  {id:"liminal", name:"Liminal", cost:2600, cls:"liminal"},
+  {id:"galaxy",  name:"Galaxy",  cost:4500, cls:"galaxy"},
+  {id:"aurora",  name:"Aurora",  cost:4800, cls:"aurora"},
+  {id:"matrix",  name:"Matrix",  cost:5000, cls:"matrix"},
+  {id:"plasma",  name:"Plasma",  cost:5200, cls:"plasma"},
+  {id:"frostbite",  name:"Frostbite",  cost:5400, cls:"frostbite"},
+  {id:"emberglow",  name:"Ember Glow",  cost:5600, cls:"emberglow"},
+  {id:"glitch",  name:"Glitch",  cost:5900, cls:"glitch"},
+  {id:"titan",  name:"Titan",  cost:6200, cls:"titan"},
+  {id:"voidglass",  name:"Void Glass",  cost:6800, cls:"voidglass"},
+  {id:"sunburst",  name:"Sunburst",  cost:7000, cls:"sunburst"},
+  {id:"prism",  name:"Prism",  cost:7400, cls:"prism"}
+];
+
+// prestige-exclusive cosmetics — never purchasable, only granted by prestiging
+const prestigeCosmetics = [
+  {id:"prestigeBronze",  name:"Prestige Bronze",  cls:"prestigeBronze"},
+  {id:"prestigeSilver",  name:"Prestige Silver",  cls:"prestigeSilver"},
+  {id:"prestigeGold",    name:"Prestige Gold",    cls:"prestigeGold"},
+  {id:"prestigeDiamond", name:"Prestige Diamond", cls:"prestigeDiamond"},
+  {id:"omega",           name:"Omega",            cls:"omega"}
+];
+const allCosmetics = cosmetics.concat(prestigeCosmetics);
+
+const boardThemes = [
+  {id:"default",     name:"Default",          cost:0,    bg:"linear-gradient(160deg,#12151c,#04050a)", glow:"transparent", blur:"0px"},
+  {id:"rgb",         name:"RGB Backlight",    cost:800,  bg:"linear-gradient(160deg,#141414,#04050a)", glow:"conic-gradient(red,yellow,lime,cyan,blue,magenta,red)", blur:"26px", extraCls:"themeRgb"},
+  {id:"underblue",   name:"Blue Underglow",   cost:400,  bg:"linear-gradient(160deg,#0c1420,#04050a)", glow:"#2a6bff", blur:"30px"},
+  {id:"underpurple", name:"Purple Underglow", cost:400,  bg:"linear-gradient(160deg,#170c26,#04050a)", glow:"#8a2aff", blur:"30px"},
+  {id:"chrome",      name:"Chrome Frame",     cost:600,  bg:"linear-gradient(145deg,#f5f7fa 0%,#c3c9d1 20%,#8b93a0 40%,#e1e5ea 60%,#6e7682 80%,#ffffff 100%)", glow:"#c7ccd6", blur:"20px"},
+  {id:"woodframe",   name:"Wood Frame",       cost:750,  bg:"linear-gradient(145deg,#8b5a2b 0%,#6b3f1a 25%,#3e240f 50%,#6b3f1a 75%,#2b1a0d 100%)", glow:"#7a4b28", blur:"20px"},
+  {id:"pulse",       name:"Pulse Frame",      cost:1100, bg:"linear-gradient(160deg,#1a0f22,#04050a)", glow:"#ff4fd8", blur:"32px", extraCls:"themePulse"},
+  {id:"aurora",      name:"Aurora Frame",     cost:1400, bg:"linear-gradient(120deg,#0a3d2e,#1a6b4a,#0a2d5a,#3a1a6b,#0a3d2e)", glow:"#3ae0a0", blur:"30px", extraCls:"themeAurora"},
+  {id:"midnight",    name:"Midnight Frame",   cost:1800, bg:"linear-gradient(160deg,#050814,#0f1730,#050814)", glow:"#5c7bff", blur:"28px"},
+  {id:"ember",       name:"Ember Frame",      cost:2000, bg:"linear-gradient(160deg,#1c0700,#4d1200,#1c0700)", glow:"#ff6c2f", blur:"32px"},
+  {id:"prismframe",  name:"Prism Frame",      cost:2400, bg:"linear-gradient(120deg,#ff0040,#ff9f1c,#ffe66d,#4ecdc4,#1a8cff,#a95fff)", glow:"#ffffff", blur:"36px"}
+];
+
+// prestige-exclusive board themes — never purchasable, only granted by prestiging
+const prestigeThemes = [
+  {id:"solsticeframe", name:"Solstice Frame",  bg:"linear-gradient(120deg,#3a1a00,#a05a00,#3a1a6b,#3a1a00)", glow:"#ffb238", blur:"34px", extraCls:"themeSolstice"},
+  {id:"voidframe",     name:"Void Frame",      bg:"linear-gradient(160deg,#0a0014,#1a0030,#000)", glow:"#8a2aff", blur:"36px", extraCls:"themeVoid"},
+  {id:"celestialhalo", name:"Celestial Halo",  bg:"linear-gradient(160deg,#141420,#04050a)", glow:"conic-gradient(red,orange,yellow,green,blue,violet,red)", blur:"38px", extraCls:"themeCelestial"},
+  {id:"stellarforge",  name:"Stellar Forge",   bg:"linear-gradient(135deg,#140b2a,#2d145f,#0f3b62,#140b2a)", glow:"#8ff3ff", blur:"40px", extraCls:"themeCelestial"},
+  {id:"omegaaura",name:"Omega Aura",bg:"linear-gradient(135deg,#120000 0%,#2b1400 15%,#003024 30%,#001a33 50%,#220033 70%,#330014 85%,#120000 100%)",glow:"conic-gradient(from 90deg,#ff0040,#ff7a00,#ffee00,#00ff9d,#00c3ff,#7a00ff,#ff0040)",blur:"48px",extraCls:"themeOmega"}
+];
+const allThemes = boardThemes.concat(prestigeThemes);
+
+/* =========================================================
+   CHARM CATALOG — generated once at load from theme word-lists.
+========================================================= */
+const RARITY_BASE_PRICE = {common:20, rare:60, epic:150, legendary:400};
+const RARITY_BOOST      = {common:1,  rare:2,  epic:4,   legendary:8};
+
+function shuffleArr(arr){
+  for(let i=arr.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [arr[i],arr[j]] = [arr[j],arr[i]];
+  }
+  return arr;
+}
+function rollRarityFromWeights(w){
+  const total = w.common + w.rare + w.epic + w.legendary;
+  let r = Math.random()*total;
+  if(r < w.common) return "common";
+  r -= w.common;
+  if(r < w.rare) return "rare";
+  r -= w.rare;
+  if(r < w.epic) return "epic";
+  return "legendary";
+}
+function buildCatalog(prefix, adjectives, nouns, emojis, count, weights){
+  const combos = [];
+  adjectives.forEach(a => nouns.forEach(n => combos.push(a+" "+n)));
+  shuffleArr(combos);
+  const catalog = [];
+  for(let i=0;i<count;i++){
+    let name = combos[i % combos.length];
+    if(i >= combos.length) name += " " + (Math.floor(i/combos.length)+1);
+    const rarity = rollRarityFromWeights(weights);
+    const icon = emojis[i % emojis.length];
+    const priceJitter = 0.8 + Math.random()*0.4;
+    const boostJitter = 0.85 + Math.random()*0.3;
+    catalog.push({
+      templateKey: prefix + "_" + i,
+      name, icon, rarity,
+      basePrice: Math.max(5, Math.round(RARITY_BASE_PRICE[rarity]*priceJitter)),
+      boost: parseFloat((RARITY_BOOST[rarity]*boostJitter).toFixed(2))
+    });
+  }
+  return catalog;
+}
+
+const STARTER_ADJ = ["Little","Shiny","Lucky","Bright","Twinkly","Simple","Happy","Round"];
+const STARTER_NOUN = ["Star","Droplet","Clover","Orb","Spark","Pebble","Leaf","Bead"];
+const STARTER_EMOJI = ["⭐","💧","🍀","🔵","✨","🪨","🍃","🔴"];
+
+const ELEMENTAL_ADJ = ["Blazing","Frozen","Storming","Rooted","Charged","Radiant","Shadowed","Lunar","Solar","Molten","Crystalline","Windswept","Volcanic","Glacial","Thundering"];
+const ELEMENTAL_NOUN = ["Ember","Droplet","Gust","Boulder","Spark","Sprout","Shard","Eclipse","Flare","Cinder","Frost","Gale","Quake","Tide","Bolt","Inferno","Tempest","Avalanche","Tsunami","Volcano"];
+const ELEMENTAL_EMOJI = ["🔥","💧","🌪️","🪨","⚡","🌿","❄️","☀️","🌑","🌋","🧊","🍂","🌊","🌈","🌤️"];
+
+const MYSTIC_ADJ = ["Arcane","Enchanted","Ancient","Cursed","Blessed","Ethereal","Runic","Celestial","Forbidden","Sacred","Whispering","Hidden","Astral","Ghostly","Timeworn","Occult","Mystical","Divine","Shadowy","Eldritch"];
+const MYSTIC_NOUN = ["Orb","Ward","Rune","Sigil","Relic","Talisman","Charm","Amulet","Grimoire","Idol","Totem","Vial","Scroll","Crystal","Seal"];
+const MYSTIC_EMOJI = ["🔮","💫","✨","🌟","🪄","🧿","🕯️","📿","⚱️","🪬","📜","🔯","🧪","🗝️","💠"];
+
+const VAULT_ADJ = ["Eternal","Divine","Forbidden","Radiant","Voidborn","Immortal","Sovereign","Primal","Infinite","Hallowed"];
+const VAULT_NOUN = ["Core","Crown","Seal","Heart","Throne","Codex","Aegis","Nexus","Beacon","Vault"];
+const VAULT_EMOJI = ["👑","🏆","🌌","⚜️","💎","🔱","🪙","🛡️","🌠","🔆"];
+
+const NEBULA_ADJ = ["Astral","Ethereal","Celestial","Void","Stellar","Cosmic","Nova","Galactic","Radiant","Eclipsebound","Quantum","Interstellar","Nebulous","Luminous","Darkmatter","Supernova","Wormhole","Pulsar","Quasar","Exoplanet"];
+const NEBULA_NOUN = ["Nebula","Supercluster","Asteroid","Cosmos","Starforge","Horizon","Darkrift","Starlight","Galaxy","Nexus","Comet","Meteorite","Black Hole","White Dwarf","Red Giant","Neutron Star","Void Rift","Star Cluster","Ring System","Solar Flare"];
+const NEBULA_EMOJI = ["🌌","✨","🌠","🪐","🌑","💫","🔮","⚡","🛸","👁️"];
+
+const MONSTER_ADJ = ["Tiny","Grumpy","Bouncy","Sneaky","Sparkly","Rusty","Fuzzy","Wobbly","Zappy","Gloopy","Spiky","Shiny","Sleepy","Feisty","Chunky","Glowing","Squishy","Cheeky","Mossy","Frosty","Slimy","Wild","Brave","Soggy","Electric","Toothy","Dizzy","Burly"];
+const MONSTER_NOUN = ["Blob","Sprite","Imp","Gremlin","Critter","Beastie","Wisp","Goblin","Sprocket","Muncher","Nibbler","Snapper","Hopper","Glimmer","Grub","Fang","Whisker","Scamp","Puff","Gloop","Drifter","Chomper","Howler","Biter","Spore","Crawler","Slither","Tick","Rumbler"];
+const MONSTER_EMOJI = ["👾","🐲","🐙","🦑","🐌","🐛","🦎","🐸","🦖","🦕","👹","👺","🤖","🎃","🦠","🐺","🦇","🐍","🦂","🦥"];
+
+const OG_ADJ = ["Prototype","Unreleased","Alpha-Tested","Patchwork","Rollbacked","Pre-Launch","Retired","Legacy","Hotfixed","Archived"];
+const OG_NOUN = ["Build","Instance","Datashard","Cache","Backup","Packet","Module","Fragment","Snapshot","Registry"];
+const OG_EMOJI = ["🧾","🗂️","🧬","🧠","💾","📼","🧷","⚙️","🧰","🖥️"];
+
+const CHRONO_ADJ = ["Fractured","Temporal","Recursive","Clockwork","Looping","Pastborne","Futureborn","Stitched","Delayed","Accelerated"];
+const CHRONO_NOUN = ["Minute","Epoch","Hourglass","Relay","Chronicle","Tick","Timeline","Loop","Vault","Signal"];
+const CHRONO_EMOJI = ["⏳","🕰️","⌛","🌀","⏱️","🔁","📡","🪐","🧭","⚡"];
+
+const AETHER_ADJ = ["Sacred","Mythic","Branded","Crowned","Runed","Blessed","Ancient","Lunar","Solar","Hidden"];
+const AETHER_NOUN = ["Relic","Token","Sigil","Totem","Shard","Charm","Emblem","Prism","Icon","Vault"];
+const AETHER_EMOJI = ["🕯️","🪬","✨","🌟","🔆","🧿","👁️","🏺","🪽","💠"];
+
+
+
+const BOXES = [
+  {id:"starter",   name:"Starter Box",   cost:100,  catalog:"starter",   desc:"Basic charms to get you going.",           weights:{common:65,rare:25,epic:8, legendary:2}},
+  {id:"elemental", name:"Elemental Box", cost:250,  catalog:"elemental", desc:"Charms infused with fire, ice & storm.",   weights:{common:55,rare:28,epic:13,legendary:4}},
+  {id:"mystic",    name:"Mystic Box",    cost:500,  catalog:"mystic",    desc:"Arcane relics and enchanted trinkets.",    weights:{common:45,rare:30,epic:18,legendary:7}},
+  {id:"monster",   name:"Monster Box",   cost:400,  catalog:"monster",   desc:"200 cartoony critters to collect.",        weights:{common:55,rare:27,epic:14,legendary:4}},
+  {id:"vault",     name:"Vault Box",     cost:1000, catalog:"vault",     desc:"The rarest treasures in the game.",        weights:{common:30,rare:30,epic:28,legendary:12}},
+  {id:"nebula",    name:"Nebula Box",    cost:5000, catalog:"nebula",    desc:"The galaxy, in charm form.",                weights:{common:35,rare:30,epic:25,legendary:17}},
+  {id:"og",        name:"OG Box",        cost:6000, catalog:"og",        desc:"Weird little relics from early builds.",   weights:{common:20,rare:15,epic:14,legendary:10}},
+  {id:"chrono",    name:"Chrono Box",    cost:9000, catalog:"chrono",    desc:"Time-bending charms with better odds.",     weights:{common:22,rare:28,epic:30,legendary:20}},
+  {id:"aether",    name:"Aether Box",    cost:12000, catalog:"aether",    desc:"High-end relics for serious collectors.",   weights:{common:12,rare:22,epic:33,legendary:33}},
+  {id:"rift",      name:"Rift Box",      cost:16000, catalog:"rift",      desc:"Unstable relics from the edge of the game.", weights:{common:10,rare:20,epic:30,legendary:40}},
+  {id:"mythic",    name:"Mythic Box",    cost:22000, catalog:"mythic",    desc:"Built for endgame collectors.",             weights:{common:8,rare:17,epic:30,legendary:45}}
+];
+
+const CATALOGS = {
+  starter:   buildCatalog("starter",   STARTER_ADJ,   STARTER_NOUN,   STARTER_EMOJI,   40,  BOXES[0].weights),
+  elemental: buildCatalog("elemental", ELEMENTAL_ADJ, ELEMENTAL_NOUN, ELEMENTAL_EMOJI, 100, BOXES[1].weights),
+  mystic:    buildCatalog("mystic",    MYSTIC_ADJ,    MYSTIC_NOUN,    MYSTIC_EMOJI,    100, BOXES[2].weights),
+  monster:   buildCatalog("monster",   MONSTER_ADJ,   MONSTER_NOUN,   MONSTER_EMOJI,   200, BOXES[3].weights),
+  vault:     buildCatalog("vault",     VAULT_ADJ,     VAULT_NOUN,     VAULT_EMOJI,     60,  BOXES[4].weights),
+  nebula:    buildCatalog("nebula",    NEBULA_ADJ,    NEBULA_NOUN,    NEBULA_EMOJI,    70,  BOXES[5].weights),
+  og:        buildCatalog("og",        OG_ADJ,        OG_NOUN,        OG_EMOJI,        80,  BOXES[6].weights),
+  chrono:    buildCatalog("chrono",    CHRONO_ADJ,    CHRONO_NOUN,    CHRONO_EMOJI,    60,  BOXES[7].weights),
+  aether:    buildCatalog("aether",    AETHER_ADJ,    AETHER_NOUN,    AETHER_EMOJI,    60,  BOXES[8].weights),
+  rift:      buildCatalog("rift",      ["Broken","Fractured","Warped","Shattered","Split","Jagged","Sundered","Bleeding","Crumbling","Twisted"], ["Shard","Gate","Rift","Echo","Pulse","Vortex","Loop","Key","Core","Fragment"], ["🕳️","🌀","🧿","⚫","🔺","🔻","🪐","💠","🫧","🗝️"], 70, BOXES[9].weights),
+  mythic:    buildCatalog("mythic",    ["Royal","Ancient","Ascended","Hidden","Infinite","Prime","Mythic","Crowned","Sacred","Final"], ["Crown","Relic","Aegis","Sigil","Heart","Idol","Throne","Shard","Mark","Key"], ["👑","🏺","🛡️","✨","💎","🔱","🌌","🪽","⚜️","🔮"], 80, BOXES[10].weights)
+};
+
+function openBoxRoll(box){
+  const rarity = rollRarityFromWeights(box.weights);
+  const catalog = CATALOGS[box.catalog];
+  let candidates = catalog.filter(c => c.rarity === rarity);
+  if(candidates.length === 0) candidates = catalog;
+  const template = candidates[Math.floor(Math.random()*candidates.length)];
+  return {
+    instanceId: "i" + Date.now() + Math.floor(Math.random()*1000000),
+    templateKey: template.templateKey,
+    name: template.name,
+    icon: template.icon,
+    rarity: template.rarity,
+    basePrice: template.basePrice,
+    boost: template.boost,
+    condition: 100,
+    boxId: box.id
+  };
+}
+
+const DAILY_CHARMS = [
+  {name:"Signal Spark", icon:"📶", rarity:"common", boost:2, price:90, desc:"A clean little click booster."},
+  {name:"Gleam Stitch", icon:"🪡", rarity:"common", boost:2, price:95, desc:"Neat, tidy, dependable."},
+  {name:"Echo Shell", icon:"🐚", rarity:"rare", boost:4, price:260, desc:"Carries your best rhythms."},
+  {name:"Pulse Lens", icon:"🔍", rarity:"rare", boost:5, price:320, desc:"Sharpens every press."},
+  {name:"Moon Tag", icon:"🌙", rarity:"epic", boost:7, price:760, desc:"A quiet charm with a loud boost."},
+  {name:"Forge Heart", icon:"🫀", rarity:"epic", boost:8, price:880, desc:"Built to last through every streak."},
+  {name:"Sun Crown", icon:"👑", rarity:"legendary", boost:12, price:2200, desc:"Daily royalty, if you are lucky."},
+  {name:"Void Prism", icon:"🜁", rarity:"legendary", boost:13, price:2600, desc:"A rare fracture from the edge of the board."},
+  {name:"Owner's Key", icon:"🗝️", rarity:"legendary", boost:18, price:0, ownerOnly:true, desc:"Exclusive to the creator account."}
+];
+
+const RARITY_ORDER = {common:1, rare:2, epic:3, legendary:4};
+function rarityWeight(rarity){
+  return {common:60, rare:25, epic:11, legendary:4}[rarity] || 1;
+}
+function weightedPick(items){
+  const total = items.reduce((sum, item) => sum + rarityWeight(item.rarity), 0);
+  let roll = Math.random() * total;
+  for(const item of items){
+    roll -= rarityWeight(item.rarity);
+    if(roll <= 0) return item;
+  }
+  return items[items.length - 1];
+}
+function makeDailyShopKey(){
+  const now = new Date();
+  const utc = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+  return utc.toISOString().slice(0,10);
+}
+function buildDailyShop(){
+  const key = makeDailyShopKey();
+  if(dailyShopKey === key && dailyShopCache.length) return dailyShopCache;
+  dailyShopKey = key;
+  const pool = DAILY_CHARMS.filter(charm => !charm.ownerOnly || state.ownerUnlocked);
+  const picks = [];
+  const legendaryPool = pool.filter(item => item.rarity === "legendary");
+  if(legendaryPool.length){
+    picks.push(legendaryPool[Math.floor(Math.random() * legendaryPool.length)]);
+  }
+  while(picks.length < 5){
+    const eligible = pool.filter(item => !picks.includes(item));
+    if(!eligible.length) break;
+    picks.push(weightedPick(eligible));
+  }
+  dailyShopCache = picks.slice(0,5).map((item, index) => ({
+    id: `${key}_${index}_${item.name.replace(/[^a-z0-9]/gi,"").toLowerCase()}`,
+    ...item,
+    price: item.price || Math.max(80, item.boost * 120)
+  }));
+  state.dailyShopDate = key;
+  state.dailyShopItems = dailyShopCache;
+  saveState();
+  return dailyShopCache;
+}
+function buyDailyCharm(item){
+  if(item.ownerOnly && !state.ownerUnlocked){
+    alert("That item is owner-exclusive.");
+    return;
+  }
+  if(!state.ownerUnlocked && state.clicks < item.price){
+    alert("Not enough clicks.");
+    return;
+  }
+  if(!state.ownerUnlocked) state.clicks -= item.price;
+  state.charms.push(normalizeCharm({
+    name: item.name,
+    icon: item.icon,
+    rarity: item.rarity,
+    basePrice: item.price,
+    boost: item.boost,
+    condition: 100,
+    boxId: "daily"
+  }));
+  saveState();
+  renderCollection();
+  renderMarket();
+  updateStatsDisplay();
+  renderDailyShop();
+}
+
+
+const PRESTIGE_TIERS = [
+  {level:1,  name:"Awakened",     icon:"🥉", threshold:5000,        multAdd:5,  reward:{cosmetic:"prestigeBronze"},                       desc:"+5% permanent boost · Prestige Bronze keycap"},
+  {level:2,  name:"Resolute",     icon:"🔥", threshold:15000,       multAdd:5,  reward:{charmName:"Ember Core", charmIcon:"🔥", charmRarity:"epic", charmBoost:6},
+   desc:"+5% permanent boost · guaranteed Ember Core charm"},
+  {level:3,  name:"Ascendant",    icon:"🥈", threshold:40000,       multAdd:5,  reward:{cosmetic:"prestigeSilver"},                       desc:"+5% permanent boost · Prestige Silver keycap"},
+  {level:4,  name:"Vanguard",     icon:"☀️", threshold:100000,      multAdd:6,  reward:{theme:"solsticeframe"},                           desc:"+6% permanent boost · Solstice Frame (animated board)"},
+  {level:5,  name:"Luminous",     icon:"🌠", threshold:250000,      multAdd:6,  reward:{charmName:"Starfall Shard", charmIcon:"🌠", charmRarity:"legendary", charmBoost:10, nameColor:true},
+   desc:"+6% permanent boost · guaranteed Starfall Shard · custom name colour unlocked"},
+  {level:6,  name:"Ethereal",     icon:"🏵️", threshold:600000,      multAdd:7,  reward:{cosmetic:"prestigeGold"},                         desc:"+7% permanent boost · Prestige Gold keycap"},
+  {level:7,  name:"Sovereign",    icon:"🌀", threshold:1500000,     multAdd:7,  reward:{theme:"voidframe"},                               desc:"+7% permanent boost · Void Frame (animated board)"},
+  {level:8,  name:"Transcendent", icon:"🦅", threshold:3500000,     multAdd:8,  reward:{charmName:"Phoenix Heart", charmIcon:"🦅", charmRarity:"legendary", charmBoost:12},
+   desc:"+8% permanent boost · guaranteed Phoenix Heart charm"},
+  {level:9,  name:"Mythic",       icon:"💎", threshold:8000000,     multAdd:9,  reward:{cosmetic:"prestigeDiamond", nameplate:true},      desc:"+9% permanent boost · Prestige Diamond keycap · custom nameplate text unlocked"},
+  {level:10, name:"Celestial",    icon:"🌈", threshold:18000000,    multAdd:12, reward:{theme:"celestialhalo"},                           desc:"+12% permanent boost · Celestial Halo (animated rainbow board)"},
+  {level:11, name:"OMEGA",        icon:"Ω",  threshold:50000000,    multAdd:50, reward:{cosmetic:"omega", theme:"omegaaura", charmName:"The One Key", charmIcon:"Ω", charmRarity:"legendary", charmBoost:25, nameColor:true, nameplate:true, badge:true},
+   desc:"+50% permanent boost · Omega keycap · Omega Aura board · The One Key charm · full rainbow nameplate & badge"},
+  {level:12, name:"Apex",         icon:"✦",  threshold:120000000,   multAdd:12, reward:{theme:"prismframe", charmName:"Apex Key", charmIcon:"✦", charmRarity:"legendary", charmBoost:14},
+   desc:"+12% permanent boost · Prism Frame · Apex Key"},
+  {level:13, name:"Paragon",      icon:"⬟",  threshold:250000000,   multAdd:14, reward:{cosmetic:"prism", charmName:"Paragon Crest", charmIcon:"⬟", charmRarity:"legendary", charmBoost:16},
+   desc:"+14% permanent boost · Prism keycap · Paragon Crest"},
+  {level:14, name:"Myriad",       icon:"✺",  threshold:500000000,   multAdd:16, reward:{theme:"midnight", charmName:"Myriad Core", charmIcon:"✺", charmRarity:"legendary", charmBoost:18},
+   desc:"+16% permanent boost · Midnight Frame · Myriad Core"},
+  {level:15, name:"Creator",      icon:"◆",  threshold:1000000000,  multAdd:20, reward:{cosmetic:"dev", theme:"ember", charmName:"Unreleased Relic", charmIcon:"◆", charmRarity:"legendary", charmBoost:22, badge:true},
+   desc:"+20% permanent boost · Dev Box access · unreleased relics"},
+  {level:16, name:"Infinite",     icon:"∞",  threshold:2500000000,  multAdd:25, reward:{theme:"stellarforge", charmName:"Infinity Loop", charmIcon:"∞", charmRarity:"legendary", charmBoost:26},
+   desc:"+25% permanent boost · Stellar Forge · Infinity Loop"}
+];
+
+function currentPrestigeTier(){
+  return PRESTIGE_TIERS.find(t => t.level === state.prestige) || null;
+}
+function nextPrestigeTier(){
+  return PRESTIGE_TIERS.find(t => t.level === state.prestige + 1) || null;
+}
+function getPrestigeMultiplierPercent(){
+  let total = 0;
+  PRESTIGE_TIERS.forEach(t => { if(t.level <= state.prestige) total += t.multAdd; });
+  return total;
+}
+
+/* =========================================================
+   CONDITION / MARKETPLACE VALUE
+========================================================= */
+function conditionLabel(cond){
+  if(cond >= 99) return "Pristine";
+  if(cond >= 85) return "Good";
+  if(cond >= 60) return "Worn";
+  if(cond >= 30) return "Damaged";
+  return "Ruined";
+}
+function conditionMultiplier(cond){
+  if(cond >= 99) return 1.0;
+  if(cond >= 85) return 0.8;
+  if(cond >= 60) return 0.55;
+  if(cond >= 30) return 0.3;
+  return 0.12;
+}
+function sellValue(charm){
+  return Math.max(1, Math.round(charm.basePrice * conditionMultiplier(charm.condition)));
+}
+
+/* =========================================================
+   STATE
+========================================================= */
+const STORAGE_KEY = "keypress_save_v6";
+const OWNER_EMAIL = "crypticfn2012@gmail.com";
+const GOOGLE_CLIENT_ID = "387562570914-f6slk74l4259c27o4p011ib002pa0fa0.apps.googleusercontent.com";
+
+function defaultState(){
+  return {
+    clicks:9999999999999999999999999999999999999999999999988888888888888888888888888888888888888888888999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999,
+    lifetimeClicks:0,
+    totalPresses:0,
+    mainKey:null,
+    ownedCosmetics:["base"],
+    equippedCosmetic:"base",
+    ownedThemes:["default"],
+    equippedTheme:"default",
+    charms:[],
+    keyCharms:{},
+    muted:false,
+    volume:0.5,
+    unlockedFlags:{},
+    prestige:0,
+    nameColorUnlocked:false,
+    nameplateUnlocked:false,
+    customNameColor:"#00f5ff",
+    customNameplate:"",
+    accountEmail:"",
+    username:"Guest",
+    ownerUnlocked:false,
+    dailyShopDate:"",
+    dailyShopItems:[]
+  };
+}
+
+let storageAvailable = true;
+let state = loadState();
+let history = [];
+let placingCharmId = null;
+let marketSort = "value";
+let antiCheatLockUntil = 0;
+let pressHistory = [];
+let dailyShopCache = [];
+let dailyShopKey = "";
+let googleProfile = null;
+let googleReady = false;
+let loginRequired = true;
+
+function loadState(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw) return migrateOldSave();
+    const parsed = JSON.parse(raw);
+    const merged = Object.assign(defaultState(), parsed);
+    merged.charms = (merged.charms || []).map(normalizeCharm);
+    if(merged.accountEmail){
+      googleProfile = {
+        email: merged.accountEmail,
+        name: merged.username || merged.accountEmail.split("@")[0],
+        picture: ""
+      };
+      loginRequired = false;
+    }
+    return merged;
+  }catch(e){
+    console.warn("KeyPress: could not load save", e);
+    storageAvailable = false;
+    return defaultState();
+  }
+}
+
+function migrateOldSave(){
+  try{
+    for(const key of ["keypress_save_v4","keypress_save_v3","keypress_save_v2","keypress_save_v1"]){
+      const raw = localStorage.getItem(key);
+      if(raw){
+        const parsed = JSON.parse(raw);
+        const merged = Object.assign(defaultState(), parsed);
+        merged.charms = (merged.charms || []).map(normalizeCharm);
+        if(!merged.lifetimeClicks) merged.lifetimeClicks = merged.clicks || 0;
+        return merged;
+      }
+    }
+  }catch(e){ /* ignore, fall through to fresh state */ }
+  return defaultState();
+}
+
+function normalizeCharm(c){
+  return {
+    instanceId: c.instanceId || c.id || ("i"+Date.now()+Math.floor(Math.random()*1000000)),
+    templateKey: c.templateKey || "",
+    name: c.name || "Mystery Charm",
+    icon: c.icon || "❔",
+    rarity: c.rarity || "common",
+    basePrice: c.basePrice || c.value || RARITY_BASE_PRICE[c.rarity] || 20,
+    boost: c.boost !== undefined ? c.boost : (RARITY_BOOST[c.rarity] || 1),
+    condition: c.condition !== undefined ? c.condition : 100,
+    boxId: c.boxId || c.boxType || "starter"
+  };
+}
+
+function saveState(){
+  try{
+    if(googleProfile && googleProfile.email){
+      state.accountEmail = googleProfile.email;
+    }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    storageAvailable = true;
+    setSaveStatus(true);
+  }catch(e){
+    console.warn("KeyPress: could not save progress", e);
+    storageAvailable = false;
+    setSaveStatus(false);
+  }
+}
+
+function setSaveStatus(ok){
+  const el = document.getElementById("saveStatus");
+  if(!el) return;
+  if(ok){
+    el.textContent = "Saved locally in this browser.";
+    el.classList.remove("warn");
+  }else{
+    el.textContent = "⚠ Couldn't save (private browsing or local-file security may block it). Use Export to back up your progress.";
+    el.classList.add("warn");
+  }
+}
+
+function sanitizeUsername(name){
+  const cleaned = (name || "").trim().replace(/\s+/g, " ").slice(0, 18);
+  return cleaned || "Player";
+}
+
+/* =========================================================
+   AUDIO — satisfying tap, not harsh noise
+========================================================= */
+let audioCtx = null;
+function ensureAudio(){
+  if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if(audioCtx.state === "suspended") audioCtx.resume();
+}
+function playClickSound(){
+  if(state.muted) return;
+  ensureAudio();
+  const ctx = audioCtx;
+  const now = ctx.currentTime;
+  const vol = state.volume;
+  const pitchJitter = 0.94 + Math.random()*0.12;
+
+  const osc = ctx.createOscillator();
+  osc.type = "sine";
+  osc.frequency.setValueAtTime(190 * pitchJitter, now);
+  osc.frequency.exponentialRampToValueAtTime(70 * pitchJitter, now + 0.045);
+
+  const oscGain = ctx.createGain();
+  oscGain.gain.setValueAtTime(0.0001, now);
+  oscGain.gain.linearRampToValueAtTime(vol * 0.55, now + 0.004);
+  oscGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.09);
+
+  osc.connect(oscGain).connect(ctx.destination);
+  osc.start(now);
+  osc.stop(now + 0.1);
+
+  const tickBufferSize = Math.floor(ctx.sampleRate * 0.006);
+  const tickBuffer = ctx.createBuffer(1, tickBufferSize, ctx.sampleRate);
+  const tickData = tickBuffer.getChannelData(0);
+  for(let i=0;i<tickBufferSize;i++){
+    tickData[i] = (Math.random()*2-1) * Math.pow(1 - i/tickBufferSize, 3);
+  }
+  const tick = ctx.createBufferSource();
+  tick.buffer = tickBuffer;
+
+  const tickFilter = ctx.createBiquadFilter();
+  tickFilter.type = "lowpass";
+  tickFilter.frequency.value = 3200;
+
+  const tickGain = ctx.createGain();
+  tickGain.gain.value = vol * 0.12;
+
+  tick.connect(tickFilter).connect(tickGain).connect(ctx.destination);
+  tick.start(now);
+  tick.stop(now + 0.008);
+}
+
+/* =========================================================
+   DOM REFS (declared exactly once)
+========================================================= */
+const startScreen = document.getElementById("startScreen");
+const gameWrap = document.getElementById("gameWrap");
+const playBtn = document.getElementById("playBtn");
+const startShopBtn = document.getElementById("startShopBtn");
+const keyboardEl = document.getElementById("keyboard");
+const boardWrap = document.getElementById("boardWrap");
+
+const statClicks = document.getElementById("statClicks");
+const statCps = document.getElementById("statCps");
+const statTotal = document.getElementById("statTotal");
+const statBoost = document.getElementById("statBoost");
+const playerBadge = document.getElementById("playerBadge");
+const guestBanner = document.getElementById("guestBanner");
+
+const shop = document.getElementById("shop");
+const shopBtn = document.getElementById("shopBtn");
+const changeKeyBtn = document.getElementById("changeKeyBtn");
+const muteBtn = document.getElementById("muteBtn");
+const prestigeShortcutBtn = document.getElementById("prestigeShortcutBtn");
+const settingsBtn = document.getElementById("settingsBtn");
+const settingsModal = document.getElementById("settingsModal");
+const closeSettingsBtn = document.getElementById("closeSettingsBtn");
+const resetBtn = document.getElementById("resetBtn");
+const volumeSlider = document.getElementById("volumeSlider");
+const accountBadge = document.getElementById("accountBadge");
+const accountBtn = document.getElementById("accountBtn");
+const accountsModal = document.getElementById("loginModal");
+const closeAccountsBtn = document.getElementById("closeAccountsBtn");
+const currentAccountLabel = document.getElementById("currentAccountLabel");
+const accountStatus = document.getElementById("accountStatus");
+const fallbackGoogleBtn = document.getElementById("fallbackGoogleBtn");
+const emailLoginInput = document.getElementById("emailLoginInput");
+const emailLoginBtn = document.getElementById("emailLoginBtn");
+const guestContinueBtn = document.getElementById("guestContinueBtn");
+const antiCheatBanner = document.getElementById("antiCheatBanner");
+
+const charmViewModes = ["best","rarity","value","name"];
+let charmViewMode = "best";
+
+const cosmeticsList = document.getElementById("cosmeticsList");
+const themesList = document.getElementById("themesList");
+const boxesList = document.getElementById("boxesList");
+const dailyShopList = document.getElementById("dailyShopList");
+const dailyShopDateLabel = document.getElementById("dailyShopDateLabel");
+const collectionList = document.getElementById("collectionList");
+const marketList = document.getElementById("marketList");
+const prestigeHeaderEl = document.getElementById("prestigeHeader");
+const prestigeTierList = document.getElementById("prestigeTierList");
+
+const placeBanner = document.getElementById("placeBanner");
+const revealModal = document.getElementById("revealModal");
+const revealCard = document.getElementById("revealCard");
+const revealIcon = document.getElementById("revealIcon");
+const revealName = document.getElementById("revealName");
+const revealRarity = document.getElementById("revealRarity");
+const revealSub = document.getElementById("revealSub");
+const closeRevealBtn = document.getElementById("closeRevealBtn");
+
+let awaitingKeySelectMode = false;
+
+/* =========================================================
+   KEYBOARD RENDER
+========================================================= */
+function createKeySlot(label){
+  const slot = document.createElement("div");
+  slot.className = "keySlot";
+  if(["SHIFT","ENTER","BACK","TAB","CAPS"].includes(label)) slot.classList.add("wide");
+  if(label === "SPACE") slot.classList.add("space");
+
+  const cap = document.createElement("div");
+  cap.className = "key";
+  cap.textContent = label;
+  cap.dataset.key = label;
+  cap.addEventListener("click", () => handleKeyClick(label));
+
+  slot.appendChild(cap);
+  return slot;
+}
+
+function renderKeyboard(){
+  keyboardEl.innerHTML = "";
+  layout.forEach(row => {
+    const r = document.createElement("div");
+    r.className = "row";
+    row.forEach(k => r.appendChild(createKeySlot(k)));
+    keyboardEl.appendChild(r);
+  });
+  applyCosmetic();
+  applyTheme();
+  refreshKeyVisuals();
+}
+
+function handleKeyClick(label){
+  if(placingCharmId){
+    state.keyCharms[label] = placingCharmId;
+    placingCharmId = null;
+    placeBanner.classList.remove("show");
+    saveState();
+    refreshKeyVisuals();
+    return;
+  }
+  if(!state.mainKey || awaitingKeySelectMode){
+    state.mainKey = label;
+    awaitingKeySelectMode = false;
+    saveState();
+    refreshKeyVisuals();
+    return;
+  }
+  if(label === state.mainKey){
+    registerPress(label);
+  }
+}
+
+function refreshKeyVisuals(){
+  document.querySelectorAll(".key").forEach(el => {
+    const label = el.dataset.key;
+    el.classList.toggle("selected", label === state.mainKey);
+    el.classList.toggle("placeTarget", !!placingCharmId);
+
+    const existingBadge = el.querySelector(".charmBadge");
+    if(existingBadge) existingBadge.remove();
+
+    const charmId = state.keyCharms[label];
+    if(charmId){
+      const charm = state.charms.find(c => c.instanceId === charmId);
+      if(charm){
+        const badge = document.createElement("div");
+        badge.className = "charmBadge " + charm.rarity;
+        badge.textContent = charm.icon;
+        el.appendChild(badge);
+      }
+    }
+  });
+}
+
+/* =========================================================
+   COSMETICS / THEMES APPLICATION
+========================================================= */
+function applyCosmetic(){
+  document.querySelectorAll(".key").forEach(k => {
+    allCosmetics.forEach(c => k.classList.remove(c.cls));
+    const c = allCosmetics.find(c => c.id === state.equippedCosmetic);
+    if(c) k.classList.add(c.cls);
+  });
+}
+function applyTheme(){
+  const theme = allThemes.find(t => t.id === state.equippedTheme) || allThemes[0];
+  document.documentElement.style.setProperty("--board-bg", theme.bg);
+  document.documentElement.style.setProperty("--underglow", theme.glow);
+  document.documentElement.style.setProperty("--underglow-blur", theme.blur);
+
+  boardWrap.classList.remove("themeRgb","themePulse","themeAurora","themeSolstice","themeVoid","themeCelestial","themeOmega");
+  if(theme.extraCls) boardWrap.classList.add(theme.extraCls);
+}
+
+/* =========================================================
+   CASH BOOST from equipped charms + prestige multiplier
+========================================================= */
+function getTotalBoostPercent(){
+  const equippedIds = new Set(Object.values(state.keyCharms));
+  let total = 0;
+  equippedIds.forEach(id => {
+    const c = state.charms.find(c => c.instanceId === id);
+    if(c) total += c.boost;
+  });
+  return total;
+}
+
+/* =========================================================
+   KEY PRESS HANDLING
+========================================================= */
+window.addEventListener("keydown", e => {
+  const label = keyEventMap[e.key] || e.key.toUpperCase();
+
+  if(label === "O" && !placingCharmId){ toggleShop(); return; }
+  if(label === "ESC" && placingCharmId){
+    placingCharmId = null;
+    placeBanner.classList.remove("show");
+    refreshKeyVisuals();
+    return;
+  }
+
+  if(!state.mainKey) return;
+  if(label !== state.mainKey) return;
+  if(e.repeat) return;
+
+  registerPress(label);
+});
+
+function registerPress(label){
+  if(Date.now() < antiCheatLockUntil){
+    showAntiCheat("Input paused briefly after a suspicious pattern.");
+    return;
+  }
+  recordInputStamp();
+  state.totalPresses++;
+
+  const chestBoost = getTotalBoostPercent();
+  const prestigeBoost = getPrestigeMultiplierPercent();
+  const gain = 1 * (1 + chestBoost/100) * (1 + prestigeBoost/100);
+  state.clicks = parseFloat((state.clicks + gain).toFixed(2));
+  state.lifetimeClicks = parseFloat((state.lifetimeClicks + gain).toFixed(2));
+
+  history.push(Date.now());
+  playClickSound();
+
+  const charmId = state.keyCharms[label];
+  if(charmId){
+    const charm = state.charms.find(c => c.instanceId === charmId);
+    if(charm) charm.condition = Math.max(0, charm.condition - Math.random()*0.35);
+  }
+
+  document.querySelectorAll(".key").forEach(el => {
+    if(el.dataset.key === label){
+      el.classList.add("pressed");
+      setTimeout(() => el.classList.remove("pressed"), 70);
+    }
+  });
+
+  // legitimate Gamplo achievement hooks (create matching keys in your Gamplo dashboard)
+  if(window.Gamplo && typeof Gamplo.isReady === "function" && Gamplo.isReady() && Gamplo.getPlayer()){
+    if(state.totalPresses === 1) Gamplo.unlockAchievement("first_press").catch(()=>{});
+    if(state.totalPresses === 100) Gamplo.unlockAchievement("100_clicks").catch(()=>{});
+    if(state.totalPresses === 1000) Gamplo.unlockAchievement("1000_clicks").catch(()=>{});
+  }
+
+  updateStatsDisplay();
+  saveState();
+}
+
+function updateStatsDisplay(){
+  statClicks.textContent = Math.floor(state.clicks);
+  statTotal.textContent = state.totalPresses;
+  statBoost.textContent = "+" + (getTotalBoostPercent() + getPrestigeMultiplierPercent()).toFixed(1) + "%";
+  renderPlayerBadge();
+  updatePrestigeShortcut();
+}
+
+setInterval(() => {
+  const now = Date.now();
+  history = history.filter(t => now - t < 1000);
+  statCps.textContent = history.length;
+}, 100);
+
+/* =========================================================
+   SHOP: COSMETICS / THEMES
+========================================================= */
+function renderCosmetics(){
+  cosmeticsList.innerHTML = "";
+  cosmetics.forEach(c => {
+    const owned = state.ownerUnlocked || state.ownedCosmetics.includes(c.id);
+    const equipped = state.equippedCosmetic === c.id;
+    const el = document.createElement("div");
+    el.className = "item" + (owned?" owned":"") + (equipped?" equipped":"") + (!owned && state.clicks < c.cost ? " disabled":"");
+    el.innerHTML = `
+      <div>
+        <div class="itemName">${c.name}</div>
+        <div class="itemSub">${owned ? (equipped?"Equipped":"Owned") : "Locked"}</div>
+      </div>
+      <div class="cost">${owned ? (equipped?"✓":"Equip") : c.cost}</div>
+    `;
+    el.onclick = () => {
+      if(owned || state.ownerUnlocked){ state.equippedCosmetic = c.id; }
+      else if(state.clicks >= c.cost){
+        state.clicks -= c.cost;
+        state.ownedCosmetics.push(c.id);
+        state.equippedCosmetic = c.id;
+      } else return;
+      saveState(); applyCosmetic(); updateStatsDisplay(); renderCosmetics();
+    };
+    cosmeticsList.appendChild(el);
+  });
+
+  if(state.prestige > 0){
+    const divider = document.createElement("div");
+    divider.className = "itemSub";
+    divider.style.marginTop = "6px";
+    divider.textContent = "★ Prestige-exclusive keycaps you've earned:";
+    cosmeticsList.appendChild(divider);
+    prestigeCosmetics.forEach(c => {
+      if(!state.ownerUnlocked && !state.ownedCosmetics.includes(c.id)) return;
+      const equipped = state.equippedCosmetic === c.id;
+      const el = document.createElement("div");
+      el.className = "item owned" + (equipped?" equipped":"");
+      el.innerHTML = `<div><div class="itemName">${c.name}</div><div class="itemSub">${equipped?"Equipped":"Owned"}</div></div><div class="cost">${equipped?"✓":"Equip"}</div>`;
+      el.onclick = () => { state.equippedCosmetic = c.id; saveState(); applyCosmetic(); updateStatsDisplay(); renderCosmetics(); };
+      cosmeticsList.appendChild(el);
+    });
+  }
+}
+
+function renderThemes(){
+  themesList.innerHTML = "";
+  boardThemes.forEach(t => {
+    const owned = state.ownerUnlocked || state.ownedThemes.includes(t.id);
+    const equipped = state.equippedTheme === t.id;
+    const el = document.createElement("div");
+    el.className = "item" + (owned?" owned":"") + (equipped?" equipped":"") + (!owned && state.clicks < t.cost ? " disabled":"");
+    el.innerHTML = `
+      <div>
+        <div class="itemName">${t.name}</div>
+        <div class="itemSub">${owned ? (equipped?"Equipped":"Owned") : "Locked"}</div>
+      </div>
+      <div class="cost">${owned ? (equipped?"✓":"Equip") : t.cost}</div>
+    `;
+    el.onclick = () => {
+      if(owned || state.ownerUnlocked){ state.equippedTheme = t.id; }
+      else if(state.clicks >= t.cost){
+        state.clicks -= t.cost;
+        state.ownedThemes.push(t.id);
+        state.equippedTheme = t.id;
+      } else return;
+      saveState(); applyTheme(); updateStatsDisplay(); renderThemes();
+    };
+    themesList.appendChild(el);
+  });
+
+  if(state.prestige > 0){
+    const divider = document.createElement("div");
+    divider.className = "itemSub";
+    divider.style.marginTop = "6px";
+    divider.textContent = "★ Prestige-exclusive board themes you've earned:";
+    themesList.appendChild(divider);
+    prestigeThemes.forEach(t => {
+      if(!state.ownerUnlocked && !state.ownedThemes.includes(t.id)) return;
+      const equipped = state.equippedTheme === t.id;
+      const el = document.createElement("div");
+      el.className = "item owned" + (equipped?" equipped":"");
+      el.innerHTML = `<div><div class="itemName">${t.name}</div><div class="itemSub">${equipped?"Equipped":"Owned"}</div></div><div class="cost">${equipped?"✓":"Equip"}</div>`;
+      el.onclick = () => { state.equippedTheme = t.id; saveState(); applyTheme(); updateStatsDisplay(); renderThemes(); };
+      themesList.appendChild(el);
+    });
+  }
+}
+
+/* =========================================================
+   SHOP: BOXES
+========================================================= */
+function renderBoxes(){
+  boxesList.innerHTML = "";
+  BOXES.forEach(box => {
+    const el = document.createElement("div");
+    el.className = "boxCard" + (!state.ownerUnlocked && state.clicks < box.cost ? " disabled" : "");
+    el.innerHTML = `
+      <div class="boxHeader"><span>${box.name}</span><span class="cost">${box.cost}</span></div>
+      <div class="itemSub">${box.desc}</div>
+      <div class="itemSub">C ${box.weights.common}% · R ${box.weights.rare}% · E ${box.weights.epic}% · L ${box.weights.legendary}%</div>
+    `;
+    el.onclick = () => {
+      if(!state.ownerUnlocked && state.clicks < box.cost) return;
+      if(!state.ownerUnlocked) state.clicks -= box.cost;
+      const charm = openBoxRoll(box);
+      state.charms.push(charm);
+      saveState();
+      updateStatsDisplay();
+      renderBoxes();
+      renderCollection();
+      renderMarket();
+      showReveal(charm);
+    };
+    boxesList.appendChild(el);
+  });
+}
+
+function renderDailyShop(){
+  if(!dailyShopList) return;
+  const items = buildDailyShop();
+  dailyShopDateLabel.textContent = `Daily reset: ${dailyShopKey}`;
+  dailyShopList.innerHTML = "";
+  items.forEach(item => {
+    const card = document.createElement("div");
+    card.className = `dailyShopCard ${item.rarity}`;
+    card.innerHTML = `
+      <div class="row"><div class="name">${item.icon} ${item.name}</div><div class="price">${item.price} clicks</div></div>
+      <div class="itemSub">${item.rarity}${item.ownerOnly ? " · owner only" : ""} · +${item.boost}% boost</div>
+      <div class="desc">${item.desc}</div>
+      <button class="iconbtn" style="width:100%;">Buy</button>
+    `;
+    card.querySelector("button").onclick = () => buyDailyCharm(item);
+    dailyShopList.appendChild(card);
+  });
+}
+
+function showReveal(charm, isPrestige){
+  revealCard.className = "revealCard " + (isPrestige ? "prestige" : charm.rarity);
+  revealIcon.textContent = charm.icon;
+  revealName.textContent = charm.name;
+  revealRarity.textContent = isPrestige ? "prestige reward" : charm.rarity;
+  revealSub.textContent = isPrestige
+    ? (charm.sub || "")
+    : "Worth " + charm.basePrice + " clicks · +" + charm.boost + "% boost";
+  revealModal.classList.add("show");
+}
+closeRevealBtn.onclick = () => revealModal.classList.remove("show");
+
+/* =========================================================
+   SHOP: CHARM COLLECTION (equip / unequip)
+========================================================= */
+function renderCollection(){
+  collectionList.innerHTML = "";
+  if(state.charms.length === 0){
+    collectionList.innerHTML = "<div class='empty'>No charms yet — open a box!</div>";
+    return;
+  }
+  const grouped = new Map();
+  state.charms.forEach(charm => {
+    const key = `${charm.name}|${charm.icon}|${charm.rarity}|${charm.basePrice}|${charm.boost}`;
+    if(!grouped.has(key)) grouped.set(key, []);
+    grouped.get(key).push(charm);
+  });
+
+  const stacks = Array.from(grouped.values()).map(items => ({
+    charm: items[0],
+    items,
+    count: items.length,
+    avgCondition: items.reduce((sum, item) => sum + item.condition, 0) / items.length
+  }));
+  const order = {legendary:0, epic:1, rare:2, common:3};
+  stacks.sort((a,b) => {
+    if(charmViewMode === "rarity") return order[a.charm.rarity] - order[b.charm.rarity];
+    if(charmViewMode === "value") return sellValue(b.charm) - sellValue(a.charm);
+    if(charmViewMode === "name") return a.charm.name.localeCompare(b.charm.name);
+    return (sellValue(b.charm) * b.count) - (sellValue(a.charm) * a.count);
+  });
+
+  const grid = document.createElement("div");
+  grid.className = "charmGrid";
+
+  stacks.forEach(stack => {
+    const charm = stack.charm;
+    const equippedKey = Object.keys(state.keyCharms).find(k => state.keyCharms[k] === charm.instanceId);
+    const cell = document.createElement("div");
+    cell.className = "charmCell " + charm.rarity + (placingCharmId === charm.instanceId ? " selected" : "");
+    cell.title = `${charm.name} x${stack.count} (${charm.rarity})\nValue each: ${sellValue(charm)} clicks\nBoost: +${charm.boost}%\nCondition: ${Math.round(stack.avgCondition)}% (${conditionLabel(stack.avgCondition)})`;
+    cell.innerHTML = `<div style="font-size:18px;line-height:1;">${charm.icon}</div><div class="itemSub" style="font-size:10px;">x${stack.count}</div><div class="itemSub" style="font-size:10px;">${Math.round(stack.avgCondition)}%</div>`;
+    cell.onclick = () => {
+      if(equippedKey){
+        delete state.keyCharms[equippedKey];
+        saveState();
+        refreshKeyVisuals();
+        renderCollection();
+        updateStatsDisplay();
+        return;
+      }
+      placingCharmId = charm.instanceId;
+      placeBanner.classList.add("show");
+      shop.classList.remove("open");
+      refreshKeyVisuals();
+    };
+    grid.appendChild(cell);
+  });
+
+  collectionList.appendChild(grid);
+  const hint = document.createElement("div");
+  hint.className = "itemSub";
+  hint.style.marginTop = "6px";
+  hint.textContent = "Stacks compress duplicates into one tile. Tap a stack to place it on a key.";
+  collectionList.appendChild(hint);
+}
+
+/* =========================================================
+   SHOP: MARKETPLACE (sell)
+========================================================= */
+function renderMarket(){
+  marketList.innerHTML = "";
+  if(state.charms.length === 0){
+    marketList.innerHTML = "<div class='empty'>Nothing to sell yet — open a box!</div>";
+    return;
+  }
+
+  const sorted = state.charms.slice().sort((a,b) => {
+    if(marketSort === "value") return sellValue(b) - sellValue(a);
+    if(marketSort === "condition") return b.condition - a.condition;
+    const order = {legendary:0, epic:1, rare:2, common:3};
+    return order[a.rarity] - order[b.rarity];
+  });
+
+  sorted.forEach(charm => {
+    const value = sellValue(charm);
+    const label = conditionLabel(charm.condition);
+    const equippedKey = Object.keys(state.keyCharms).find(k => state.keyCharms[k] === charm.instanceId);
+    const el = document.createElement("div");
+    el.className = "marketItem";
+    el.innerHTML = `
+      <div class="marketIcon ${charm.rarity}">${charm.icon}</div>
+      <div class="marketInfo">
+        <div class="itemName">${charm.name}</div>
+        <div class="itemSub">${charm.rarity} · ${label} (${Math.round(charm.condition)}%) · +${charm.boost}% boost${equippedKey ? " · on "+equippedKey : ""}</div>
+      </div>
+      <button class="sellBtn">Sell ${value}</button>
+    `;
+    el.querySelector(".sellBtn").onclick = () => {
+      if(!confirm(`Sell ${charm.name} for ${value} clicks?`)) return;
+      sellCharm(charm.instanceId);
+    };
+    marketList.appendChild(el);
+  });
+}
+
+function sellCharm(instanceId){
+  const idx = state.charms.findIndex(c => c.instanceId === instanceId);
+  if(idx === -1) return;
+  const charm = state.charms[idx];
+  const value = sellValue(charm);
+  state.clicks += value;
+
+  Object.keys(state.keyCharms).forEach(k => {
+    if(state.keyCharms[k] === instanceId) delete state.keyCharms[k];
+  });
+  state.charms.splice(idx, 1);
+
+  saveState();
+  updateStatsDisplay();
+  refreshKeyVisuals();
+  renderMarket();
+  renderCollection();
+}
+
+document.querySelectorAll(".sortRow .iconbtn").forEach(btn => {
+  btn.onclick = () => {
+    const parent = btn.parentElement;
+    if(parent && parent.previousElementSibling && parent.previousElementSibling.classList.contains("title")) return;
+    document.querySelectorAll("#section-market .sortRow .iconbtn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    marketSort = btn.dataset.sort;
+    renderMarket();
+  };
+});
+
+document.querySelectorAll("#section-collection .sortRow .iconbtn").forEach(btn => {
+  btn.onclick = () => {
+    document.querySelectorAll("#section-collection .sortRow .iconbtn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    charmViewMode = btn.dataset.view;
+    renderCollection();
+  };
+});
+
+/* =========================================================
+   SHOP: PRESTIGE
+========================================================= */
+function renderPrestige(){
+  const tier = currentPrestigeTier();
+  const next = nextPrestigeTier();
+  const mult = getPrestigeMultiplierPercent();
+
+  prestigeHeaderEl.innerHTML = "";
+  const header = document.createElement("div");
+  header.className = "prestigeHeader";
+
+  if(!next){
+    header.innerHTML = `
+      <div class="bigIcon">Ω</div>
+      <div class="name">OMEGA — Max Prestige</div>
+      <div class="mult">Permanent boost: +${mult}%</div>
+      <div class="progressLabel" style="margin-top:8px;">You've reached the final prestige. Nothing left to cash in — just flex it.</div>
+    `;
+  } else {
+    const progress = Math.min(100, (state.lifetimeClicks / next.threshold) * 100);
+    const canPrestige = state.lifetimeClicks >= next.threshold;
+    header.innerHTML = `
+      <div class="bigIcon">${tier ? tier.icon : "🔹"}</div>
+      <div class="name">${tier ? tier.name : "No Prestige Yet"}</div>
+      <div class="mult">Permanent boost: +${mult}%</div>
+      <div class="progressBarOuter"><div class="progressBarInner" style="width:${progress}%;"></div></div>
+      <div class="progressLabel">${Math.floor(state.lifetimeClicks).toLocaleString()} / ${next.threshold.toLocaleString()} lifetime clicks toward ${next.name}</div>
+      <button class="prestigeBtn" id="doPrestigeBtn" ${canPrestige ? "" : "disabled"}>
+        ${canPrestige ? "✨ Prestige to " + next.name : "Locked"}
+      </button>
+    `;
+  }
+  prestigeHeaderEl.appendChild(header);
+
+  const doBtn = document.getElementById("doPrestigeBtn");
+  if(doBtn){
+    doBtn.onclick = () => {
+      if(!confirm(`Prestige to ${next.name}? This resets your spendable clicks to 0 (your cosmetics, themes, and charms are kept) in exchange for a permanent +${next.multAdd}% click boost and an exclusive reward. Continue?`)){
+        return;
+      }
+      doPrestige(next);
+    };
+  }
+
+  prestigeTierList.innerHTML = "";
+  PRESTIGE_TIERS.forEach(t => {
+    const claimed = t.level <= state.prestige;
+    const isCurrentTarget = !claimed && next && t.level === next.level;
+    const row = document.createElement("div");
+    row.className = "tierRow" + (claimed ? " claimed" : "") + (isCurrentTarget ? " current" : "");
+    row.innerHTML = `
+      <div class="tIcon">${t.icon}</div>
+      <div class="tBody">
+        <div class="tName">${t.level === 11 ? "Final — " : "Prestige " + t.level + " — "}${t.name} ${claimed ? "✓" : ""}</div>
+        <div class="tReward">${t.desc}</div>
+      </div>
+      <div class="tThresh">${t.threshold.toLocaleString()}</div>
+    `;
+    prestigeTierList.appendChild(row);
+  });
+}
+
+function doPrestige(tier){
+  state.clicks = 99999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999898999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999;
+  state.prestige = tier.level;
+
+  const r = tier.reward;
+  let rewardSub = "";
+
+  if(r.cosmetic){
+    if(!state.ownedCosmetics.includes(r.cosmetic)) state.ownedCosmetics.push(r.cosmetic);
+    state.equippedCosmetic = r.cosmetic;
+    rewardSub += allCosmetics.find(c=>c.id===r.cosmetic).name + " keycap unlocked. ";
+  }
+  if(r.theme){
+    if(!state.ownedThemes.includes(r.theme)) state.ownedThemes.push(r.theme);
+    state.equippedTheme = r.theme;
+    rewardSub += allThemes.find(t=>t.id===r.theme).name + " board unlocked. ";
+  }
+  if(r.charmName){
+    const charm = {
+      instanceId: "i" + Date.now() + Math.floor(Math.random()*1000000),
+      templateKey: "prestige_" + tier.level,
+      name: r.charmName,
+      icon: r.charmIcon,
+      rarity: r.charmRarity,
+      basePrice: RARITY_BASE_PRICE[r.charmRarity] * 4,
+      boost: r.charmBoost,
+      condition: 100,
+      boxId: "prestige"
+    };
+    state.charms.push(charm);
+    rewardSub += r.charmName + " charm granted. ";
+  }
+  if(r.nameColor) state.nameColorUnlocked = true;
+  if(r.nameplate) state.nameplateUnlocked = true;
+
+  saveState();
+  applyCosmetic();
+  applyTheme();
+  renderKeyboard();
+  updateStatsDisplay();
+  renderCosmetics();
+  renderThemes();
+  renderCollection();
+  renderMarket();
+  renderPrestige();
+
+  showReveal({icon: tier.icon, name: tier.name + "!", sub: rewardSub || ("+" + tier.multAdd + "% permanent boost")}, true);
+
+  if(window.Gamplo && typeof Gamplo.isReady === "function" && Gamplo.isReady() && Gamplo.getPlayer()){
+    Gamplo.unlockAchievement("prestige_" + tier.level).catch(()=>{});
+    if(tier.level === 11) Gamplo.unlockAchievement("prestige_omega").catch(()=>{});
+  }
+}
+
+function updatePrestigeShortcut(){
+  const next = nextPrestigeTier();
+  if(next && state.lifetimeClicks >= next.threshold){
+    prestigeShortcutBtn.style.display = "inline-block";
+    prestigeShortcutBtn.textContent = "✨ Prestige!";
+  } else if(state.prestige > 0){
+    prestigeShortcutBtn.style.display = "inline-block";
+    prestigeShortcutBtn.textContent = (currentPrestigeTier()||{}).icon + " P" + state.prestige;
+  } else {
+    prestigeShortcutBtn.style.display = "none";
+  }
+}
+prestigeShortcutBtn.onclick = () => { toggleShop(true); switchTab("prestige"); };
+
+/* =========================================================
+   SHOP TABS / TOGGLES
+========================================================= */
+function switchTab(tabId){
+  document.querySelectorAll(".tab").forEach(t => t.classList.toggle("active", t.dataset.tab === tabId));
+  document.querySelectorAll(".section").forEach(s => s.classList.toggle("active", s.id === "section-" + tabId));
+}
+document.querySelectorAll(".tab").forEach(tab => {
+  tab.onclick = () => switchTab(tab.dataset.tab);
+});
+
+function toggleShop(forceOpen){
+  if(forceOpen){ shop.classList.add("open"); }
+  else{ shop.classList.toggle("open"); }
+  if(shop.classList.contains("open")){
+    renderCosmetics();
+    renderThemes();
+    renderBoxes();
+    renderDailyShop();
+    renderCollection();
+    renderMarket();
+    renderPrestige();
+  }
+}
+shopBtn.onclick = () => toggleShop();
+
+changeKeyBtn.onclick = () => { awaitingKeySelectMode = true; };
+
+muteBtn.onclick = () => {
+  state.muted = !state.muted;
+  muteBtn.textContent = state.muted ? "🔇" : "🔊";
+  saveState();
+};
+
+/* =========================================================
+   PLAYER BADGE (Gamplo identity)
+========================================================= */
+const BASIC_FILTER_WORDS = ["fuck","shit","bitch","nigger","faggot","retard","cunt"];
+function containsFlaggedWord(str){
+  const lower = (str||"").toLowerCase();
+  return BASIC_FILTER_WORDS.some(w => lower.includes(w));
+}
+
+function renderPlayerBadge(){
+  const displayName = sanitizeUsername(state.username || (googleProfile && googleProfile.name) || "Player");
+  const nameColor = state.nameColorUnlocked ? state.customNameColor : "#e7edf6";
+  const nameplate = (state.nameplateUnlocked && state.customNameplate && !containsFlaggedWord(state.customNameplate))
+    ? ` "${state.customNameplate}"` : "";
+
+  const avatarHtml = googleProfile && googleProfile.picture
+    ? `<img src="${googleProfile.picture}" alt="" />`
+    : `<span class="noAvatar">${(displayName||"?").charAt(0).toUpperCase()}</span>`;
+
+  const tierBadge = state.prestige > 0
+    ? `<span class="prestigeTag${state.prestige===11?" omega":""}">${state.prestige===11?"Ω OMEGA":"P"+state.prestige}</span>`
+    : "";
+  const ownerBadge = state.ownerUnlocked ? `<span class="prestigeTag owner">OWNER</span>` : "";
+
+  playerBadge.style.display = "flex";
+  playerBadge.innerHTML = `${avatarHtml}<span style="color:${nameColor};font-weight:600;">${displayName}${nameplate}</span>${tierBadge}${ownerBadge}`;
+  accountBadge.style.display = "flex";
+  accountBadge.innerHTML = `<span>${displayName}</span><span class="pill${state.ownerUnlocked?" owner":""}">${state.ownerUnlocked ? "Owner" : "Account"}</span>`;
+  if(currentAccountLabel){
+    currentAccountLabel.textContent = googleProfile ? `${displayName} · ${googleProfile.email}` : "Not signed in";
+  }
+}
+
+/* =========================================================
+   SETTINGS
+========================================================= */
+settingsBtn.onclick = () => {
+  settingsModal.classList.add("open");
+  setSaveStatus(storageAvailable);
+  renderNameCustomizationRow();
+};
+closeSettingsBtn.onclick = () => settingsModal.classList.remove("open");
+accountBtn.onclick = () => {
+  accountsModal.classList.add("open");
+  renderLoginUI();
+};
+closeAccountsBtn.onclick = () => accountsModal.classList.remove("open");
+emailLoginBtn.onclick = handleLocalEmailLogin;
+
+volumeSlider.oninput = () => {
+  state.volume = volumeSlider.value / 100;
+  saveState();
+};
+
+function renderLoginUI(){
+  if(googleProfile){
+    accountStatus.textContent = "Signed in with Google.";
+    fallbackGoogleBtn.textContent = "Signed in";
+    fallbackGoogleBtn.disabled = true;
+    emailLoginBtn.disabled = true;
+  }else{
+    accountStatus.textContent = GOOGLE_CLIENT_ID.startsWith("YOUR_GOOGLE_CLIENT_ID")
+      ? "Google auth is not configured yet."
+      : "Click the Google button to sign in, or use email login here.";
+    fallbackGoogleBtn.textContent = "Sign in with Google";
+    fallbackGoogleBtn.disabled = false;
+    emailLoginBtn.disabled = false;
+  }
+}
+
+function renderNameCustomizationRow(){
+  const existing = document.getElementById("nameCustomRow");
+  if(existing) existing.remove();
+  if(!state.nameColorUnlocked && !state.nameplateUnlocked) return;
+
+  const row = document.createElement("div");
+  row.id = "nameCustomRow";
+  row.style.padding = "8px 0";
+  row.style.borderBottom = "1px solid #222";
+
+  let html = "";
+  if(state.nameColorUnlocked){
+    html += `<div class="settingsRow"><span>Name colour (Prestige reward)</span><input type="color" id="nameColorInput" value="${state.customNameColor}" /></div>`;
+  }
+  if(state.nameplateUnlocked){
+    html += `<div class="settingsRow"><span>Custom nameplate (Prestige reward)</span><input type="text" id="nameplateInput" maxlength="16" value="${state.customNameplate}" style="width:100px;background:#0e1119;border:1px solid #2a3346;color:#fff;border-radius:6px;padding:4px 6px;" /></div>`;
+  }
+  row.innerHTML = html;
+
+  const dangerRow = document.querySelector("#settingsModal .dangerBtn").closest(".settingsRow");
+  dangerRow.parentNode.insertBefore(row, dangerRow);
+
+  const colorInput = document.getElementById("nameColorInput");
+  if(colorInput) colorInput.oninput = () => { state.customNameColor = colorInput.value; saveState(); renderPlayerBadge(); };
+  const nameplateInput = document.getElementById("nameplateInput");
+  if(nameplateInput) nameplateInput.onchange = () => {
+    const val = nameplateInput.value.trim();
+    if(containsFlaggedWord(val)){
+      alert("That nameplate isn't allowed. Please choose something else.");
+      nameplateInput.value = state.customNameplate;
+      return;
+    }
+    state.customNameplate = val;
+    saveState();
+    renderPlayerBadge();
+  };
+}
+
+resetBtn.onclick = () => {
+  if(confirm("Reset all progress? This cannot be undone.")){
+    try{ localStorage.removeItem(STORAGE_KEY); }catch(e){}
+    state = defaultState();
+    history = [];
+    placingCharmId = null;
+    settingsModal.classList.remove("open");
+    placeBanner.classList.remove("show");
+    renderKeyboard();
+    updateStatsDisplay();
+    renderPlayerBadge();
+    renderLoginUI();
+    muteBtn.textContent = "🔊";
+    volumeSlider.value = 50;
+    saveState();
+  }
+};
+
+/* =========================================================
+   START SCREEN -> GAME
+========================================================= */
+playBtn.onclick = () => {
+  if(!googleProfile){
+    accountsModal.classList.add("open");
+    renderLoginUI();
+    startScreen.classList.add("hidden");
+    setTimeout(() => { startScreen.style.display = "none"; }, 350);
+    gameWrap.classList.add("visible");
+    return;
+  }
+  ensureAudio();
+  startScreen.classList.add("hidden");
+  setTimeout(() => { startScreen.style.display = "none"; }, 550);
+  gameWrap.classList.add("visible");
+};
+
+/* =========================================================
+   GAMPLO SDK INTEGRATION
+   (cloud saves are throttled to respect the platform's rate
+   limit of ~10 saves/minute; guests fall back to localStorage
+   only, since guest accounts get 403s on save/achievement calls)
+========================================================= */
+let cloudDirty = false;
+function markCloudDirty(){ cloudDirty = true; }
+
+function showAntiCheat(message){
+  antiCheatBanner.textContent = message;
+  antiCheatBanner.classList.add("show");
+  antiCheatLockUntil = Date.now() + 15000;
+  setTimeout(() => {
+    if(Date.now() >= antiCheatLockUntil) antiCheatBanner.classList.remove("show");
+  }, 15050);
+}
+
+function recordInputStamp(){
+  const now = performance.now();
+  pressHistory.push(now);
+  if(pressHistory.length > 24) pressHistory.shift();
+  if(pressHistory.length < 12) return;
+  const deltas = [];
+  for(let i = 1; i < pressHistory.length; i++) deltas.push(pressHistory[i] - pressHistory[i - 1]);
+  const avg = deltas.reduce((a,b) => a + b, 0) / deltas.length;
+  const variance = deltas.reduce((a,b) => a + Math.pow(b - avg, 2), 0) / deltas.length;
+  const tooFast = avg < 55;
+  const tooUniform = variance < 8;
+  if(tooFast && tooUniform){
+    showAntiCheat("Macro-like input detected. Rewards paused briefly.");
+  }
+}
+
+document.addEventListener("keydown", (e) => {
+  if(e.repeat) recordInputStamp();
+});
+document.addEventListener("pointerdown", () => {
+  recordInputStamp();
+}, {capture:true});
+
+if(window.Gamplo && typeof Gamplo.onReady === "function"){
+  Gamplo.onReady(async () => {
+    const player = Gamplo.getPlayer();
+
+    if(player){
+      guestBanner.classList.remove("show");
+      try{
+        const cloudSave = await Gamplo.getSave(0);
+        // only adopt the cloud save if this browser has no local progress yet,
+        // to avoid a fresh device silently overwriting real progress
+        if(cloudSave && state.totalPresses === 0){
+          state = Object.assign(defaultState(), cloudSave);
+          state.charms = (state.charms || []).map(normalizeCharm);
+          renderKeyboard();
+          updateStatsDisplay();
+          muteBtn.textContent = state.muted ? "🔇" : "🔊";
+          volumeSlider.value = Math.round(state.volume * 100);
+        }
+      }catch(e){ console.warn("Gamplo: no cloud save yet or failed to load", e); }
+
+      setInterval(async () => {
+        if(!cloudDirty) return;
+        cloudDirty = false;
+        try{ await Gamplo.setSave(state, 0); }catch(e){ console.warn("Gamplo cloud save failed", e); }
+      }, 8000);
+
+      window.addEventListener("beforeunload", () => { Gamplo.setSave(state, 0).catch(()=>{}); });
+    } else {
+      guestBanner.classList.add("show");
+    }
+
+    if(typeof Gamplo.onResize === "function"){
+      Gamplo.onResize((w,h) => {
+        document.body.style.width = w + "px";
+        document.body.style.height = h + "px";
+      });
+    }
+
+    renderPlayerBadge();
+  });
+}
+
+function decodeJwtPayload(token){
+  const payload = token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
+  const padded = payload + "=".repeat((4 - payload.length % 4) % 4);
+  return JSON.parse(atob(padded));
+}
+
+function handleGoogleCredential(response){
+  try{
+    googleProfile = decodeJwtPayload(response.credential);
+    loginRequired = false;
+    state.username = sanitizeUsername(googleProfile.name || googleProfile.email || "Player");
+    state.ownerUnlocked = googleProfile.email === OWNER_EMAIL;
+    if(state.ownerUnlocked){
+      state.ownedCosmetics = allCosmetics.map(c => c.id);
+      state.ownedThemes = [...new Set([...boardThemes.map(t => t.id), ...prestigeThemes.map(t => t.id)])];
+      state.ownerUnlocked = true;
+      state.clicks = Math.max(state.clicks, 999999);
+    }
+    saveState();
+    renderKeyboard();
+    updateStatsDisplay();
+    renderPlayerBadge();
+    renderLoginUI();
+    accountsModal.classList.remove("open");
+  }catch(err){
+    console.warn("Google sign-in failed", err);
+    accountStatus.textContent = "Google sign-in failed.";
+  }
+}
+
+function handleLocalEmailLogin(){
+  const email = (emailLoginInput.value || "").trim().toLowerCase();
+  if(!email || !email.includes("@")){
+    accountStatus.textContent = "Enter a valid email address.";
+    return;
+  }
+  googleProfile = {
+    email,
+    name: email.split("@")[0],
+    picture: ""
+  };
+  loginRequired = false;
+  state.username = sanitizeUsername(googleProfile.name);
+  state.accountEmail = googleProfile.email;
+  state.ownerUnlocked = email === OWNER_EMAIL;
+  if(state.ownerUnlocked){
+    state.ownedCosmetics = allCosmetics.map(c => c.id);
+    state.ownedThemes = [...new Set([...boardThemes.map(t => t.id), ...prestigeThemes.map(t => t.id)])];
+    state.clicks = Math.max(state.clicks, 999999);
+  }
+  saveState();
+  renderKeyboard();
+  updateStatsDisplay();
+  renderPlayerBadge();
+  renderLoginUI();
+  accountsModal.classList.remove("open");
+}
+
+function initGoogleSignIn(){
+  if(!window.google || !google.accounts || !google.accounts.id) return;
+  if(!GOOGLE_CLIENT_ID || GOOGLE_CLIENT_ID.startsWith("YOUR_GOOGLE_CLIENT_ID")){
+    accountStatus.textContent = "Add your Google client ID to enable login.";
+    fallbackGoogleBtn.onclick = () => alert("Paste a valid Google OAuth client ID into the index.html file first.");
+    return;
+  }
+  google.accounts.id.initialize({
+    client_id: 387562570914-f6slk74l4259c27o4p011ib002pa0fa0.apps.googleusercontent.com,
+    callback: handleGoogleCredential
+  });
+  google.accounts.id.renderButton(
+    document.getElementById("googleSignInButton"),
+    {theme:"outline", size:"large", text:"signin_with", shape:"pill", width:280}
+  );
+  google.accounts.id.prompt();
+  googleReady = true;
+  fallbackGoogleBtn.onclick = () => google.accounts.id.prompt();
+}
+
+// mark cloud saves dirty whenever we persist locally
+const _originalSaveState = saveState;
+saveState = function(){ _originalSaveState(); markCloudDirty(); };
+
+/* =========================================================
+   INIT
+========================================================= */
+function init(){
+  renderKeyboard();
+  updateStatsDisplay();
+  renderPlayerBadge();
+  renderLoginUI();
+  muteBtn.textContent = state.muted ? "🔇" : "🔊";
+  volumeSlider.value = Math.round(state.volume * 100);
+  statCps.textContent = "0";
+  fallbackGoogleBtn.onclick = () => {
+    if(window.google && google.accounts && google.accounts.id && googleReady){
+      google.accounts.id.prompt();
+    }else{
+      accountStatus.textContent = "Google auth needs a hosted site and client ID. You can use email login for now.";
+    }
+  };
+  emailLoginBtn.onclick = handleLocalEmailLogin;
+
+  setInterval(saveState, 5000);
+  window.addEventListener("beforeunload", saveState);
+  initGoogleSignIn();
+  if(!googleProfile) accountsModal.classList.add("open");
+}
+init();
+</script>
+</body>
+</html>
