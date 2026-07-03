@@ -277,11 +277,15 @@ body{
   background-size:300% 300%; color:#241033;
   animation:holoShift 3s linear infinite;
 }
-.liminal{
-  color:#5a5430;
-  font-family:'Courier New',monospace;
-  filter:saturate(0.9) contrast(0.95);
-  animation:liminalFlicker 4s infinite;
+.key.liminal{
+  background:linear-gradient(180deg,#e6d88f,#d9cc7a,#cdbf6a);
+  font-family:monospace;
+  color:#5a5330;
+  border:1px solid rgba(90,80,40,0.4);
+  box-shadow:
+    inset 0 0 10px rgba(0,0,0,0.15),
+    inset 0 0 25px rgba(255,240,160,0.08);
+  filter:saturate(0.9) contrast(1.05);
 }
 .key.galaxy{background:linear-gradient(120deg,#0b0f2a,#1b1f5a,#3a0ca3,#7209b7,#f72585,#4cc9f0,#0b0f2a);background-size:400% 400%;color:#e0e6ff;animation:galaxyShift 6s ease infinite;box-shadow:0 0 12px rgba(114,9,183,0.6),0 0 24px rgba(76,201,240,0.4);}
 @keyframes holoShift{ 0%{background-position:0% 50%;} 100%{background-position:300% 50%;} }
@@ -297,9 +301,11 @@ body{
 }
 @keyframes liminalFlicker{
   0%,100%{filter:brightness(1);}
-  48%{filter:brightness(1);}
-  50%{filter:brightness(0.85);}
-  52%{filter:brightness(1);}
+  50%{filter:brightness(0.92);}
+}
+
+.key.liminal{
+  animation:liminalFlicker 6s infinite;
 }
 @keyframes galaxyShift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
 /* ---------- START SCREEN ---------- */
@@ -655,7 +661,7 @@ const cosmetics = [
   {id:"holo",    name:"Holographic", cost:2800, cls:"holo"},
   {id:"cosmic",  name:"Cosmic",  cost:3400, cls:"cosmic"},
   {id:"galaxy",  name:"Galaxy",  cost:4500, cls:"galaxy"},
-  {id:"liminal",name:"Liminal",cost:5000,frame:"repeating-linear-gradient(90deg,#d6cf8a 0px,#cfc77a 40px,#c3bb6f 80px,#d6cf8a 120px),repeating-linear-gradient(0deg,#e6de9c 0px,#d8d089 20px,#cfc77a 40px)",glow:"0 0 12px rgba(255,240,150,0.35),inset 0 0 10px rgba(120,110,60,0.25)",blur:"0px",cls:"liminal"},
+  {id:"liminal",name:"Liminal",cost:5000,frame:"linear-gradient(180deg,#e6d88f,#d9cc7a,#cdbf6a,#d9cc7a,#e6d88f)",glow:"0 0 12px rgba(255,240,150,0.25),inset 0 0 10px rgba(120,110,60,0.35)",blur:"0px",cls:"liminal"}
 ];
 
 const boardThemes = [
