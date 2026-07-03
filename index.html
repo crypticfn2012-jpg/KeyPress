@@ -723,6 +723,11 @@ body{
     <div class="itemSub">You need Google sign-in to save progress. This keeps everything on one account.</div>
     <div id="googleSignInButton" style="margin:14px 0;"></div>
     <button class="iconbtn" id="fallbackGoogleBtn" style="width:100%;margin-top:4px;">Sign in with Google</button>
+    <div class="settingsRow" style="margin-top:10px;">
+      <span>Email</span>
+      <input type="email" id="emailLoginInput" placeholder="you@example.com" style="width:160px;background:#0e1119;border:1px solid #2a3346;color:#fff;border-radius:6px;padding:4px 6px;" />
+    </div>
+    <button class="iconbtn" id="emailLoginBtn" style="width:100%;margin-top:6px;">Use Email Login</button>
     <div class="settingsRow">
       <span>Signed in as</span>
       <div id="currentAccountLabel" style="font-size:12px;opacity:0.85;"></div>
@@ -1311,6 +1316,8 @@ const closeAccountsBtn = document.getElementById("closeAccountsBtn");
 const currentAccountLabel = document.getElementById("currentAccountLabel");
 const accountStatus = document.getElementById("accountStatus");
 const fallbackGoogleBtn = document.getElementById("fallbackGoogleBtn");
+const emailLoginInput = document.getElementById("emailLoginInput");
+const emailLoginBtn = document.getElementById("emailLoginBtn");
 const antiCheatBanner = document.getElementById("antiCheatBanner");
 
 const cosmeticsList = document.getElementById("cosmeticsList");
@@ -2003,6 +2010,7 @@ accountBtn.onclick = () => {
   renderLoginUI();
 };
 closeAccountsBtn.onclick = () => accountsModal.classList.remove("open");
+emailLoginBtn.onclick = handleLocalEmailLogin;
 
 volumeSlider.oninput = () => {
   state.volume = volumeSlider.value / 100;
@@ -2014,12 +2022,14 @@ function renderLoginUI(){
     accountStatus.textContent = "Signed in with Google.";
     fallbackGoogleBtn.textContent = "Signed in";
     fallbackGoogleBtn.disabled = true;
+    emailLoginBtn.disabled = true;
   }else{
     accountStatus.textContent = GOOGLE_CLIENT_ID.startsWith("YOUR_GOOGLE_CLIENT_ID")
-      ? "Add a Google client ID to enable real sign-in."
-      : "Click the Google button to sign in.";
+      ? "Google auth is not configured yet."
+      : "Click the Google button to sign in, or use email login here.";
     fallbackGoogleBtn.textContent = "Sign in with Google";
     fallbackGoogleBtn.disabled = false;
+    emailLoginBtn.disabled = false;
   }
 }
 
@@ -2210,6 +2220,33 @@ function handleGoogleCredential(response){
   }
 }
 
+function handleLocalEmailLogin(){
+  const email = (emailLoginInput.value || "").trim().toLowerCase();
+  if(!email || !email.includes("@")){
+    accountStatus.textContent = "Enter a valid email address.";
+    return;
+  }
+  googleProfile = {
+    email,
+    name: email.split("@")[0],
+    picture: ""
+  };
+  loginRequired = false;
+  state.username = sanitizeUsername(googleProfile.name);
+  state.ownerUnlocked = email === OWNER_EMAIL;
+  if(state.ownerUnlocked){
+    state.ownedCosmetics = allCosmetics.map(c => c.id);
+    state.ownedThemes = [...new Set([...boardThemes.map(t => t.id), ...prestigeThemes.map(t => t.id)])];
+    state.clicks = Math.max(state.clicks, 999999);
+  }
+  saveState();
+  renderKeyboard();
+  updateStatsDisplay();
+  renderPlayerBadge();
+  renderLoginUI();
+  accountsModal.classList.remove("open");
+}
+
 function initGoogleSignIn(){
   if(!window.google || !google.accounts || !google.accounts.id) return;
   if(!GOOGLE_CLIENT_ID || GOOGLE_CLIENT_ID.startsWith("YOUR_GOOGLE_CLIENT_ID")){
@@ -2249,9 +2286,10 @@ function init(){
     if(window.google && google.accounts && google.accounts.id && googleReady){
       google.accounts.id.prompt();
     }else{
-      alert("Add a Google OAuth client ID to enable real sign-in.");
+      accountStatus.textContent = "Google auth needs a hosted site and client ID. You can use email login for now.";
     }
   };
+  emailLoginBtn.onclick = handleLocalEmailLogin;
 
   setInterval(saveState, 5000);
   window.addEventListener("beforeunload", saveState);
