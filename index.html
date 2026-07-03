@@ -930,7 +930,7 @@ const BOXES = [
   {id:"aether",    name:"Aether Box",    cost:12000, catalog:"aether",    desc:"High-end relics for serious collectors.",   weights:{common:12,rare:22,epic:33,legendary:33}},
   {id:"rift",      name:"Rift Box",      cost:16000, catalog:"rift",      desc:"Unstable relics from the edge of the game.", weights:{common:10,rare:20,epic:30,legendary:40}},
   {id:"mythic",    name:"Mythic Box",    cost:22000, catalog:"mythic",    desc:"Built for endgame collectors.",             weights:{common:8,rare:17,epic:30,legendary:45}},
-  {id:"dev",       name:"Dev Box",       cost:0,     catalog:"dev",       desc:"Unreleased stuff reserved for the owner.",  weights:{common:0,rare:0,epic:35,legendary:65}}
+  {id:"prestige",  name:"Prestige Box",  cost:0,     catalog:"mythic",    desc:"Exclusive charms for those who prestige.",  weights:{common:0,rare:0,epic:0,legendary:100}}
 ];
 
 const CATALOGS = {
@@ -945,7 +945,6 @@ const CATALOGS = {
   aether:    buildCatalog("aether",    AETHER_ADJ,    AETHER_NOUN,    AETHER_EMOJI,    60,  BOXES[8].weights),
   rift:      buildCatalog("rift",      ["Broken","Fractured","Warped","Shattered","Split","Jagged","Sundered","Bleeding","Crumbling","Twisted"], ["Shard","Gate","Rift","Echo","Pulse","Vortex","Loop","Key","Core","Fragment"], ["🕳️","🌀","🧿","⚫","🔺","🔻","🪐","💠","🫧","🗝️"], 70, BOXES[9].weights),
   mythic:    buildCatalog("mythic",    ["Royal","Ancient","Ascended","Hidden","Infinite","Prime","Mythic","Crowned","Sacred","Final"], ["Crown","Relic","Aegis","Sigil","Heart","Idol","Throne","Shard","Mark","Key"], ["👑","🏺","🛡️","✨","💎","🔱","🌌","🪽","⚜️","🔮"], 80, BOXES[10].weights),
-  dev:       buildCatalog("dev",       ["Prototype","Unreleased","Forbidden","Admin","Null","Secret","Vaulted","Locked","Debug","Eternal"], ["Relic","Glyph","Charm","Token","Shard","Skin","Theme","Box","Keycap","Frame"], ["🧪","🛠️","🧬","🧾","🧱","🧲","🧷","🪄","🗝️","🛰️"], 40, BOXES[11].weights)
 };
 
 function openBoxRoll(box){
