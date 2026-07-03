@@ -277,6 +277,7 @@ body{
   background-size:300% 300%; color:#241033;
   animation:holoShift 3s linear infinite;
 }
+.key.galaxy{background:linear-gradient(120deg,#0b0f2a,#1b1f5a,#3a0ca3,#7209b7,#f72585,#4cc9f0,#0b0f2a);background-size:400% 400%;color:#e0e6ff;animation:galaxyShift 6s ease infinite;box-shadow:0 0 12px rgba(114,9,183,0.6),0 0 24px rgba(76,201,240,0.4);}
 @keyframes holoShift{ 0%{background-position:0% 50%;} 100%{background-position:300% 50%;} }
 .key.cosmic{
   background:
@@ -288,7 +289,7 @@ body{
   color:#d0c0ff;
   box-shadow:inset 0 0 10px #7a4bff88, 0 0 14px #7a4bff55;
 }
-
+@keyframes galaxyShift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
 /* ---------- START SCREEN ---------- */
 .startScreen{
   position:fixed; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:18px;
@@ -631,16 +632,17 @@ const cosmetics = [
   {id:"marble",  name:"Marble",  cost:1900, cls:"marble"},
   {id:"circuit", name:"Circuit", cost:2100, cls:"circuit"},
   {id:"holo",    name:"Holographic", cost:2800, cls:"holo"},
-  {id:"cosmic",  name:"Cosmic",  cost:3400, cls:"cosmic"}
+  {id:"cosmic",  name:"Cosmic",  cost:3400, cls:"cosmic"},
+  {id:"galaxy",  name:"Galaxy",  cost:4500, cls:"galaxy"}
 ];
 
 const boardThemes = [
-  {id:"default",     name:"Default",          cost:0,   frame:"#12151c", glow:"transparent", blur:"0px"},
+  {id:"default",      name:"Default",          cost:0,   frame:"#12151c", glow:"transparent", blur:"0px"},
   {id:"rgb",          name:"RGB Backlight",   cost:800, frame:"#141414", glow:"conic-gradient(red,yellow,lime,cyan,blue,magenta,red)", blur:"26px"},
   {id:"underblue",    name:"Blue Underglow",  cost:400, frame:"#0c1420", glow:"#2a6bff", blur:"30px"},
   {id:"underpurple",  name:"Purple Underglow",cost:400, frame:"#170c26", glow:"#8a2aff", blur:"30px"},
-  {id:"chrome",       name:"Chrome Frame",    cost:600, frame:"linear-gradient(160deg,#e8ecf2,#8b93a0)", glow:"transparent", blur:"0px"},
-  {id:"woodframe",    name:"Wood Frame",      cost:600, frame:"linear-gradient(160deg,#7a4b28,#3a2412)", glow:"transparent", blur:"0px"}
+  {id:"chrome",       name:"Chrome Frame",cost:600,frame:"linear-gradient(145deg,#f5f7fa 0%,#c3c9d1 20%,#8b93a0 40%,#e1e5ea 60%,#6e7682 80%,#ffffff 100%)",glow:"0 0 10px rgba(200,210,230,0.6),inset 0 0 6px rgba(255,255,255,0.8)",blur:"0px"},
+  {id:"woodframe",    name:"Wood Frame",      cost:750, frame:"linear-gradient(145deg,#8b5a2b 0%,#6b3f1a 25%,#3e240f 50%,#6b3f1a 75%,#2b1a0d 100%)",glow:"0 0 8px rgba(120,72,30,0.4),inset 0 0 6px rgba(255,200,120,0.15)",blur:"0px"}
 ];
 
 /* =========================================================
@@ -763,7 +765,7 @@ const BOXES = [
   {id:"monster",   name:"Monster Box",   cost:400,  catalog:"monster",   desc:"200 cartoony critters to collect.",        weights:{common:55,rare:27,epic:14,legendary:4}},
   {id:"vault",     name:"Vault Box",     cost:1000, catalog:"vault",     desc:"The rarest treasures in the game.",        weights:{common:30,rare:30,epic:28,legendary:12}},
   {id:"nebula",    name:"Nebula Box",    cost:5000, catalog:"nebula",    desc:"The Galaxy is yours!",                    weights:{common:35,rare:30,epic:25,legendary:17}},
-  {id:"OG",    name:"OG Box",    cost:6000, catalog:"og",    desc:"Thanks for being an OG!",                    weights:{common:20,rare:15,epic:14,legendary:10}},
+  {id:"og",    name:"OG Box",    cost:6000, catalog:"og",    desc:"Thanks for being an OG!",                    weights:{common:20,rare:15,epic:14,legendary:10}},
 ];
 
 const CATALOGS = {
@@ -773,7 +775,7 @@ const CATALOGS = {
   monster:   buildCatalog("monster",   MONSTER_ADJ,   MONSTER_NOUN,   MONSTER_EMOJI,   200, BOXES[3].weights),
   vault:     buildCatalog("vault",     VAULT_ADJ,     VAULT_NOUN,     VAULT_EMOJI,     60,  BOXES[4].weights),
   nebula:    buildCatalog("nebula",    Nebula_ADJ,    Nebula_NOUN,    Nebula_EMOJI,    70,  BOXES[5].weights),
-  OG:    buildCatalog("OG",    OG_ADJ,    OG_NOUN,    OG_EMOJI,    80,  BOXES[6].weights)
+  og:        buildCatalog("og",        OG_ADJ,        OG_NOUN,        OG_EMOJI,        80,  BOXES[6].weights)
 };
 
 
