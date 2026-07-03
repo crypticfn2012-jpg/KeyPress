@@ -29,7 +29,7 @@ body{
   -webkit-tap-highlight-color:transparent;
 }
 
-/* ---------- TOP BAR ---------- */
+
 .topbar{
   position:fixed;
   top:0;left:0;right:0;
@@ -64,7 +64,7 @@ body{
 .iconbtn:hover{background:#242c42;}
 .iconbtn:active{transform:translateY(1px);}
 
-/* ---------- STAGE / KEYBOARD (real perspective tilt) ---------- */
+
 .stage{
   height:100vh;
   display:flex;
@@ -115,7 +115,6 @@ body{
   transform-style:preserve-3d;
 }
 
-/* keySlot = the recessed well the cap sits in (gives real depth via translateZ) */
 .keySlot{
   position:relative;
   height:44px;
@@ -184,12 +183,12 @@ body{
   border:2px solid #888;
   transform:translateZ(2px);
 }
-.charmBadge.common{border-color:#b8c1cf;box-shadow:0 0 4px #b8c1cf;}
+.charmBadge.common{border-color:#666666;box-shadow:0 0 4px #989899;}
 .charmBadge.rare{border-color:#4aa3ff;box-shadow:0 0 6px #4aa3ff;}
-.charmBadge.epic{border-color:#b26cff;box-shadow:0 0 7px #b26cff;}
-.charmBadge.legendary{border-color:#ffb238;box-shadow:0 0 9px #ffb238;}
+.charmBadge.epic{border-color:#482072;box-shadow:0 0 7px #b26cff;}
+.charmBadge.legendary{border-color:#ee9a13;box-shadow:0 0 9px #ffb238;}
 
-/* ---------- KEYCAP COSMETICS ---------- */
+
 .key.glass{
   background:linear-gradient(165deg,rgba(150,220,255,0.55),rgba(150,220,255,0.08));
   border:1px solid rgba(200,240,255,0.7);
@@ -433,7 +432,10 @@ body{
 }
 </style>
 </head>
-<body>
+
+  <body>
+
+
 
 <div class="startScreen" id="startScreen">
   <div class="logo">⌨ KeyPress</div>
@@ -549,6 +551,7 @@ body{
 </div>
 
 <script>
+
   async function submitScore(score) {
     const player = Gamplo.getPlayer();
 
@@ -655,6 +658,18 @@ function shuffleArr(arr){
     [arr[i],arr[j]] = [arr[j],arr[i]];
   }
   return arr;
+}
+function createAIPlayer(difficulty){
+  return {
+    cps: 4 + Math.random()*difficulty, // base speed
+    variance: 0.5 + Math.random()*1.5,
+    score: 0
+  };
+}
+
+function updateAI(ai, dt){
+  const fluctuation = (Math.random()-0.5) * ai.variance;
+  ai.score += Math.max(0, ai.cps + fluctuation) * dt;
 }
 function checkTiming() {
     const now = Date.now();
@@ -1612,5 +1627,6 @@ if (DEV_MODE) {
     });
 }
 </script>
+<script src="check_js_temp.js"></script>
 </body>
 </html>
