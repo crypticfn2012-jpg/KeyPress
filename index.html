@@ -414,6 +414,19 @@ body{
   -webkit-background-clip:text; background-clip:text; color:transparent;
 }
 .tagline{opacity:0.75;font-size:14px;}
+
+.pixelForgeBrand{
+  display:flex; align-items:center; justify-content:center; gap:10px;
+  margin-top:8px; padding:9px 15px; border:1px solid rgba(7,137,255,.38);
+  border-radius:12px; background:rgba(5,9,17,.72);
+  box-shadow:0 8px 28px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.04);
+}
+.pixelForgeBrand svg{width:42px;height:42px;flex:none;display:block}
+.pixelForgeBrand .brandWords{display:flex;flex-direction:column;gap:3px;text-align:left}
+.pixelForgeBrand strong{font-size:11px;letter-spacing:1.4px;color:#f7f9ff}
+.pixelForgeBrand strong span{color:#0789ff}
+.pixelForgeBrand small{font-size:9px;letter-spacing:2.8px;color:#8ca6c8}
+
 .playBtn{
   margin-top:10px; padding:14px 42px; font-size:16px; font-weight:700; border-radius:10px; border:none; cursor:pointer;
   background:linear-gradient(90deg,#00f5ff,#7a4bff); color:#05060a;
@@ -607,6 +620,15 @@ body{
 <div class="startScreen" id="startScreen">
   <div class="logo">⌨ KeyPress</div>
   <div class="tagline">Pick a key, then mash it for clicks!</div>
+  <div class="pixelForgeBrand" aria-label="A PixelForge Studios game">
+    <svg viewBox="0 0 500 330" role="img" aria-label="PixelForge Studios logo">
+      <g transform="translate(95 22)"><path d="M8 112 35 8h125c29 0 43 24 32 48-4 9-14 16-27 20L68 112l-9 34-51 31 16-65Zm40-27 92-31c12-4 16-19 4-19H62Z" fill="#f7f9ff"/><path d="M102 111 242 59h95l-35 34H189l-7 25h104l-31 32H177l-10 34-51 31 23-104Z" fill="#0789ff"/></g>
+      <text x="250" y="252" text-anchor="middle" font-family="Arial,sans-serif" font-size="43" font-weight="900" fill="#f7f9ff">PIXEL<tspan fill="#0789ff">FORGE</tspan></text>
+      <path d="M48 279h57m290 0h57" stroke="#0789ff" stroke-width="4"/>
+      <text x="250" y="286" text-anchor="middle" font-family="Arial,sans-serif" font-size="15" font-weight="700" letter-spacing="13" fill="#f7f9ff">STUDIOS</text>
+    </svg>
+    <span class="brandWords"><strong>PIXEL<span>FORGE</span></strong><small>STUDIOS</small></span>
+  </div>
   <button class="playBtn" id="playBtn">Play</button>
 </div>
 
@@ -1118,7 +1140,7 @@ const GOOGLE_CLIENT_ID = "387562570914-f6slk74l4259c27o4p011ib002pa0fa0.apps.goo
 
 function defaultState(){
   return {
-    clicks:9999999999999999999999999999999999999999999999988888888888888888888888888888888888888888888999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999,
+    clicks:0,
     lifetimeClicks:0,
     totalPresses:0,
     mainKey:null,
@@ -1163,6 +1185,10 @@ function loadState(){
     if(!raw) return migrateOldSave();
     const parsed = JSON.parse(raw);
     const merged = Object.assign(defaultState(), parsed);
+    // Repair the accidental huge starting balance in older saves without
+    // resetting normal progress or other saved unlocks.
+    if (!Number.isFinite(merged.clicks) || merged.clicks > 1000000000 || merged.clicks < 0) merged.clicks = 0;
+    if (!Number.isFinite(merged.lifetimeClicks) || merged.lifetimeClicks < 0) merged.lifetimeClicks = 0;
     merged.charms = (merged.charms || []).map(normalizeCharm);
     return merged;
   }catch(e){
@@ -1179,6 +1205,9 @@ function migrateOldSave(){
       if(raw){
         const parsed = JSON.parse(raw);
         const merged = Object.assign(defaultState(), parsed);
+        // Legacy saves may contain the accidental huge starter balance.
+        if (!Number.isFinite(merged.clicks) || merged.clicks > 1000000000 || merged.clicks < 0) merged.clicks = 0;
+        if (!Number.isFinite(merged.lifetimeClicks) || merged.lifetimeClicks < 0) merged.lifetimeClicks = 0;
         merged.charms = (merged.charms || []).map(normalizeCharm);
         if(!merged.lifetimeClicks) merged.lifetimeClicks = merged.clicks || 0;
         return merged;
