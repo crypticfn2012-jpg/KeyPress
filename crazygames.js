@@ -257,7 +257,7 @@
   async function refreshCrazyUser(existingUser){
     const sdk=window.CrazyGames&&window.CrazyGames.SDK;
     try{
-      const available=!!(sdk&&sdk.user&&typeof sdk.user.isUserAccountAvailable==="function"&&await sdk.user.isUserAccountAvailable());
+      const available=!!(sdk&&sdk.user&&sdk.user.isUserAccountAvailable);
       profileBtn.style.display=available?"":"none";
       if(!available)return;
       const user=existingUser===undefined&&sdk&&sdk.user&&typeof sdk.user.getUser==="function"?await sdk.user.getUser():existingUser;
@@ -269,9 +269,9 @@
   }
   profileBtn.addEventListener("click",async function(){
     const sdk=window.CrazyGames&&window.CrazyGames.SDK;
-    if(!sdkReady||!sdk.user||typeof sdk.user.isUserAccountAvailable!=="function"||typeof sdk.user.showAuthPrompt!=="function"){notify("CrazyGames accounts are available on the CrazyGames platform.");return;}
+    if(!sdkReady||!sdk.user||!sdk.user.isUserAccountAvailable||typeof sdk.user.showAuthPrompt!=="function"){notify("CrazyGames accounts are available on the CrazyGames platform.");return;}
     setGameplay(false);
-    try{const available=await sdk.user.isUserAccountAvailable();if(!available){notify("CrazyGames accounts are not available in this session.");return;}const user=await sdk.user.showAuthPrompt();if(user){await refreshCrazyUser(user);saveState();notify("Your CrazyGames account is connected.");}}
+    try{const user=await sdk.user.showAuthPrompt();if(user){await refreshCrazyUser(user);saveState();notify("Your CrazyGames account is connected.");}}
     catch(e){if(e&&e.code!=="userCancelled")notify("Could not open the CrazyGames sign-in.");}
     finally{syncGameplay();}
   });
