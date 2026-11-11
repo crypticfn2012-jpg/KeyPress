@@ -233,9 +233,11 @@
     try{
       let initialized=false;
       if(window.__keyPressSdkInit){initialized=await window.__keyPressSdkInit;}
-      else{await sdk.init();initialized=true;try{if(sdk.game)sdk.game.loadingStart();}catch(e){}}
+      else{await sdk.init();initialized=true;if(sdk.environment!=="disabled"){try{if(sdk.game)sdk.game.loadingStart();}catch(e){}}}
       if(!initialized){revealGame();return;}
-      sdkReady=true;sdkEnv=sdk.environment||"disabled";
+      sdkEnv=sdk.environment||"disabled";
+      if(sdkEnv==="disabled"){revealGame();return;}
+      sdkReady=true;
       if(sdkEnv!=="disabled"&&sdk.data){
         try{
           const cloud=sdk.data.getItem("keypress_save_v6");
