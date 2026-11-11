@@ -1185,6 +1185,28 @@ let placingCharmId = null;
 let marketSort = "value";
 let antiCheatLockUntil = 0;
 let pressHistory = [];
+
+function showAntiCheat(message){
+  const banner = document.getElementById("antiCheatBanner");
+  if(!banner) return;
+  banner.textContent = message || "Input pattern flagged. Slow down for a moment.";
+  banner.classList.add("show");
+  clearTimeout(showAntiCheat.timer);
+  showAntiCheat.timer = setTimeout(() => banner.classList.remove("show"), 1600);
+}
+
+function recordInputStamp(){
+  const now = Date.now();
+  pressHistory = pressHistory.filter(stamp => now - stamp < 1000);
+  pressHistory.push(now);
+  if(pressHistory.length > 45){
+    antiCheatLockUntil = now + 1200;
+    pressHistory = [];
+    showAntiCheat("Input rate too high. Wait a moment, then continue.");
+    return false;
+  }
+  return true;
+}
 let dailyShopCache = [];
 let dailyShopKey = "";
 let googleProfile = null;
@@ -1515,7 +1537,7 @@ function registerPress(label){
     showAntiCheat("Input paused briefly after a suspicious pattern.");
     return;
   }
-  recordInputStamp();
+  if(!recordInputStamp()) return;
   state.totalPresses++;
 
   const chestBoost = getTotalBoostPercent();
