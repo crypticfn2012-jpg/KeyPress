@@ -52,7 +52,7 @@
       board.style.setProperty("--kp-board-scale","1");
       const w=Math.max(220,stage.clientWidth-36),h=Math.max(140,stage.clientHeight-28);
       const r=board.getBoundingClientRect();
-      const scale=Math.max(.34,Math.min(1,w/Math.max(r.width,1),h/Math.max(r.height,1)));
+      const scale=Math.max(.15,Math.min(1,w/Math.max(r.width,1),h/Math.max(r.height,1)));
       board.style.setProperty("--kp-board-scale",String(scale));
     });
   }
@@ -130,7 +130,8 @@
     const oldBest=Number(state.arcadeBest[run.mode])||0,isRecord=score>oldBest;
     state.arcadeBest[run.mode]=Math.max(oldBest,score);
     const xp=run.hits===0?0:Math.max(10,Math.round(score*(run.mode==="precision"?1.5:1))+Math.max(0,20-run.misses));
-    const coins=run.hits===0?0:Math.max(5,Math.round(score*.5));
+    const baseCoins=run.hits===0?0:Math.max(5,Math.round(score*.5));
+    const coins=boostUntil>Date.now()?baseCoins*2:baseCoins;
     const oldLevel=xpLevel(state.arcadeXP||0).level;
     state.arcadeXP=(state.arcadeXP||0)+xp;state.arcadeRuns=(state.arcadeRuns||0)+1;
     if(score>=20)state.arcadeWins=(state.arcadeWins||0)+1;
