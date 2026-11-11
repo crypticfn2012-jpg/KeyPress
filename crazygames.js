@@ -34,8 +34,9 @@
     ".kp-level{display:flex;align-items:center;gap:7px;font-size:10px;color:#a9b8cc;white-space:nowrap}.kp-level-track{width:64px;height:5px;background:#29364a;border-radius:9px;overflow:hidden}.kp-level-track i{display:block;height:100%;background:#00e7ef}",
     ".kp-toast{position:fixed;left:50%;bottom:20px;transform:translate(-50%,15px);z-index:100;padding:10px 15px;border-radius:10px;background:#152438;border:1px solid #2e526d;color:#e8f8ff;font-size:12px;opacity:0;pointer-events:none;transition:.2s}.kp-toast.show{opacity:1;transform:translate(-50%,0)}",
     "#kpArcadeBtn{border-color:#167b91;color:#7af6ff}#kpBoostBtn{border-color:#8b6b25;color:#ffe08a}",
-    "@media(max-width:900px){.topbar{height:48px}.topbtns{gap:4px}.iconbtn{padding:7px 8px;font-size:11px}.stats{gap:7px;font-size:10px}.playerBadge{display:none!important}}",
-    "@media(max-width:640px){.stats span:nth-child(n+3){display:none}.topbtns #accountBtn,.topbtns #changeKeyBtn{display:none}.kp-mode-grid{grid-template-columns:1fr}.kp-mode{min-height:82px}.kp-card{padding:17px}.kp-hud{top:54px;gap:8px;padding:8px 10px;font-size:11px}}",
+    ".topbtns #kpProfileBtn{max-width:100px;overflow:hidden;text-overflow:ellipsis}",
+    "@media(max-width:900px){.topbar{height:48px}.topbtns{gap:4px}.iconbtn{padding:7px 8px;font-size:11px}.stats{gap:7px;font-size:10px}.stats span:nth-child(n+3){display:none}.playerBadge{display:none!important}.topbtns #changeKeyBtn,.topbtns #prestigeShortcutBtn{display:none!important}}",
+    "@media(max-width:640px){.topbtns #kpLevelHud{display:none}.topbtns #accountBtn,.topbtns #changeKeyBtn{display:none}.kp-mode-grid{grid-template-columns:1fr}.kp-mode{min-height:82px}.kp-card{padding:17px}.kp-hud{top:54px;gap:8px;padding:8px 10px;font-size:11px}}",
     "@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}"
   ].join("");
   const style=document.createElement("style");style.textContent=css;document.head.appendChild(style);
@@ -268,10 +269,9 @@
   if($("loginModal"))$("loginModal").classList.remove("open");
   if(typeof accountsModal!=="undefined"&&accountsModal)accountsModal.classList.remove("open");
   if($("guestBanner"))$("guestBanner").classList.remove("show");
-  if($("playBtn"))$("playBtn").onclick=function(){
-    ensureAudio();$("startScreen").classList.add("hidden");$("startScreen").style.display="none";
-    $("gameWrap").classList.add("visible");syncGameplay();fitBoard();
-  };
+  // CrazyGames should open directly into the playable keyboard, without a forced sign-in or splash gate.
+  if($("startScreen")){$("startScreen").classList.add("hidden");$("startScreen").style.display="none";}
+  if($("gameWrap"))$("gameWrap").classList.add("visible");
   const keyboard=$("keyboard");
   if(keyboard)new MutationObserver(function(){updateSelectedKey();fitBoard();}).observe(keyboard,{childList:true,subtree:true,attributes:true,attributeFilter:["class"]});
   const oldKeyClick=handleKeyClick;
