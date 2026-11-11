@@ -6,7 +6,10 @@ The CrazyGames build is served directly from `index.html`. No bundler or build s
 
 - CrazyGames HTML5 SDK v3, initialized before using platform modules.
 - Gameplay start/stop and loading start/stop lifecycle events.
-- CrazyGames Data module saves, with a one-time migration from the existing `keypress_save_v6` browser save.
+- CrazyGames Data module saves the complete game state (currency, clicks, XP, levels, cosmetics, inventory, settings and progression) under one save key.
+- CrazyGames automatically syncs Data module saves across devices for signed-in players. Guest progress is stored locally by the Data module and is automatically transferred to the account when the player signs in, provided that account does not already have a save.
+- Existing `keypress_save_v6` progress is retained during migration; an existing CrazyGames cloud save takes priority over a local save to avoid overwriting established account progress.
+- The Settings save indicator distinguishes active CrazyGames cloud saving from browser-only fallback saving.
 - Optional CrazyGames account sign-in and platform username display. Guest play remains available and no Google/email login is required.
 - Arcade modes: 30-second Sprint, 60-second Endurance and Precision Run.
 - XP, levels, personal bests, run rewards and a 2× rewarded-video boost integration.
