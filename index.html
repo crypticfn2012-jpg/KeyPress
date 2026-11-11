@@ -1,6 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <script src="https://sdk.crazygames.com/crazygames-sdk-v3.js"></script>
+  <script>
+    window.__keyPressSdkInit = (async function () {
+      try {
+        if (!window.CrazyGames || !window.CrazyGames.SDK) return false;
+        await window.CrazyGames.SDK.init();
+        try { window.CrazyGames.SDK.game.loadingStart(); } catch (e) {}
+        return true;
+      } catch (error) {
+        console.warn("CrazyGames SDK initialization failed; using browser save fallback.", error);
+        return false;
+      }
+    })();
+  </script>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
 <title>KeyPress</title>
@@ -612,7 +626,6 @@ body{
   .logo{font-size:36px;}
 }
 </style>
-  <script src="https://sdk.crazygames.com/crazygames-sdk-v3.js"></script>
 </head>
 <body>
 
