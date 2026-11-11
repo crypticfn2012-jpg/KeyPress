@@ -614,6 +614,7 @@ body{
   .logo{font-size:36px;}
 }
 </style>
+  <script src="https://sdk.crazygames.com/crazygames-sdk-v3.js"></script>
 </head>
 <body>
 
@@ -2283,7 +2284,7 @@ function initGoogleSignIn(){
     return;
   }
   google.accounts.id.initialize({
-    client_id: 387562570914-f6slk74l4259c27o4p011ib002pa0fa0.apps.googleusercontent.com,
+    client_id: GOOGLE_CLIENT_ID,
     callback: handleGoogleCredential
   });
   google.accounts.id.renderButton(
@@ -2326,5 +2327,6 @@ function init(){
 }
 init();
 </script>
+  <script src="./crazygames.js"></script>
 </body>
 </html>
