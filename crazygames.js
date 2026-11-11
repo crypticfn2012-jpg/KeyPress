@@ -81,11 +81,11 @@
   hud.innerHTML='<span class="kp-timer" id="kpTimer">30.0</span><span>Hits <b id="kpHits">0</b></span><span>Misses <b id="kpMisses">0</b></span><span>Best <b id="kpBest">0</b></span>';
   document.body.appendChild(hud);
   const result=document.createElement("div");result.className="kp-result";result.id="kpResult";
-  result.innerHTML='<div class="kp-result-card"><div class="kp-kicker">RUN COMPLETE</div><div class="kp-title" id="kpResultTitle">Nice run!</div><div class="kp-result-score" id="kpResultScore">0</div><div class="kp-sub" id="kpResultSub">+0 XP · +0 coins</div><div class="kp-progress"><i id="kpResultProgress"></i></div><div style="margin-top:20px"><button class="kp-primary" id="kpRunAgain">Run Again</button> <button class="kp-secondary" id="kpResultClose">Continue</button></div></div>';
+  result.innerHTML='<div class="kp-result-card"><div class="kp-kicker">RUN COMPLETE</div><div class="kp-title" id="kpResultTitle">Nice run!</div><div class="kp-result-score" id="kpResultScore">0</div><div class="kp-sub" id="kpResultSub">+0 XP · +0 coins</div><div class="kp-progress"><i id="kpResultProgress"></i></div><div style="margin-top:20px"><button class="kp-primary" id="kpRunAgain">Run Again</button></div></div>';
   document.body.appendChild(result);
   boostBtn.className="kp-secondary";boostBtn.textContent="Watch video for 2× coins";boostBtn.style.display=ADS_ENABLED?"":"none";
   const rewardRow=document.createElement("div");rewardRow.style.cssText="display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:16px";
-  const skipBoost=document.createElement("button");skipBoost.className="kp-secondary";skipBoost.textContent="Continue";
+  const skipBoost=document.createElement("button");skipBoost.id="kpResultClose";skipBoost.className="kp-secondary";skipBoost.textContent="Continue";
   rewardRow.appendChild(boostBtn);rewardRow.appendChild(skipBoost);result.querySelector(".kp-result-card").appendChild(rewardRow);
   const toast=document.createElement("div");toast.className="kp-toast";toast.id="kpToast";document.body.appendChild(toast);
 
@@ -146,7 +146,6 @@
   }
   function closeResult(){result.classList.remove("open");run=null;syncGameplay();}
   $("kpResultClose").addEventListener("click",closeResult);
-  skipBoost.addEventListener("click",closeResult);
   $("kpRunAgain").addEventListener("click",function(){result.classList.remove("open");run=null;startRun();});
   document.addEventListener("keydown",function(e){
     if(!run||run.finished||e.repeat||e.metaKey||e.ctrlKey||e.altKey)return;
@@ -287,7 +286,7 @@
   const keyboard=$("keyboard");
   if(keyboard)new MutationObserver(function(){updateSelectedKey();fitBoard();}).observe(keyboard,{childList:true,subtree:true,attributes:true,attributeFilter:["class"]});
   const oldKeyClick=handleKeyClick;
-  handleKeyClick=function(label){oldKeyClick(label);updateSelectedKey();fitBoard();};
+  handleKeyClick=function(label){\n    if(run&&!run.finished&&label!==state.mainKey){if(run.mode==="precision"){run.misses++;$("kpMisses").textContent=run.misses;}notify("Keep using your selected key during a run.");return;}\n    oldKeyClick(label);updateSelectedKey();fitBoard();\n  };
   initCrazyGames();updateLevel();updateSelectedKey();fitBoard();
   window.addEventListener("beforeunload",function(){try{saveState();}catch(e){}});
 })();
