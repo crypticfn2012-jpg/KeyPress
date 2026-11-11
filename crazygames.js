@@ -231,8 +231,11 @@
     const sdk=window.CrazyGames&&window.CrazyGames.SDK;
     if(!sdk||typeof sdk.init!=="function"){console.info("CrazyGames SDK not loaded; browser save mode.");revealGame();return;}
     try{
-      await sdk.init();sdkReady=true;sdkEnv=sdk.environment||"disabled";
-      try{if(sdk.game)sdk.game.loadingStart();}catch(e){}
+      let initialized=false;
+      if(window.__keyPressSdkInit){initialized=await window.__keyPressSdkInit;}
+      else{await sdk.init();initialized=true;try{if(sdk.game)sdk.game.loadingStart();}catch(e){}}
+      if(!initialized){revealGame();return;}
+      sdkReady=true;sdkEnv=sdk.environment||"disabled";
       if(sdkEnv!=="disabled"&&sdk.data){
         try{
           const cloud=sdk.data.getItem("keypress_save_v6");
