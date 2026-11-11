@@ -63,13 +63,15 @@
       !["INPUT","TEXTAREA"].includes(document.activeElement.tagName))e.preventDefault();
   },{passive:false});
 
-  const ADS_ENABLED=false; // Enable only after CrazyGames approves Full Launch monetization.\n  const ADS_ENABLED=false; // Turn on only after CrazyGames grants Full Launch monetization.\n  const topBtns=document.querySelector(".topbtns");
+  const ADS_ENABLED=false; // Enable only after CrazyGames approves Full Launch monetization.
+  const topBtns=document.querySelector(".topbtns");
   const arcadeBtn=document.createElement("button");
   arcadeBtn.className="iconbtn";arcadeBtn.id="kpArcadeBtn";arcadeBtn.textContent="Arcade";
   const boostBtn=document.createElement("button");
   boostBtn.className="iconbtn";boostBtn.id="kpBoostBtn";boostBtn.textContent="2× Boost";
   const levelHud=document.createElement("div");levelHud.className="kp-level";levelHud.id="kpLevelHud";
-  if(topBtns){topBtns.insertBefore(arcadeBtn,topBtns.firstChild);topBtns.appendChild(levelHud);}
+  const profileBtn=document.createElement("button");profileBtn.className="iconbtn";profileBtn.id="kpProfileBtn";profileBtn.textContent="Guest";profileBtn.title="Sign in with CrazyGames";
+  if(topBtns){topBtns.insertBefore(arcadeBtn,topBtns.firstChild);topBtns.appendChild(levelHud);topBtns.appendChild(profileBtn);}
 
   const modal=document.createElement("div");modal.className="kp-modal";modal.id="kpArcadeModal";
   modal.innerHTML='<div class="kp-card"><div class="kp-kicker">KEYPRESS / ARCADE</div><div class="kp-title">Choose your challenge.</div><div class="kp-sub">Pick a key on the keyboard first, then compete for a personal best. Every run earns XP and coins.</div><div class="kp-mode-grid"><button class="kp-mode selected" data-mode="sprint"><span>⚡</span><strong>30 Second Sprint</strong><small>Press your chosen key as fast as possible before time runs out.</small></button><button class="kp-mode" data-mode="endurance"><span>🔥</span><strong>60 Second Endurance</strong><small>Keep your pace up for a full minute. Build a new personal best.</small></button><button class="kp-mode" data-mode="precision"><span>🎯</span><strong>Precision Run</strong><small>30 seconds. Wrong keys cost points, so stay accurate.</small></button></div><div class="kp-actions"><span class="kp-sub" id="kpSelectedKey">Choose a key on the keyboard first</span><div><button class="kp-secondary" id="kpArcadeClose">Back</button> <button class="kp-primary" id="kpStartRun">Start Run</button></div></div></div>';
@@ -80,6 +82,10 @@
   const result=document.createElement("div");result.className="kp-result";result.id="kpResult";
   result.innerHTML='<div class="kp-result-card"><div class="kp-kicker">RUN COMPLETE</div><div class="kp-title" id="kpResultTitle">Nice run!</div><div class="kp-result-score" id="kpResultScore">0</div><div class="kp-sub" id="kpResultSub">+0 XP · +0 coins</div><div class="kp-progress"><i id="kpResultProgress"></i></div><div style="margin-top:20px"><button class="kp-primary" id="kpRunAgain">Run Again</button> <button class="kp-secondary" id="kpResultClose">Continue</button></div></div>';
   document.body.appendChild(result);
+  boostBtn.className="kp-secondary";boostBtn.textContent="Watch video for 2× coins";boostBtn.style.display=ADS_ENABLED?"":"none";
+  const rewardRow=document.createElement("div");rewardRow.style.cssText="display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:16px";
+  const skipBoost=document.createElement("button");skipBoost.className="kp-secondary";skipBoost.textContent="Continue";
+  rewardRow.appendChild(boostBtn);rewardRow.appendChild(skipBoost);result.querySelector(".kp-result-card").appendChild(rewardRow);
   const toast=document.createElement("div");toast.className="kp-toast";toast.id="kpToast";document.body.appendChild(toast);
 
   const oldRegisterPress=registerPress,oldSaveState=saveState,oldPlayClickSound=playClickSound,oldUpdateStats=updateStatsDisplay;
@@ -133,11 +139,15 @@
     $("kpResultSub").textContent=run.hits+" hits · "+run.misses+" misses · +"+xp+" XP · +"+coins+" coins";
     const p=xpLevel(state.arcadeXP);$("kpResultProgress").style.width=(p.progress/p.need*100)+"%";
     result.classList.add("open");syncGameplay();
-    if(isRecord&&sdkReady){try{window.CrazyGames.SDK.game.happytime();}catch(e){}}\n    if(ADS_ENABLED&&sdkReady&&state.arcadeRuns%4===0)requestMidgameAd();
+    if(isRecord&&sdkReady){try{window.CrazyGames.SDK.game.happytime();}catch(e){}}
+    if(ADS_ENABLED&&sdkReady&&state.arcadeRuns%4===0)requestMidgameAd();
+    if(ADS_ENABLED&&sdkReady&&state.arcadeRuns%4===0)requestMidgameAd();
     if(p.level>oldLevel)notify("Level up! You reached level "+p.level+".");else if(isRecord)notify("New personal best!");
   }
   function closeResult(){result.classList.remove("open");run=null;syncGameplay();}
-  $("kpResultClose").addEventListener("click",closeResult);\n  skipBoost.addEventListener("click",closeResult);
+  $("kpResultClose").addEventListener("click",closeResult);
+  skipBoost.addEventListener("click",closeResult);
+  skipBoost.addEventListener("click",closeResult);
   $("kpRunAgain").addEventListener("click",function(){result.classList.remove("open");run=null;startRun();});
   document.addEventListener("keydown",function(e){
     if(!run||run.finished||e.repeat||e.metaKey||e.ctrlKey||e.altKey)return;
@@ -145,9 +155,10 @@
     if(label!==state.mainKey&&!["Escape","Tab","CapsLock","Shift"].includes(e.key)){run.misses++;$("kpMisses").textContent=run.misses;}
   },true);
   registerPress=function(label){
-    if(run&&!run.finished){run.hits++;$("kpHits").textContent=run.hits;}
+    const beforePresses=Number(state.totalPresses)||0;
     const before=Number(state.clicks)||0,beforeLife=Number(state.lifetimeClicks)||0;
     oldRegisterPress(label);
+    if(run&&!run.finished&&(Number(state.totalPresses)||0)>beforePresses){run.hits++;$("kpHits").textContent=run.hits;}
     if(boostUntil>Date.now()){
       const earned=Math.max(0,(Number(state.clicks)||0)-before),life=Math.max(0,(Number(state.lifetimeClicks)||0)-beforeLife);
       state.clicks=Number((state.clicks+earned).toFixed(2));state.lifetimeClicks=Number((state.lifetimeClicks+life).toFixed(2));
@@ -164,7 +175,8 @@
     else{boostBtn.textContent="2× Boost";boostBtn.disabled=false;state.rewardBoostUntil=0;}
   }
   boostBtn.addEventListener("click",async function(){
-    if(!ADS_ENABLED)return;\n    if(adBusy||boostUntil>Date.now())return;
+    if(!ADS_ENABLED)return;
+    if(adBusy||boostUntil>Date.now())return;
     const sdk=window.CrazyGames&&window.CrazyGames.SDK;
     if(!sdkReady||!sdk.ad||!["local","crazygames"].includes(sdkEnv)){notify("Reward videos are available on CrazyGames.");return;}
     adBusy=true;setGameplay(false);let settled=false;
@@ -180,11 +192,28 @@
   });
   setInterval(updateBoost,250);updateBoost();
 
+  async function requestMidgameAd(){
+    if(!ADS_ENABLED||!sdkReady||!window.CrazyGames.SDK.ad||adBusy)return;
+    adBusy=true;setGameplay(false);
+    const buttons=[$("kpRunAgain"),$("kpResultClose"),skipBoost];buttons.forEach(function(b){if(b)b.disabled=true;});
+    let settled=false;
+    function resume(){adBusy=false;sdkMuted=false;buttons.forEach(function(b){if(b)b.disabled=false;});syncGameplay();}
+    try{
+      await window.CrazyGames.SDK.ad.requestAd("midgame",{
+        adStarted:function(){sdkMuted=true;},
+        adError:function(error){if(settled)return;settled=true;resume();console.warn("Midgame ad unavailable",error);},
+        adFinished:function(){if(settled)return;settled=true;resume();}
+      });
+      if(!settled){settled=true;resume();}
+    }catch(e){if(!settled){settled=true;resume();}console.warn("Midgame ad failed",e);}
+  }
+
   // Use SDK Data as the canonical save and migrate existing browser progress once.
   async function initCrazyGames(){
     const sdk=window.CrazyGames&&window.CrazyGames.SDK;
     if(!sdk||typeof sdk.init!=="function"){console.info("CrazyGames SDK not loaded; browser save mode.");return;}
     try{
+      try{if(sdk.game)sdk.game.loadingStart();}catch(e){}
       await sdk.init();sdkReady=true;sdkEnv=sdk.environment||"disabled";
       if(sdkEnv!=="disabled"&&sdk.data){
         const cloud=sdk.data.getItem("keypress_save_v6");
@@ -204,26 +233,37 @@
         applySettings(sdk.game.settings||{});
         if(typeof sdk.game.addSettingsChangeListener==="function")sdk.game.addSettingsChangeListener(applySettings);
       }
-      // CrazyGames identity is used when present; Google/email login is not required.
-      try{
-        if(sdk.user&&typeof sdk.user.getUser==="function"){
-          const user=await sdk.user.getUser();
-          if(user&&(user.username||user.displayName)){
-            state.username=String(user.username||user.displayName).slice(0,24);
-            if(user.profilePictureUrl)googleProfile={name:state.username,picture:user.profilePictureUrl,email:""};
-            renderPlayerBadge();
-          }
-        }
-      }catch(e){console.debug("CrazyGames profile unavailable",e);}
+      // Use CrazyGames profile when signed in; otherwise continue as a guest.
+      await refreshCrazyUser();
+      if(sdk.user&&typeof sdk.user.addAuthListener==="function")sdk.user.addAuthListener(function(user){refreshCrazyUser(user);});
+      try{if(sdk.game)sdk.game.loadingStop();}catch(e){}
       syncGameplay();console.info("CrazyGames SDK ready:",sdkEnv);
     }catch(e){sdkReady=false;console.warn("CrazyGames SDK initialization failed; local saves remain enabled.",e);}
   }
+  async function refreshCrazyUser(existingUser){
+    const sdk=window.CrazyGames&&window.CrazyGames.SDK;
+    try{
+      const user=existingUser===undefined&&sdk&&sdk.user&&typeof sdk.user.getUser==="function"?await sdk.user.getUser():existingUser;
+      if(user&&user.username){profileBtn.textContent=String(user.username);profileBtn.title="Signed in with CrazyGames";}
+      else{profileBtn.textContent="Guest";profileBtn.title="Sign in with your CrazyGames account to sync progress";}
+      if(user&&user.profilePictureUrl)profileBtn.style.backgroundImage="url("+JSON.stringify(user.profilePictureUrl)+")";
+      else profileBtn.style.backgroundImage="";
+    }catch(e){profileBtn.textContent="Guest";console.debug("CrazyGames profile unavailable",e);}
+  }
+  profileBtn.addEventListener("click",async function(){
+    const sdk=window.CrazyGames&&window.CrazyGames.SDK;
+    if(!sdkReady||!sdk.user||!sdk.user.isUserAccountAvailable||typeof sdk.user.showAuthPrompt!=="function"){notify("CrazyGames accounts are available on the CrazyGames platform.");return;}
+    try{const user=await sdk.user.showAuthPrompt();if(user){await refreshCrazyUser(user);saveState();notify("Your CrazyGames account is connected.");}}
+    catch(e){if(e&&e.code!=="userCancelled")notify("Could not open the CrazyGames sign-in.");}
+  });
   const baseSave=saveState;
   saveState=function(){
     baseSave();
     try{const sdk=window.CrazyGames&&window.CrazyGames.SDK;if(sdkReady&&sdkEnv!=="disabled"&&sdk.data)sdk.data.setItem("keypress_save_v6",JSON.stringify(state));}
     catch(e){console.warn("CrazyGames save failed; local copy retained.",e);}
   };
+
+  setInterval(function(){saveState();},5000);
 
   // Remove the forced Google sign-in gate and let players enter immediately.
   if($("accountBtn"))$("accountBtn").classList.add("kp-hidden");
