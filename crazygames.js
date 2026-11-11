@@ -97,7 +97,7 @@
   function updateLevel(){const p=xpLevel(state.arcadeXP||0);levelHud.innerHTML="<strong>LV "+p.level+"</strong><span class=\"kp-level-track\"><i style=\"width:"+Math.min(100,p.progress/p.need*100)+"%\"></i></span><span>"+p.progress+"/"+p.need+" XP</span>";}
   let toastTimer=0;
   function notify(message){toast.textContent=message;toast.classList.add("show");clearTimeout(toastTimer);toastTimer=setTimeout(function(){toast.classList.remove("show");},2200);}
-  function menuOpen(){return !!document.querySelector(".shop.open,#kpArcadeModal.open,#kpResult.open,#revealModal.open");}
+  function menuOpen(){return !!document.querySelector(".shop.open,#kpArcadeModal.open,#kpResult.open,#revealModal.show");}
   function setGameplay(active){if(!sdkReady||!window.CrazyGames||!window.CrazyGames.SDK.game||gameplayActive===active)return;gameplayActive=active;try{if(active)window.CrazyGames.SDK.game.gameplayStart();else window.CrazyGames.SDK.game.gameplayStop();}catch(e){console.debug("CrazyGames gameplay event",e);}}
   function syncGameplay(){if(!sdkReady||!document.querySelector(".gameWrap.visible")||adBusy)return;setGameplay(!menuOpen()&&!document.hidden&&!(run&&run.finished));}
   const observer=new MutationObserver(syncGameplay);
@@ -140,7 +140,7 @@
     $("kpResultSub").textContent=run.hits+" hits · "+run.misses+" misses · +"+xp+" XP · +"+coins+" coins";
     const p=xpLevel(state.arcadeXP);$("kpResultProgress").style.width=(p.progress/p.need*100)+"%";
     result.classList.add("open");syncGameplay();
-    if(isRecord&&sdkReady){try{window.CrazyGames.SDK.game.happytime();}catch(e){}}
+    if(isRecord&&sdkReady){try{const task=window.CrazyGames.SDK.game.happytime();if(task&&typeof task.catch==="function")task.catch(function(){});}catch(e){}}
     if(ADS_ENABLED&&sdkReady&&state.arcadeRuns%4===0)requestMidgameAd();
     if(p.level>oldLevel)notify("Level up! You reached level "+p.level+".");else if(isRecord)notify("New personal best!");
   }
@@ -215,16 +215,22 @@
       try{if(sdk.game)sdk.game.loadingStart();}catch(e){}
       await sdk.init();sdkReady=true;sdkEnv=sdk.environment||"disabled";
       if(sdkEnv!=="disabled"&&sdk.data){
-        const cloud=sdk.data.getItem("keypress_save_v6");
-        if(cloud){
-          try{const parsed=JSON.parse(cloud);if(parsed&&typeof parsed==="object"){
-            state=Object.assign(defaultState(),state,parsed);state.charms=(state.charms||[]).map(normalizeCharm);
-            renderKeyboard();updateStatsDisplay();muteBtn.textContent=state.muted?"🔇":"🔊";volumeSlider.value=Math.round(state.volume*100);
-          }}catch(e){console.warn("Invalid CrazyGames save",e);}
-        }else{
-          const old=localStorage.getItem("keypress_save_v6");
-          sdk.data.setItem("keypress_save_v6",old||JSON.stringify(state));
-        }
+        try{
+          const cloud=sdk.data.getItem("keypress_save_v6");
+          if(cloud){
+            const parsed=JSON.parse(cloud);
+            if(parsed&&typeof parsed==="object"){
+              state=Object.assign(defaultState(),state,parsed);
+              state.charms=(state.charms||[]).map(normalizeCharm);
+              renderKeyboard();updateStatsDisplay();
+              muteBtn.textContent=state.muted?"🔇":"🔊";
+              volumeSlider.value=Math.round(state.volume*100);
+            }
+          }else{
+            const old=localStorage.getItem("keypress_save_v6");
+            sdk.data.setItem("keypress_save_v6",old||JSON.stringify(state));
+          }
+        }catch(e){console.warn("CrazyGames Data module unavailable; local saving will continue.",e);}
       }
       if(sdkEnv!=="disabled"&&sdk.game){
         const applySettings=function(settings){sdkMuted=!!(settings&&settings.muteAudio);};
