@@ -9,7 +9,7 @@
       try {
         if (!window.CrazyGames || !window.CrazyGames.SDK) return false;
         await window.CrazyGames.SDK.init();
-        try { window.CrazyGames.SDK.game.loadingStart(); } catch (e) {}
+        if (window.CrazyGames.SDK.environment !== "disabled") { try { window.CrazyGames.SDK.game.loadingStart(); } catch (e) {} }
         return true;
       } catch (error) {
         console.warn("CrazyGames SDK initialization failed; using browser save fallback.", error);
