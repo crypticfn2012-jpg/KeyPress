@@ -265,7 +265,7 @@
       else{profileBtn.textContent="Login";profileBtn.title="Sign in with your CrazyGames account";}
       if(user&&user.profilePictureUrl){profileBtn.style.backgroundImage="url("+JSON.stringify(user.profilePictureUrl)+")";profileBtn.style.backgroundPosition="8px center";profileBtn.style.backgroundRepeat="no-repeat";profileBtn.style.backgroundSize="20px 20px";profileBtn.style.paddingLeft="34px";}
       else{profileBtn.style.backgroundImage="";profileBtn.style.paddingLeft="8px";}
-    }catch(e){profileBtn.textContent="Guest";console.debug("CrazyGames profile unavailable",e);}
+    }catch(e){profileBtn.style.display="none";console.debug("CrazyGames profile unavailable",e);}
   }
   profileBtn.addEventListener("click",async function(){
     const sdk=window.CrazyGames&&window.CrazyGames.SDK;
