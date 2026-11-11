@@ -91,7 +91,7 @@
 
   const oldRegisterPress=registerPress,oldSaveState=saveState,oldPlayClickSound=playClickSound,oldUpdateStats=updateStatsDisplay;
   Object.assign(state,{arcadeXP:0,arcadeRuns:0,arcadeBest:{sprint:0,endurance:0,precision:0},arcadeWins:0,rewardBoostUntil:0},state);
-  let mode="sprint",run=null,runTimer=null,sdkReady=false,sdkEnv="disabled",sdkMuted=false,adBusy=false,gameplayActive=false;
+  let mode="sprint",run=null,runTimer=null,sdkReady=false,sdkDataReady=false,sdkEnv="disabled",sdkMuted=false,adBusy=false,gameplayActive=false;
   let boostUntil=Number(state.rewardBoostUntil)||0;
   function xpLevel(xp){let level=1,rest=Math.max(0,Number(xp)||0),need=100;while(rest>=need&&level<999){rest-=need;level++;need=Math.round(100+level*30);}return{level:level,progress:rest,need:need};}
   function updateLevel(){const p=xpLevel(state.arcadeXP||0);levelHud.innerHTML="<strong>LV "+p.level+"</strong><span class=\"kp-level-track\"><i style=\"width:"+Math.min(100,p.progress/p.need*100)+"%\"></i></span><span>"+p.progress+"/"+p.need+" XP</span>";}
@@ -128,8 +128,8 @@
     const score=run.mode==="precision"?Math.max(0,run.hits-run.misses*2):run.hits;
     const oldBest=Number(state.arcadeBest[run.mode])||0,isRecord=score>oldBest;
     state.arcadeBest[run.mode]=Math.max(oldBest,score);
-    const xp=Math.max(10,Math.round(score*(run.mode==="precision"?1.5:1))+Math.max(0,20-run.misses));
-    const coins=Math.max(5,Math.round(score*.5));
+    const xp=run.hits===0?0:Math.max(10,Math.round(score*(run.mode==="precision"?1.5:1))+Math.max(0,20-run.misses));
+    const coins=run.hits===0?0:Math.max(5,Math.round(score*.5));
     const oldLevel=xpLevel(state.arcadeXP||0).level;
     state.arcadeXP=(state.arcadeXP||0)+xp;state.arcadeRuns=(state.arcadeRuns||0)+1;
     if(score>=20)state.arcadeWins=(state.arcadeWins||0)+1;
@@ -221,16 +221,19 @@
             const parsed=JSON.parse(cloud);
             if(parsed&&typeof parsed==="object"){
               state=Object.assign(defaultState(),state,parsed);
+              state.arcadeBest=Object.assign({sprint:0,endurance:0,precision:0},state.arcadeBest||{});
               state.charms=(state.charms||[]).map(normalizeCharm);
               renderKeyboard();updateStatsDisplay();
               muteBtn.textContent=state.muted?"🔇":"🔊";
               volumeSlider.value=Math.round(state.volume*100);
+              boostUntil=Number(state.rewardBoostUntil)||0;updateBoost();
             }
           }else{
             const old=localStorage.getItem("keypress_save_v6");
             sdk.data.setItem("keypress_save_v6",old||JSON.stringify(state));
           }
-        }catch(e){console.warn("CrazyGames Data module unavailable; local saving will continue.",e);}
+          sdkDataReady=true;
+        }catch(e){sdkDataReady=false;console.warn("CrazyGames Data module unavailable; local saving will continue.",e);}
       }
       if(sdkEnv!=="disabled"&&sdk.game){
         const applySettings=function(settings){sdkMuted=!!(settings&&settings.muteAudio);};
@@ -263,7 +266,7 @@
   const baseSave=saveState;
   saveState=function(){
     baseSave();
-    try{const sdk=window.CrazyGames&&window.CrazyGames.SDK;if(sdkReady&&sdkEnv!=="disabled"&&sdk.data)sdk.data.setItem("keypress_save_v6",JSON.stringify(state));}
+    try{const sdk=window.CrazyGames&&window.CrazyGames.SDK;if(sdkReady&&sdkDataReady&&sdkEnv!=="disabled"&&sdk.data)sdk.data.setItem("keypress_save_v6",JSON.stringify(state));}
     catch(e){console.warn("CrazyGames save failed; local copy retained.",e);}
   };
 
