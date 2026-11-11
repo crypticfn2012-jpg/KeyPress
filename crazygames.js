@@ -33,6 +33,7 @@
     ".kp-progress{height:5px;background:#202b3b;border-radius:99px;overflow:hidden;margin-top:8px}.kp-progress i{display:block;height:100%;background:#00e7ef}",
     ".kp-level{display:flex;align-items:center;gap:7px;font-size:10px;color:#a9b8cc;white-space:nowrap}.kp-level-track{width:64px;height:5px;background:#29364a;border-radius:9px;overflow:hidden}.kp-level-track i{display:block;height:100%;background:#00e7ef}",
     ".kp-toast{position:fixed;left:50%;bottom:20px;transform:translate(-50%,15px);z-index:100;padding:10px 15px;border-radius:10px;background:#152438;border:1px solid #2e526d;color:#e8f8ff;font-size:12px;opacity:0;pointer-events:none;transition:.2s}.kp-toast.show{opacity:1;transform:translate(-50%,0)}",
+    ".kp-loader{position:fixed;inset:0;z-index:10000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:#080d16;color:#eaf6ff;font-weight:800;letter-spacing:2px}.kp-loader i{width:30px;height:30px;border:3px solid #26384b;border-top-color:#00e7ef;border-radius:50%;animation:kpSpin .8s linear infinite}.kp-loader small{font-size:11px;letter-spacing:1px;color:#9eacc1;font-weight:500}@keyframes kpSpin{to{transform:rotate(360deg)}}
     "#kpArcadeBtn{border-color:#167b91;color:#7af6ff}#kpBoostBtn{border-color:#8b6b25;color:#ffe08a}",
     ".topbtns #kpProfileBtn{max-width:100px;overflow:hidden;text-overflow:ellipsis}",
     "@media(max-width:900px){.topbar{height:48px}.topbtns{gap:4px}.iconbtn{padding:7px 8px;font-size:11px}.stats{gap:7px;font-size:10px}.stats span:nth-child(n+3){display:none}.playerBadge{display:none!important}.topbtns #changeKeyBtn,.topbtns #prestigeShortcutBtn{display:none!important}}",
@@ -204,10 +205,19 @@
     }catch(e){if(!settled){settled=true;resume();}console.warn("Midgame ad failed",e);}
   }
 
+  const loader=document.createElement("div");loader.className="kp-loader";loader.innerHTML="<i></i><span>KEYPRESS</span><small>Preparing your game...</small>";document.body.appendChild(loader);
+  let gameRevealed=false;
+  function revealGame(){
+    if(gameRevealed)return;gameRevealed=true;
+    if($("startScreen")){$("startScreen").classList.add("hidden");$("startScreen").style.display="none";}
+    if($("gameWrap")){$("gameWrap").classList.add("visible");$("gameWrap").style.visibility="visible";$("gameWrap").style.pointerEvents="auto";}
+    loader.remove();fitBoard();syncGameplay();
+  }
+
   // Use SDK Data as the canonical save and migrate existing browser progress once.
   async function initCrazyGames(){
     const sdk=window.CrazyGames&&window.CrazyGames.SDK;
-    if(!sdk||typeof sdk.init!=="function"){console.info("CrazyGames SDK not loaded; browser save mode.");return;}
+    if(!sdk||typeof sdk.init!=="function"){console.info("CrazyGames SDK not loaded; browser save mode.");revealGame();return;}
     try{
       await sdk.init();sdkReady=true;sdkEnv=sdk.environment||"disabled";
       try{if(sdk.game)sdk.game.loadingStart();}catch(e){}
@@ -241,8 +251,8 @@
       await refreshCrazyUser();
       if(sdk.user&&typeof sdk.user.addAuthListener==="function")sdk.user.addAuthListener(function(user){refreshCrazyUser(user);});
       try{if(sdk.game)sdk.game.loadingStop();}catch(e){}
-      syncGameplay();console.info("CrazyGames SDK ready:",sdkEnv);
-    }catch(e){sdkReady=false;console.warn("CrazyGames SDK initialization failed; local saves remain enabled.",e);}
+      revealGame();console.info("CrazyGames SDK ready:",sdkEnv);
+    }catch(e){sdkReady=false;console.warn("CrazyGames SDK initialization failed; local saves remain enabled.",e);revealGame();}
   }
   async function refreshCrazyUser(existingUser){
     const sdk=window.CrazyGames&&window.CrazyGames.SDK;
@@ -280,9 +290,9 @@
   if($("loginModal"))$("loginModal").classList.remove("open");
   if(typeof accountsModal!=="undefined"&&accountsModal)accountsModal.classList.remove("open");
   if($("guestBanner"))$("guestBanner").classList.remove("show");
-  // CrazyGames should open directly into the playable keyboard, without a forced sign-in or splash gate.
+  // Keep the game hidden only while SDK/cloud data initializes; reveal it directly into gameplay.
   if($("startScreen")){$("startScreen").classList.add("hidden");$("startScreen").style.display="none";}
-  if($("gameWrap"))$("gameWrap").classList.add("visible");
+  if($("gameWrap")){$("gameWrap").classList.add("visible");$("gameWrap").style.visibility="hidden";$("gameWrap").style.pointerEvents="none";}
   const keyboard=$("keyboard");
   if(keyboard)new MutationObserver(function(){updateSelectedKey();fitBoard();}).observe(keyboard,{childList:true,subtree:true,attributes:true,attributeFilter:["class"]});
   const oldKeyClick=handleKeyClick;
