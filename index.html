@@ -625,6 +625,53 @@ body{
   .stats{font-size:10px;gap:8px;}
   .logo{font-size:36px;}
 }
+
+/* Accessibility and calmer visual defaults */
+.settingsPanel{max-width:94vw}
+.accessibilityBlock{padding:10px 0;border-bottom:1px solid #293246;display:flex;flex-direction:column;gap:8px}
+.accessibilityBlock>strong{font-size:12px;color:#dce8f8;letter-spacing:.04em}
+.accessToggle{display:flex;align-items:flex-start;gap:10px;font-size:12px;cursor:pointer}
+.accessToggle input{width:17px;height:17px;accent-color:#0789ff;flex:none;margin-top:1px}
+.accessToggle span{display:flex;flex-direction:column;gap:4px}
+.accessToggle small,.legalNote{font-size:10px;line-height:1.55;color:#aab8ce}
+.settingsSelect{width:100%;padding:10px;border-radius:8px;background:#0e1522;color:#edf3fc;border:1px solid #40516a;font:600 12px system-ui}
+.legalContent{font-size:12px;line-height:1.65;color:#cbd6e6;overflow:auto}
+.legalContent h3{color:#8ecbff;font-size:13px;margin:12px 0 5px}
+.legalContent p{margin:6px 0}
+.legalContent ul{padding-left:20px;margin:6px 0}
+.legalContent li{margin:5px 0}
+/* Tone down cosmetic animation intensity even when accessibility mode is off. */
+.boardWrap.themeRgb::before,.boardWrap.themeCelestial::before,.boardWrap.themeOmega::before{animation-duration:12s!important;opacity:.32}
+.boardWrap.themePulse::before,.boardWrap.themeAurora::before,.boardWrap.themeSolstice::before,.boardWrap.themeVoid::before{animation-duration:7s!important;opacity:.3}
+.boardWrap.themeAurora,.boardWrap.themeSolstice,.boardWrap.themeVoid,.boardWrap.themeOmega{animation-duration:14s!important}
+.key.neon,.key.slime,.key.lava,.key.circuit,.key.holo,.key.matrix,.key.plasma,.key.prestigeGold,.key.prestigeDiamond,.key.omega{animation-duration:8s!important}
+.key.liminal{animation:none!important}
+.revealCard{animation:none!important}
+/* Reduced-flashing mode is deliberately comprehensive and overrides cosmetic styles. */
+body.reduce-flash *,body.reduce-flash *::before,body.reduce-flash *::after{animation:none!important;transition:none!important;scroll-behavior:auto!important;}
+body.reduce-flash .boardWrap,body.reduce-flash .key{filter:none!important}
+body.reduce-flash .boardWrap::before{opacity:.16!important;filter:none!important}
+body.reduce-flash .key{box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 1px 2px rgba(0,0,0,.3)!important}
+body.reduce-flash .revealCard{transform:none!important}
+/* Colour-vision presets use distinct outlines/pattern cues as well as adjusted accents. */
+body.cb-protanopia{--access-accent:#56c7ff;--access-secondary:#f4d35e}
+body.cb-deuteranopia{--access-accent:#4fc3f7;--access-secondary:#f6c85f}
+body.cb-tritanopia{--access-accent:#ff8a65;--access-secondary:#8e7dff}
+body.cb-high-contrast{--access-accent:#fff;--access-secondary:#ffdf00}
+body[class*="cb-"] .key.selected{outline:3px solid var(--access-accent)!important;outline-offset:2px}
+body[class*="cb-"] .key.placeTarget{outline:3px dashed var(--access-secondary)!important;outline-offset:2px}
+body[class*="cb-"] .stats b,body[class*="cb-"] .tab.active{color:var(--access-accent)!important}
+body[class*="cb-"] .charmBadge{border-width:3px!important;box-shadow:none!important}
+body[class*="cb-"] .charmBadge.common,body[class*="cb-"] .marketIcon.common{border-style:solid!important}
+body[class*="cb-"] .charmBadge.rare,body[class*="cb-"] .marketIcon.rare{border-style:dashed!important}
+body[class*="cb-"] .charmBadge.epic,body[class*="cb-"] .marketIcon.epic{border-style:double!important}
+body[class*="cb-"] .charmBadge.legendary,body[class*="cb-"] .marketIcon.legendary{border-style:dotted!important}
+body[class*="cb-"] .charmCell.rare{background-image:repeating-linear-gradient(45deg,transparent 0 6px,rgba(255,255,255,.12) 6px 8px)}
+body[class*="cb-"] .charmCell.epic{background-image:repeating-linear-gradient(135deg,transparent 0 5px,rgba(255,255,255,.14) 5px 7px)}
+body[class*="cb-"] .charmCell.legendary{background-image:repeating-linear-gradient(90deg,transparent 0 5px,rgba(255,255,255,.16) 5px 7px)}
+body.cb-high-contrast{filter:contrast(1.12)}
+body.cb-high-contrast .iconbtn,body.cb-high-contrast .tab,body.cb-high-contrast .item{border-color:#dbe8ff}
+@media(prefers-reduced-motion:reduce){body:not(.motion-override) *,body:not(.motion-override) *::before,body:not(.motion-override) *::after{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
@@ -735,18 +782,60 @@ body{
 
 <!-- SETTINGS -->
 <div class="shop" id="settingsModal">
-  <div class="shopPanel" style="width:280px;">
-    <div class="title">Settings</div>
+  <div class="shopPanel" style="width:440px;max-width:94vw;">
+    <div class="title">Settings & Accessibility</div>
     <div class="settingsRow">
       <span>Sound Volume</span>
       <input type="range" id="volumeSlider" min="0" max="100" value="50" />
+    </div>
+    <div class="accessibilityBlock">
+      <strong>Motion & photosensitivity</strong>
+      <label class="accessToggle"><input type="checkbox" id="reduceFlashingInput" checked /> <span><b>Reduce flashing and motion</b><small>Disables animated keycaps, pulsing glows, rapid colour changes, flicker and screen shake. Recommended for photosensitive players.</small></span></label>
+      <p class="legalNote">This setting reduces visual stimulation but cannot guarantee that the game is safe for every person with photosensitive epilepsy. Stop playing if you feel unwell.</p>
+    </div>
+    <div class="accessibilityBlock">
+      <strong>Colour vision</strong>
+      <label for="colorVisionSelect" class="legalNote">Choose a contrast and pattern preset. Game information will not rely on colour alone.</label>
+      <select id="colorVisionSelect" class="settingsSelect">
+        <option value="none">Standard</option>
+        <option value="protanopia">Protanopia support</option>
+        <option value="deuteranopia">Deuteranopia support</option>
+        <option value="tritanopia">Tritanopia support</option>
+        <option value="high-contrast">High contrast</option>
+      </select>
+    </div>
+    <div class="settingsRow">
+      <span>Legal & privacy information</span>
+      <button class="iconbtn" id="openLegalBtn">View</button>
     </div>
     <div class="settingsRow">
       <span>Reset all progress</span>
       <button class="dangerBtn" id="resetBtn">Reset</button>
     </div>
-    <div class="saveStatus" id="saveStatus">Saved locally in this browser.</div>
+    <div class="saveStatus" id="saveStatus">Settings save with your game progress.</div>
     <button class="iconbtn" id="closeSettingsBtn" style="margin-top:10px;">Close</button>
+  </div>
+</div>
+<div class="shop" id="legalModal">
+  <div class="shopPanel" style="width:560px;max-width:94vw;">
+    <div class="title">Terms of Service & Privacy</div>
+    <div class="legalContent">
+      <h3>Terms of Service</h3>
+      <p>By playing KeyPress, you agree to use the game fairly and follow the rules of the platform where you play.</p>
+      <ul>
+        <li>Do not exploit bugs, interfere with the game, or use tools to disrupt the experience for other players or the platform.</li>
+        <li>Coins, XP, levels, cosmetics and other game rewards are virtual game progress. They have no cash value and cannot be exchanged for real money.</li>
+        <li>Game features, balance, availability and progress systems may change as the game is updated.</li>
+        <li>The game is provided for entertainment. To the extent permitted by law, it is provided without a guarantee that it will always be available or error-free.</li>
+      </ul>
+      <h3>Privacy</h3>
+      <p>KeyPress stores gameplay progress and preferences using the browser's local storage or the CrazyGames Data module when available. If you use CrazyGames account features, your platform profile may be used to display your username and profile image. Account authentication and platform data are handled by CrazyGames.</p>
+      <p>KeyPress does not ask you to submit your real name, home address or payment details. Do not enter personal or sensitive information into custom text fields.</p>
+      <h3>Accessibility</h3>
+      <p>Settings include reduced flashing and motion plus colour-vision contrast presets. These options are intended to improve comfort and readability; they are not medical guarantees. Take breaks and stop playing if you experience discomfort.</p>
+      <p><small>Last updated: 11 November 2026. This in-game summary is not legal advice. Platform terms and privacy policies also apply when you play through a third-party platform.</small></p>
+    </div>
+    <button class="iconbtn" id="closeLegalBtn" style="margin-top:10px;">Back to settings</button>
   </div>
 </div>
 
@@ -1174,7 +1263,9 @@ function defaultState(){
     username:"Guest",
     ownerUnlocked:false,
     dailyShopDate:"",
-    dailyShopItems:[]
+    dailyShopItems:[],
+    reduceFlashing:true,
+    colorVisionMode:"none"
   };
 }
 
@@ -2050,12 +2141,35 @@ function renderPlayerBadge(){
 /* =========================================================
    SETTINGS
 ========================================================= */
+const reduceFlashingInput = document.getElementById("reduceFlashingInput");
+const colorVisionSelect = document.getElementById("colorVisionSelect");
+const legalModal = document.getElementById("legalModal");
+function applyAccessibilitySettings(){
+  document.body.classList.toggle("reduce-flash", state.reduceFlashing !== false);
+  ["protanopia","deuteranopia","tritanopia","high-contrast"].forEach(mode => document.body.classList.remove("cb-"+mode));
+  if(state.colorVisionMode && state.colorVisionMode !== "none") document.body.classList.add("cb-"+state.colorVisionMode);
+  if(reduceFlashingInput) reduceFlashingInput.checked = state.reduceFlashing !== false;
+  if(colorVisionSelect) colorVisionSelect.value = state.colorVisionMode || "none";
+}
 settingsBtn.onclick = () => {
   settingsModal.classList.add("open");
   setSaveStatus(storageAvailable);
   renderNameCustomizationRow();
+  applyAccessibilitySettings();
 };
 closeSettingsBtn.onclick = () => settingsModal.classList.remove("open");
+document.getElementById("openLegalBtn").onclick = () => { legalModal.classList.add("open"); };
+document.getElementById("closeLegalBtn").onclick = () => legalModal.classList.remove("open");
+reduceFlashingInput.onchange = () => {
+  state.reduceFlashing = reduceFlashingInput.checked;
+  applyAccessibilitySettings();
+  saveState();
+};
+colorVisionSelect.onchange = () => {
+  state.colorVisionMode = colorVisionSelect.value;
+  applyAccessibilitySettings();
+  saveState();
+};
 accountBtn.onclick = () => {
   accountsModal.classList.add("open");
   renderLoginUI();
@@ -2245,6 +2359,7 @@ function init(){
   updateStatsDisplay();
   renderPlayerBadge();
   renderLoginUI();
+  applyAccessibilitySettings();
   muteBtn.textContent = state.muted ? "🔇" : "🔊";
   volumeSlider.value = Math.round(state.volume * 100);
   statCps.textContent = "0";
