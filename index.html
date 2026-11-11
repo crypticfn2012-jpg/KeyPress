@@ -1562,13 +1562,6 @@ function registerPress(label){
     }
   });
 
-  // legitimate Gamplo achievement hooks (create matching keys in your Gamplo dashboard)
-  if(window.Gamplo && typeof Gamplo.isReady === "function" && Gamplo.isReady() && Gamplo.getPlayer()){
-    if(state.totalPresses === 1) Gamplo.unlockAchievement("first_press").catch(()=>{});
-    if(state.totalPresses === 100) Gamplo.unlockAchievement("100_clicks").catch(()=>{});
-    if(state.totalPresses === 1000) Gamplo.unlockAchievement("1000_clicks").catch(()=>{});
-  }
-
   updateStatsDisplay();
   saveState();
 }
@@ -2026,7 +2019,7 @@ muteBtn.onclick = () => {
 };
 
 /* =========================================================
-   PLAYER BADGE (Gamplo identity)
+   PLAYER BADGE
 ========================================================= */
 const BASIC_FILTER_WORDS = ["fuck","shit","bitch","nigger","faggot","retard","cunt"];
 function containsFlaggedWord(str){
