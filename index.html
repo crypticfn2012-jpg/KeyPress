@@ -4,8 +4,6 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
 <title>KeyPress</title>
-<script src="https://accounts.google.com/gsi/client" async defer></script>
-<script src="https://gamplo.com/sdk/gamplo.js"></script>
 <style>
 :root{
   --board-bg: linear-gradient(160deg,#12151c,#04050a);
@@ -2136,88 +2134,7 @@ playBtn.onclick = () => {
   gameWrap.classList.add("visible");
 };
 
-/* =========================================================
-   GAMPLO SDK INTEGRATION
-   (cloud saves are throttled to respect the platform's rate
-   limit of ~10 saves/minute; guests fall back to localStorage
-   only, since guest accounts get 403s on save/achievement calls)
-========================================================= */
-let cloudDirty = false;
-function markCloudDirty(){ cloudDirty = true; }
-
-function showAntiCheat(message){
-  antiCheatBanner.textContent = message;
-  antiCheatBanner.classList.add("show");
-  antiCheatLockUntil = Date.now() + 15000;
-  setTimeout(() => {
-    if(Date.now() >= antiCheatLockUntil) antiCheatBanner.classList.remove("show");
-  }, 15050);
-}
-
-function recordInputStamp(){
-  const now = performance.now();
-  pressHistory.push(now);
-  if(pressHistory.length > 24) pressHistory.shift();
-  if(pressHistory.length < 12) return;
-  const deltas = [];
-  for(let i = 1; i < pressHistory.length; i++) deltas.push(pressHistory[i] - pressHistory[i - 1]);
-  const avg = deltas.reduce((a,b) => a + b, 0) / deltas.length;
-  const variance = deltas.reduce((a,b) => a + Math.pow(b - avg, 2), 0) / deltas.length;
-  const tooFast = avg < 55;
-  const tooUniform = variance < 8;
-  if(tooFast && tooUniform){
-    showAntiCheat("Macro-like input detected. Rewards paused briefly.");
-  }
-}
-
-document.addEventListener("keydown", (e) => {
-  if(e.repeat) recordInputStamp();
-});
-document.addEventListener("pointerdown", () => {
-  recordInputStamp();
-}, {capture:true});
-
-if(window.Gamplo && typeof Gamplo.onReady === "function"){
-  Gamplo.onReady(async () => {
-    const player = Gamplo.getPlayer();
-
-    if(player){
-      guestBanner.classList.remove("show");
-      try{
-        const cloudSave = await Gamplo.getSave(0);
-        // only adopt the cloud save if this browser has no local progress yet,
-        // to avoid a fresh device silently overwriting real progress
-        if(cloudSave && state.totalPresses === 0){
-          state = Object.assign(defaultState(), cloudSave);
-          state.charms = (state.charms || []).map(normalizeCharm);
-          renderKeyboard();
-          updateStatsDisplay();
-          muteBtn.textContent = state.muted ? "🔇" : "🔊";
-          volumeSlider.value = Math.round(state.volume * 100);
-        }
-      }catch(e){ console.warn("Gamplo: no cloud save yet or failed to load", e); }
-
-      setInterval(async () => {
-        if(!cloudDirty) return;
-        cloudDirty = false;
-        try{ await Gamplo.setSave(state, 0); }catch(e){ console.warn("Gamplo cloud save failed", e); }
-      }, 8000);
-
-      window.addEventListener("beforeunload", () => { Gamplo.setSave(state, 0).catch(()=>{}); });
-    } else {
-      guestBanner.classList.add("show");
-    }
-
-    if(typeof Gamplo.onResize === "function"){
-      Gamplo.onResize((w,h) => {
-        document.body.style.width = w + "px";
-        document.body.style.height = h + "px";
-      });
-    }
-
-    renderPlayerBadge();
-  });
-}
+/* CrazyGames platform integration is loaded from crazygames.js. */
 
 function decodeJwtPayload(token){
   const payload = token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
@@ -2296,10 +2213,6 @@ function initGoogleSignIn(){
   fallbackGoogleBtn.onclick = () => google.accounts.id.prompt();
 }
 
-// mark cloud saves dirty whenever we persist locally
-const _originalSaveState = saveState;
-saveState = function(){ _originalSaveState(); markCloudDirty(); };
-
 /* =========================================================
    INIT
 ========================================================= */
@@ -2322,8 +2235,6 @@ function init(){
 
   setInterval(saveState, 5000);
   window.addEventListener("beforeunload", saveState);
-  initGoogleSignIn();
-  if(!googleProfile) accountsModal.classList.add("open");
 }
 init();
 </script>
