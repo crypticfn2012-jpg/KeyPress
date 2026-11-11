@@ -63,7 +63,7 @@
       !["INPUT","TEXTAREA"].includes(document.activeElement.tagName))e.preventDefault();
   },{passive:false});
 
-  const ADS_ENABLED=false; // Enable only after CrazyGames approves Full Launch monetization.\n  const topBtns=document.querySelector(".topbtns");
+  const ADS_ENABLED=false; // Enable only after CrazyGames approves Full Launch monetization.\n  const ADS_ENABLED=false; // Turn on only after CrazyGames grants Full Launch monetization.\n  const topBtns=document.querySelector(".topbtns");
   const arcadeBtn=document.createElement("button");
   arcadeBtn.className="iconbtn";arcadeBtn.id="kpArcadeBtn";arcadeBtn.textContent="Arcade";
   const boostBtn=document.createElement("button");
