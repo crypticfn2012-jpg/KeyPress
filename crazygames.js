@@ -63,13 +63,13 @@
       !["INPUT","TEXTAREA"].includes(document.activeElement.tagName))e.preventDefault();
   },{passive:false});
 
-  const topBtns=document.querySelector(".topbtns");
+  const ADS_ENABLED=false; // Enable only after CrazyGames approves Full Launch monetization.\n  const topBtns=document.querySelector(".topbtns");
   const arcadeBtn=document.createElement("button");
   arcadeBtn.className="iconbtn";arcadeBtn.id="kpArcadeBtn";arcadeBtn.textContent="Arcade";
   const boostBtn=document.createElement("button");
   boostBtn.className="iconbtn";boostBtn.id="kpBoostBtn";boostBtn.textContent="2× Boost";
   const levelHud=document.createElement("div");levelHud.className="kp-level";levelHud.id="kpLevelHud";
-  if(topBtns){topBtns.insertBefore(arcadeBtn,topBtns.firstChild);topBtns.insertBefore(boostBtn,arcadeBtn.nextSibling);topBtns.appendChild(levelHud);}
+  if(topBtns){topBtns.insertBefore(arcadeBtn,topBtns.firstChild);topBtns.appendChild(levelHud);}
 
   const modal=document.createElement("div");modal.className="kp-modal";modal.id="kpArcadeModal";
   modal.innerHTML='<div class="kp-card"><div class="kp-kicker">KEYPRESS / ARCADE</div><div class="kp-title">Choose your challenge.</div><div class="kp-sub">Pick a key on the keyboard first, then compete for a personal best. Every run earns XP and coins.</div><div class="kp-mode-grid"><button class="kp-mode selected" data-mode="sprint"><span>⚡</span><strong>30 Second Sprint</strong><small>Press your chosen key as fast as possible before time runs out.</small></button><button class="kp-mode" data-mode="endurance"><span>🔥</span><strong>60 Second Endurance</strong><small>Keep your pace up for a full minute. Build a new personal best.</small></button><button class="kp-mode" data-mode="precision"><span>🎯</span><strong>Precision Run</strong><small>30 seconds. Wrong keys cost points, so stay accurate.</small></button></div><div class="kp-actions"><span class="kp-sub" id="kpSelectedKey">Choose a key on the keyboard first</span><div><button class="kp-secondary" id="kpArcadeClose">Back</button> <button class="kp-primary" id="kpStartRun">Start Run</button></div></div></div>';
@@ -133,11 +133,11 @@
     $("kpResultSub").textContent=run.hits+" hits · "+run.misses+" misses · +"+xp+" XP · +"+coins+" coins";
     const p=xpLevel(state.arcadeXP);$("kpResultProgress").style.width=(p.progress/p.need*100)+"%";
     result.classList.add("open");syncGameplay();
-    if(isRecord&&sdkReady){try{window.CrazyGames.SDK.game.happytime();}catch(e){}}
+    if(isRecord&&sdkReady){try{window.CrazyGames.SDK.game.happytime();}catch(e){}}\n    if(ADS_ENABLED&&sdkReady&&state.arcadeRuns%4===0)requestMidgameAd();
     if(p.level>oldLevel)notify("Level up! You reached level "+p.level+".");else if(isRecord)notify("New personal best!");
   }
   function closeResult(){result.classList.remove("open");run=null;syncGameplay();}
-  $("kpResultClose").addEventListener("click",closeResult);
+  $("kpResultClose").addEventListener("click",closeResult);\n  skipBoost.addEventListener("click",closeResult);
   $("kpRunAgain").addEventListener("click",function(){result.classList.remove("open");run=null;startRun();});
   document.addEventListener("keydown",function(e){
     if(!run||run.finished||e.repeat||e.metaKey||e.ctrlKey||e.altKey)return;
@@ -164,7 +164,7 @@
     else{boostBtn.textContent="2× Boost";boostBtn.disabled=false;state.rewardBoostUntil=0;}
   }
   boostBtn.addEventListener("click",async function(){
-    if(adBusy||boostUntil>Date.now())return;
+    if(!ADS_ENABLED)return;\n    if(adBusy||boostUntil>Date.now())return;
     const sdk=window.CrazyGames&&window.CrazyGames.SDK;
     if(!sdkReady||!sdk.ad||!["local","crazygames"].includes(sdkEnv)){notify("Reward videos are available on CrazyGames.");return;}
     adBusy=true;setGameplay(false);let settled=false;
