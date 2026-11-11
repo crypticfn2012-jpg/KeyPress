@@ -286,7 +286,10 @@
   const keyboard=$("keyboard");
   if(keyboard)new MutationObserver(function(){updateSelectedKey();fitBoard();}).observe(keyboard,{childList:true,subtree:true,attributes:true,attributeFilter:["class"]});
   const oldKeyClick=handleKeyClick;
-  handleKeyClick=function(label){\n    if(run&&!run.finished&&label!==state.mainKey){if(run.mode==="precision"){run.misses++;$("kpMisses").textContent=run.misses;}notify("Keep using your selected key during a run.");return;}\n    oldKeyClick(label);updateSelectedKey();fitBoard();\n  };
+  handleKeyClick=function(label){
+    if(run&&!run.finished&&label!==state.mainKey){if(run.mode==="precision"){run.misses++;$("kpMisses").textContent=run.misses;}notify("Keep using your selected key during a run.");return;}
+    oldKeyClick(label);updateSelectedKey();fitBoard();
+  };
   initCrazyGames();updateLevel();updateSelectedKey();fitBoard();
   window.addEventListener("beforeunload",function(){try{saveState();}catch(e){}});
 })();
