@@ -2233,7 +2233,7 @@ function init(){
   };
   emailLoginBtn.onclick = handleLocalEmailLogin;
 
-  setInterval(saveState, 5000);
+  // Save scheduling is handled by the CrazyGames-aware wrapper in crazygames.js.
   window.addEventListener("beforeunload", saveState);
 }
 init();
