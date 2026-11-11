@@ -323,12 +323,37 @@
     finally{syncGameplay();}
   });
   const baseSave=saveState;
+  const baseSetSaveStatus=setSaveStatus;
+  setSaveStatus=function(ok){
+    const el=$("saveStatus");
+    if(!el)return;
+    el.classList.remove("warn");
+    if(!ok){baseSetSaveStatus(false);return;}
+    if(sdkReady&&sdkEnv!=="disabled"&&sdkDataReady){
+      el.textContent="CrazyGames cloud save active. Progress syncs to your account when signed in.";
+    }else if(sdkReady&&sdkEnv!=="disabled"){
+      el.textContent="Cloud saving is unavailable. Progress is currently saved only in this browser.";
+      el.classList.add("warn");
+    }else{
+      el.textContent="Saved locally in this browser.";
+    }
+  };
   saveState=function(){
     const sdk=window.CrazyGames&&window.CrazyGames.SDK;
     try{
-      if(sdkReady&&sdkDataReady&&sdkEnv!=="disabled"&&sdk&&sdk.data){sdk.data.setItem("keypress_save_v6",JSON.stringify(state));}
-      else{baseSave();}
-    }catch(e){sdkDataReady=false;console.warn("CrazyGames Data save failed; switching to browser fallback.",e);try{baseSave();}catch(localError){console.error("Local save also failed.",localError);}}
+      if(sdkReady&&sdkDataReady&&sdkEnv!=="disabled"&&sdk&&sdk.data){
+        sdk.data.setItem("keypress_save_v6",JSON.stringify(state));
+        setSaveStatus(true);
+      }else{
+        baseSave();
+        if(sdkReady&&sdkEnv!=="disabled")setSaveStatus(true);
+      }
+    }catch(e){
+      sdkDataReady=false;
+      console.warn("CrazyGames Data save failed; cloud sync is unavailable until the SDK recovers.",e);
+      try{baseSave();}catch(localError){console.error("Local save also failed.",localError);}
+      setSaveStatus(true);
+    }
   };
 
   // The periodic save timer starts only after SDK data has been loaded and gameplay is revealed.
