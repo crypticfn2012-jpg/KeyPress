@@ -1964,10 +1964,6 @@ function doPrestige(tier){
 
   showReveal({icon: tier.icon, name: tier.name + "!", sub: rewardSub || ("+" + tier.multAdd + "% permanent boost")}, true);
 
-  if(window.Gamplo && typeof Gamplo.isReady === "function" && Gamplo.isReady() && Gamplo.getPlayer()){
-    Gamplo.unlockAchievement("prestige_" + tier.level).catch(()=>{});
-    if(tier.level === 11) Gamplo.unlockAchievement("prestige_omega").catch(()=>{});
-  }
 }
 
 function updatePrestigeShortcut(){
