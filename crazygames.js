@@ -140,7 +140,7 @@
     $("kpResultSub").textContent=run.hits+" hits · "+run.misses+" misses · +"+xp+" XP · +"+coins+" coins";
     const p=xpLevel(state.arcadeXP);$("kpResultProgress").style.width=(p.progress/p.need*100)+"%";
     result.classList.add("open");syncGameplay();
-    if(isRecord&&sdkReady){try{const task=window.CrazyGames.SDK.game.happytime();if(task&&typeof task.catch==="function")task.catch(function(){});}catch(e){}}
+    if(sdkReady&&(p.level>oldLevel||(isRecord&&score>=50))){try{const task=window.CrazyGames.SDK.game.happytime();if(task&&typeof task.catch==="function")task.catch(function(){});}catch(e){}}
     if(ADS_ENABLED&&sdkReady&&state.arcadeRuns%4===0)requestMidgameAd();
     if(p.level>oldLevel)notify("Level up! You reached level "+p.level+".");else if(isRecord)notify("New personal best!");
   }
