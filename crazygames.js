@@ -101,7 +101,7 @@
   function menuOpen(){return !!document.querySelector(".shop.open,#kpArcadeModal.open,#kpResult.open,#revealModal.show");}
   function setGameplay(active){if(!sdkReady||!window.CrazyGames||!window.CrazyGames.SDK.game||gameplayActive===active)return;gameplayActive=active;try{if(active)window.CrazyGames.SDK.game.gameplayStart();else window.CrazyGames.SDK.game.gameplayStop();}catch(e){console.debug("CrazyGames gameplay event",e);}}
   function syncGameplay(){
-    if(!document.querySelector(".gameWrap.visible"))return;
+    if(!gameRevealed||!document.querySelector(".gameWrap.visible"))return;
     const paused=menuOpen()||adBusy;
     if(run&&!run.finished){
       if(paused&&!run.pausedAt){run.pausedAt=performance.now();clearInterval(runTimer);}
