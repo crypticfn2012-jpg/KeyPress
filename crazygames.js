@@ -186,7 +186,6 @@
         adError:function(error){if(settled)return;settled=true;resume();notify("No video available. Try again later.");console.warn("Reward ad",error);},
         adFinished:function(){if(settled)return;settled=true;boostUntil=Date.now()+60000;state.rewardBoostUntil=boostUntil;saveState();resume();updateBoost();notify("2× coins active for 60 seconds!");}
       });
-      if(!settled){settled=true;resume();}
     }catch(e){if(!settled){settled=true;resume();notify("The video could not be loaded.");}console.warn("Rewarded ad failed",e);}
   });
   setInterval(updateBoost,250);updateBoost();
@@ -203,7 +202,6 @@
         adError:function(error){if(settled)return;settled=true;resume();console.warn("Midgame ad unavailable",error);},
         adFinished:function(){if(settled)return;settled=true;resume();}
       });
-      if(!settled){settled=true;resume();}
     }catch(e){if(!settled){settled=true;resume();}console.warn("Midgame ad failed",e);}
   }
 
