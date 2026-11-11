@@ -37,7 +37,7 @@
     "#kpArcadeBtn{border-color:#167b91;color:#7af6ff}#kpBoostBtn{border-color:#8b6b25;color:#ffe08a}",
     ".topbtns #kpProfileBtn{max-width:100px;overflow:hidden;text-overflow:ellipsis}",
     "#settingsAccountSlot{display:flex;justify-content:flex-end;align-items:center;gap:8px;min-width:0}",
-    "#settingsAccountSlot #kpProfileBtn{display:inline-flex!important;max-width:170px;overflow:hidden;text-overflow:ellipsis;justify-content:center;border-color:#287da9;background:linear-gradient(110deg,#12334b,#17283e);color:#dff6ff}",
+    "#settingsAccountSlot #kpProfileBtn{max-width:170px;overflow:hidden;text-overflow:ellipsis;justify-content:center;border-color:#287da9;background:linear-gradient(110deg,#12334b,#17283e);color:#dff6ff}",
     "#settingsModal .settingsAccountRow{align-items:center;gap:12px}",
     "@media(max-width:520px){#settingsModal .shopPanel{padding:16px}#settingsAccountStatus{max-width:165px}}",
     "@media(max-width:900px){.topbar{height:48px}.topbtns{gap:4px}.iconbtn{padding:7px 8px;font-size:11px}.stats{gap:7px;font-size:10px}.stats span:nth-child(n+3){display:none}.playerBadge{display:none!important}.topbtns #changeKeyBtn,.topbtns #prestigeShortcutBtn{display:none!important}}",
