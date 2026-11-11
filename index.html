@@ -2238,6 +2238,9 @@ shopBtn.onclick = () => toggleShop();
 changeKeyBtn.textContent = "Change";
 changeKeyBtn.onclick = () => {
   awaitingKeySelectMode = true;
+  placingCharmId = null;
+  placeBanner.classList.remove("show");
+  refreshKeyVisuals();
   if(settingsKeyHint) settingsKeyHint.textContent = "Click a key on the keyboard...";
   settingsModal.classList.remove("open");
 };
