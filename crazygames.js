@@ -194,10 +194,10 @@
     lastMidgameAdAt=Date.now();adBusy=true;setGameplay(false);
     const buttons=[$("kpRunAgain"),$("kpResultClose"),skipBoost];buttons.forEach(function(b){if(b)b.disabled=true;});
     let settled=false;
-    function resume(){adBusy=false;sdkMuted=false;buttons.forEach(function(b){if(b)b.disabled=false;});syncGameplay();}
+    function resume(){adBusy=false;adMuted=false;buttons.forEach(function(b){if(b)b.disabled=false;});syncGameplay();}
     try{
       await window.CrazyGames.SDK.ad.requestAd("midgame",{
-        adStarted:function(){sdkMuted=true;},
+        adStarted:function(){adMuted=true;},
         adError:function(error){if(settled)return;settled=true;resume();console.warn("Midgame ad unavailable",error);},
         adFinished:function(){if(settled)return;settled=true;resume();}
       });
