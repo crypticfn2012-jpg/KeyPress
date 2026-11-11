@@ -245,11 +245,11 @@
       if(sdkEnv!=="disabled"&&sdk.game){
         const applySettings=function(settings){platformMuted=!!(settings&&settings.muteAudio);};
         applySettings(sdk.game.settings||{});
-        if(typeof sdk.game.addSettingsChangeListener==="function")sdk.game.addSettingsChangeListener(applySettings);
+        if(typeof sdk.game.addSettingsChangeListener==="function"){try{sdk.game.addSettingsChangeListener(applySettings);}catch(e){console.debug("CrazyGames settings listener unavailable",e);}}
       }
       // Use CrazyGames profile when signed in; otherwise continue as a guest.
       await refreshCrazyUser();
-      if(sdk.user&&typeof sdk.user.addAuthListener==="function")sdk.user.addAuthListener(function(user){refreshCrazyUser(user);});
+      if(sdk.user&&typeof sdk.user.addAuthListener==="function"){try{sdk.user.addAuthListener(function(user){refreshCrazyUser(user);});}catch(e){console.debug("CrazyGames auth listener unavailable",e);}}
       try{if(sdk.game)sdk.game.loadingStop();}catch(e){}
       revealGame();console.info("CrazyGames SDK ready:",sdkEnv);
     }catch(e){sdkReady=false;console.warn("CrazyGames SDK initialization failed; local saves remain enabled.",e);revealGame();}
