@@ -157,11 +157,12 @@
   $("kpResultClose").addEventListener("click",closeResult);
   $("kpRunAgain").addEventListener("click",function(){result.classList.remove("open");run=null;startRun();});
   document.addEventListener("keydown",function(e){
-    if(!run||run.finished||e.repeat||e.metaKey||e.ctrlKey||e.altKey)return;
+    if(!run||run.finished||menuOpen()||e.repeat||e.metaKey||e.ctrlKey||e.altKey)return;
     const label=keyEventMap[e.key]||e.key.toUpperCase();
     if(label!==state.mainKey&&!["Escape","Tab","CapsLock","Shift"].includes(e.key)){run.misses++;$("kpMisses").textContent=run.misses;}
   },true);
   registerPress=function(label){
+    if(run&&!run.finished&&menuOpen())return;
     const beforePresses=Number(state.totalPresses)||0;
     const before=Number(state.clicks)||0,beforeLife=Number(state.lifetimeClicks)||0;
     oldRegisterPress(label);
