@@ -223,6 +223,7 @@
     if($("startScreen")){$("startScreen").classList.add("hidden");$("startScreen").style.display="none";}
     if($("gameWrap")){$("gameWrap").classList.add("visible");$("gameWrap").style.visibility="visible";$("gameWrap").style.pointerEvents="auto";}
     loader.remove();fitBoard();startSaveTimer();syncGameplay();
+    notify(state.mainKey?"Press "+state.mainKey+" to earn coins. Open Arcade for timed challenges.":"Select a key on the keyboard to start earning coins.");
   }
 
   // Use SDK Data as the canonical save and migrate existing browser progress once.
