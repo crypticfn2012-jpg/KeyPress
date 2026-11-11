@@ -36,6 +36,10 @@
     ".kp-loader{position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;padding:18px;background:radial-gradient(ellipse at 50% 24%,rgba(48,72,112,.32),transparent 56%),#080d17;color:#edf3fc}.kp-loader-card{width:min(440px,92vw);display:flex;flex-direction:column;align-items:center;gap:13px;padding:30px 24px;border:1px solid #344761;border-radius:18px;background:linear-gradient(155deg,rgba(23,36,57,.96),rgba(12,19,31,.98));box-shadow:0 24px 65px #0008;text-align:center}.kp-forge-mark{width:120px;height:82px;display:flex;align-items:center;justify-content:center}.kp-forge-mark svg{width:100%;height:100%;display:block}.kp-loader-game{font:900 clamp(28px,7vw,44px)/1 Arial,sans-serif;letter-spacing:3px;color:#ffb451}.kp-loader-track{width:min(290px,76vw);height:11px;padding:2px;border:1px solid #3b4e69;border-radius:20px;background:#080d17;overflow:hidden}.kp-loader-track i{display:block;width:38%;height:100%;border-radius:20px;background:linear-gradient(90deg,#0789ff,#8ecbff);animation:kpLoad 1.8s ease-in-out infinite alternate}.kp-loader small{font-size:9px;letter-spacing:3px;color:#c3d0e6;font-weight:800}.kp-loader-status{font-size:11px;color:#8e9db7;letter-spacing:.5px}@keyframes kpLoad{from{transform:translateX(0)}to{transform:translateX(160%)}}body.reduce-flash .kp-loader-track i{animation:none;width:100%}@media(prefers-reduced-motion:reduce){.kp-loader-track i{animation:none;width:100%}}",
     "#kpArcadeBtn{border-color:#167b91;color:#7af6ff}#kpBoostBtn{border-color:#8b6b25;color:#ffe08a}",
     ".topbtns #kpProfileBtn{max-width:100px;overflow:hidden;text-overflow:ellipsis}",
+    "#settingsAccountSlot{display:flex;justify-content:flex-end;align-items:center;gap:8px;min-width:0}",
+    "#settingsAccountSlot #kpProfileBtn{display:inline-flex!important;max-width:170px;overflow:hidden;text-overflow:ellipsis;justify-content:center;border-color:#287da9;background:linear-gradient(110deg,#12334b,#17283e);color:#dff6ff}",
+    "#settingsModal .settingsAccountRow{align-items:center;gap:12px}",
+    "@media(max-width:520px){#settingsModal .shopPanel{padding:16px}#settingsAccountStatus{max-width:165px}}",
     "@media(max-width:900px){.topbar{height:48px}.topbtns{gap:4px}.iconbtn{padding:7px 8px;font-size:11px}.stats{gap:7px;font-size:10px}.stats span:nth-child(n+3){display:none}.playerBadge{display:none!important}.topbtns #changeKeyBtn,.topbtns #prestigeShortcutBtn{display:none!important}}",
     "@media(max-width:640px){.topbtns #kpLevelHud{display:none}.topbtns #accountBtn,.topbtns #changeKeyBtn{display:none}.kp-mode-grid{grid-template-columns:1fr}.kp-mode{min-height:82px}.kp-card{padding:17px}.kp-hud{top:54px;gap:8px;padding:8px 10px;font-size:11px}}",
     "@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}"
@@ -73,7 +77,11 @@
   boostBtn.className="iconbtn";boostBtn.id="kpBoostBtn";boostBtn.textContent="2× Boost";
   const levelHud=document.createElement("div");levelHud.className="kp-level";levelHud.id="kpLevelHud";
   const profileBtn=document.createElement("button");profileBtn.className="iconbtn";profileBtn.id="kpProfileBtn";profileBtn.textContent="Login";profileBtn.title="Sign in with CrazyGames";profileBtn.style.display="none";
-  if(topBtns){topBtns.insertBefore(arcadeBtn,topBtns.firstChild);topBtns.appendChild(levelHud);topBtns.appendChild(profileBtn);}
+  const settingsAccountSlot=$("settingsAccountSlot");
+  if(topBtns)topBtns.insertBefore(arcadeBtn,topBtns.firstChild);
+  if(topBtns)topBtns.appendChild(levelHud);
+  if(settingsAccountSlot)settingsAccountSlot.appendChild(profileBtn);
+  else if(topBtns)topBtns.appendChild(profileBtn);
 
   const modal=document.createElement("div");modal.className="kp-modal";modal.id="kpArcadeModal";
   modal.innerHTML='<div class="kp-card"><div class="kp-kicker">KEYPRESS / ARCADE</div><div class="kp-title">Choose your challenge.</div><div class="kp-sub">Pick a key on the keyboard first, then compete for a personal best. Every run earns XP and coins.</div><div class="kp-mode-grid"><button class="kp-mode selected" data-mode="sprint"><span>⚡</span><strong>30 Second Sprint</strong><small>Press your chosen key as fast as possible before time runs out.</small></button><button class="kp-mode" data-mode="endurance"><span>🔥</span><strong>60 Second Endurance</strong><small>Keep your pace up for a full minute. Build a new personal best.</small></button><button class="kp-mode" data-mode="precision"><span>🎯</span><strong>Precision Run</strong><small>30 seconds. Wrong keys cost points, so stay accurate.</small></button></div><div class="kp-actions"><span class="kp-sub" id="kpSelectedKey">Choose a key on the keyboard first</span><div><button class="kp-secondary" id="kpArcadeClose">Back</button> <button class="kp-primary" id="kpStartRun">Start Run</button></div></div></div>';
@@ -161,11 +169,11 @@
     const label=keyEventMap[e.key]||e.key.toUpperCase();
     if(label!==state.mainKey&&!["Escape","Tab","CapsLock","Shift"].includes(e.key)){run.misses++;$("kpMisses").textContent=run.misses;}
   },true);
-  registerPress=function(label){
+  registerPress=function(label,inputEvent){
     if(run&&!run.finished&&menuOpen())return;
     const beforePresses=Number(state.totalPresses)||0;
     const before=Number(state.clicks)||0,beforeLife=Number(state.lifetimeClicks)||0;
-    oldRegisterPress(label);
+    oldRegisterPress(label,inputEvent);
     if(run&&!run.finished&&(Number(state.totalPresses)||0)>beforePresses){run.hits++;$("kpHits").textContent=run.hits;}
     if(boostUntil>Date.now()){
       const earned=Math.max(0,(Number(state.clicks)||0)-before),life=Math.max(0,(Number(state.lifetimeClicks)||0)-beforeLife);
@@ -280,14 +288,30 @@
     const sdk=window.CrazyGames&&window.CrazyGames.SDK;
     try{
       const available=!!(sdk&&sdk.user&&sdk.user.isUserAccountAvailable);
+      const accountStatus=$("settingsAccountStatus");
       profileBtn.style.display=available?"":"none";
-      if(!available)return;
+      if(!available){
+        if(accountStatus)accountStatus.textContent="Sign-in is available on CrazyGames. Guest play still works here.";
+        return;
+      }
       const user=existingUser===undefined&&sdk&&sdk.user&&typeof sdk.user.getUser==="function"?await sdk.user.getUser():existingUser;
-      if(user&&user.username){profileBtn.textContent=String(user.username);profileBtn.title="Signed in with CrazyGames";}
-      else{profileBtn.textContent="Login";profileBtn.title="Sign in with your CrazyGames account";}
+      if(user&&user.username){
+        profileBtn.textContent=String(user.username);
+        profileBtn.title="Signed in with CrazyGames";
+        if(accountStatus)accountStatus.textContent="Signed in as "+String(user.username)+".";
+      }else{
+        profileBtn.textContent="Sign in";
+        profileBtn.title="Sign in with your CrazyGames account";
+        if(accountStatus)accountStatus.textContent="Not signed in. Your game is still playable as a guest.";
+      }
       if(user&&user.profilePictureUrl){profileBtn.style.backgroundImage="url("+JSON.stringify(user.profilePictureUrl)+")";profileBtn.style.backgroundPosition="8px center";profileBtn.style.backgroundRepeat="no-repeat";profileBtn.style.backgroundSize="20px 20px";profileBtn.style.paddingLeft="34px";}
       else{profileBtn.style.backgroundImage="";profileBtn.style.paddingLeft="8px";}
-    }catch(e){profileBtn.style.display="none";console.debug("CrazyGames profile unavailable",e);}
+    }catch(e){
+      profileBtn.style.display="none";
+      const accountStatus=$("settingsAccountStatus");
+      if(accountStatus)accountStatus.textContent="Account details could not be loaded. You can keep playing as a guest.";
+      console.debug("CrazyGames profile unavailable",e);
+    }
   }
   profileBtn.addEventListener("click",async function(){
     const sdk=window.CrazyGames&&window.CrazyGames.SDK;
@@ -321,9 +345,9 @@
   const keyboard=$("keyboard");
   if(keyboard)new MutationObserver(function(){updateSelectedKey();fitBoard();}).observe(keyboard,{childList:true,subtree:true,attributes:true,attributeFilter:["class"]});
   const oldKeyClick=handleKeyClick;
-  handleKeyClick=function(label){
+  handleKeyClick=function(label,inputEvent){
     if(run&&!run.finished&&label!==state.mainKey){if(run.mode==="precision"){run.misses++;$("kpMisses").textContent=run.misses;}notify("Keep using your selected key during a run.");return;}
-    oldKeyClick(label);updateSelectedKey();fitBoard();
+    oldKeyClick(label,inputEvent);updateSelectedKey();fitBoard();
   };
   initCrazyGames();updateLevel();updateSelectedKey();fitBoard();
   window.addEventListener("beforeunload",function(){try{saveState();}catch(e){}});
