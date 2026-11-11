@@ -100,12 +100,10 @@
   function notify(message){toast.textContent=message;toast.classList.add("show");clearTimeout(toastTimer);toastTimer=setTimeout(function(){toast.classList.remove("show");},2200);}
   function menuOpen(){return !!document.querySelector(".shop.open,#kpArcadeModal.open,#kpResult.open,#revealModal.show");}
   function setGameplay(active){if(!sdkReady||!window.CrazyGames||!window.CrazyGames.SDK.game||gameplayActive===active)return;gameplayActive=active;try{if(active)window.CrazyGames.SDK.game.gameplayStart();else window.CrazyGames.SDK.game.gameplayStop();}catch(e){console.debug("CrazyGames gameplay event",e);}}
-  function syncGameplay(){if(!sdkReady||!document.querySelector(".gameWrap.visible")||adBusy)return;setGameplay(!menuOpen()&&!document.hidden&&!(run&&run.finished));}
+  function syncGameplay(){if(!sdkReady||!document.querySelector(".gameWrap.visible")||adBusy)return;setGameplay(!menuOpen()&&!(run&&run.finished));}
   const observer=new MutationObserver(syncGameplay);
   document.querySelectorAll(".shop,.revealModal").forEach(function(el){observer.observe(el,{attributes:true,attributeFilter:["class"]});});
   observer.observe(modal,{attributes:true,attributeFilter:["class"]});observer.observe(result,{attributes:true,attributeFilter:["class"]});
-  document.addEventListener("visibilitychange",syncGameplay);
-  window.addEventListener("pagehide",function(){setGameplay(false);});
 
   function updateSelectedKey(){const el=$("kpSelectedKey");if(el)el.textContent=state.mainKey?"Selected key: "+state.mainKey:"Select a key on the keyboard first";}
   function openArcade(){if(run&&!run.finished)return;updateSelectedKey();modal.classList.add("open");syncGameplay();}
