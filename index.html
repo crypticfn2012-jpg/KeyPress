@@ -850,6 +850,7 @@ body.reduce-flash .unboxTrack i{width:100%}
       <span>Sound Volume</span>
       <input type="range" id="volumeSlider" min="0" max="100" value="50" />
     </div>
+    </div>
     <div class="settingsGroup">
     <div class="settingsGroupTitle">ACCESSIBILITY</div>
     <div class="accessibilityBlock">
@@ -880,6 +881,7 @@ body.reduce-flash .unboxTrack i{width:100%}
       <button class="dangerBtn" id="resetBtn">Reset</button>
     </div>
     <div class="saveStatus" id="saveStatus">Settings save with your game progress.</div>
+    </div>
     <button class="iconbtn" id="closeSettingsBtn" style="margin-top:10px;">Close</button>
   </div>
 </div>
@@ -989,7 +991,13 @@ const cosmetics = [
   {id:"titan",  name:"Titan",  cost:6200, cls:"titan"},
   {id:"voidglass",  name:"Void Glass",  cost:6800, cls:"voidglass"},
   {id:"sunburst",  name:"Sunburst",  cost:7000, cls:"sunburst"},
-  {id:"prism",  name:"Prism",  cost:7400, cls:"prism"}
+  {id:"prism",  name:"Prism",  cost:7400, cls:"prism"},
+  {id:"carbon", name:"Carbon Fibre", cost:7800, cls:"carbon"},
+  {id:"sapphire", name:"Sapphire", cost:8600, cls:"sapphire"},
+  {id:"copper", name:"Copper Alloy", cost:9200, cls:"copper"},
+  {id:"obsidian", name:"Obsidian", cost:10800, cls:"obsidian"},
+  {id:"mint", name:"Mint Glass", cost:11500, cls:"mint"},
+  {id:"forge", name:"PixelForge", cost:14500, cls:"forge"}
 ];
 
 // prestige-exclusive cosmetics — never purchasable, only granted by prestiging
@@ -1013,7 +1021,10 @@ const boardThemes = [
   {id:"aurora",      name:"Aurora Frame",     cost:1400, bg:"linear-gradient(120deg,#0a3d2e,#1a6b4a,#0a2d5a,#3a1a6b,#0a3d2e)", glow:"#3ae0a0", blur:"30px", extraCls:"themeAurora"},
   {id:"midnight",    name:"Midnight Frame",   cost:1800, bg:"linear-gradient(160deg,#050814,#0f1730,#050814)", glow:"#5c7bff", blur:"28px"},
   {id:"ember",       name:"Ember Frame",      cost:2000, bg:"linear-gradient(160deg,#1c0700,#4d1200,#1c0700)", glow:"#ff6c2f", blur:"32px"},
-  {id:"prismframe",  name:"Prism Frame",      cost:2400, bg:"linear-gradient(120deg,#ff0040,#ff9f1c,#ffe66d,#4ecdc4,#1a8cff,#a95fff)", glow:"#ffffff", blur:"36px"}
+  {id:"prismframe",  name:"Prism Frame",      cost:2400, bg:"linear-gradient(120deg,#ff0040,#ff9f1c,#ffe66d,#4ecdc4,#1a8cff,#a95fff)", glow:"#ffffff", blur:"36px"},
+  {id:"forgeframe", name:"PixelForge Studio", cost:3200, bg:"linear-gradient(145deg,#101c2d,#183d60 48%,#241b22)", glow:"#0789ff", blur:"22px"},
+  {id:"deepsea", name:"Deep Sea", cost:3600, bg:"linear-gradient(160deg,#031a2b,#07506a 48%,#03101e)", glow:"#18a8c5", blur:"24px"},
+  {id:"royalvelvet", name:"Royal Velvet", cost:4200, bg:"linear-gradient(145deg,#24112f,#4b1d50 50%,#110d20)", glow:"#a45be8", blur:"26px"}
 ];
 
 // prestige-exclusive board themes — never purchasable, only granted by prestiging
@@ -1387,10 +1398,10 @@ function recordInputStamp(inputEvent){
     const mean = pressIntervals.reduce((sum,value)=>sum+value,0)/pressIntervals.length;
     const variance = pressIntervals.reduce((sum,value)=>sum+Math.pow(value-mean,2),0)/pressIntervals.length;
     const coefficientOfVariation = Math.sqrt(variance)/Math.max(mean,1);
-    if(mean >= 35 && mean <= 125 && coefficientOfVariation < 0.018 && pressHistory.length >= 12){
+    if(mean >= 45 && mean <= 125 && coefficientOfVariation < 0.015 && pressHistory.length >= 10){
       suspiciousRhythmWindows++;
       pressIntervals = pressIntervals.slice(-8);
-      if(suspiciousRhythmWindows >= 2){
+      if(suspiciousRhythmWindows >= 3){
         antiCheatLockUntil = now + 2200;
         pressHistory = [];
         pressIntervals = [];
@@ -1578,6 +1589,10 @@ const fallbackGoogleBtn = document.getElementById("fallbackGoogleBtn");
 const emailLoginInput = document.getElementById("emailLoginInput");
 const emailLoginBtn = document.getElementById("emailLoginBtn");
 const antiCheatBanner = document.getElementById("antiCheatBanner");
+const settingsChangeKeySlot = document.getElementById("settingsChangeKeySlot");
+const settingsMuteSlot = document.getElementById("settingsMuteSlot");
+if(settingsChangeKeySlot) settingsChangeKeySlot.appendChild(changeKeyBtn);
+if(settingsMuteSlot) settingsMuteSlot.appendChild(muteBtn);
 
 const cosmeticsList = document.getElementById("cosmeticsList");
 const themesList = document.getElementById("themesList");
@@ -1928,6 +1943,8 @@ function showReveal(charm, isPrestige){
   clearTimeout(unboxTimer);
   revealCard.className = "revealCard " + (isPrestige ? "prestige" : charm.rarity) + " unboxing";
   document.getElementById("unboxIntro").classList.remove("finished");
+  document.querySelector("#unboxIntro .unboxTitle").textContent = isPrestige ? "PRESTIGE REWARD" : "MYSTERY BOX";
+  document.querySelector("#unboxIntro .unboxHint").textContent = isPrestige ? "Your milestone reward is ready..." : "Unsealing your reward...";
   revealIcon.textContent = charm.icon;
   revealName.textContent = charm.name;
   revealRarity.textContent = isPrestige ? "prestige reward" : charm.rarity;
