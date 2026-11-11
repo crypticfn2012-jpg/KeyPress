@@ -212,8 +212,8 @@
     const sdk=window.CrazyGames&&window.CrazyGames.SDK;
     if(!sdk||typeof sdk.init!=="function"){console.info("CrazyGames SDK not loaded; browser save mode.");return;}
     try{
-      try{if(sdk.game)sdk.game.loadingStart();}catch(e){}
       await sdk.init();sdkReady=true;sdkEnv=sdk.environment||"disabled";
+      try{if(sdk.game)sdk.game.loadingStart();}catch(e){}
       if(sdkEnv!=="disabled"&&sdk.data){
         try{
           const cloud=sdk.data.getItem("keypress_save_v6");
