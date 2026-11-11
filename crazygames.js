@@ -265,9 +265,11 @@
   });
   const baseSave=saveState;
   saveState=function(){
-    baseSave();
-    try{const sdk=window.CrazyGames&&window.CrazyGames.SDK;if(sdkReady&&sdkDataReady&&sdkEnv!=="disabled"&&sdk.data)sdk.data.setItem("keypress_save_v6",JSON.stringify(state));}
-    catch(e){console.warn("CrazyGames save failed; local copy retained.",e);}
+    const sdk=window.CrazyGames&&window.CrazyGames.SDK;
+    try{
+      if(sdkReady&&sdkDataReady&&sdkEnv!=="disabled"&&sdk&&sdk.data){sdk.data.setItem("keypress_save_v6",JSON.stringify(state));}
+      else{baseSave();}
+    }catch(e){sdkDataReady=false;console.warn("CrazyGames Data save failed; switching to browser fallback.",e);try{baseSave();}catch(localError){console.error("Local save also failed.",localError);}}
   };
 
   setInterval(function(){saveState();},5000);
