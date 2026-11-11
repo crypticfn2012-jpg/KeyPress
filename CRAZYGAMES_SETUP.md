@@ -25,12 +25,12 @@ Ads are intentionally disabled for the Basic Launch:
 
 - In `crazygames.js`, `ADS_ENABLED` is `false`.
 - Do not enable it until the game is approved for Full Launch and monetization is enabled in the Developer Portal.
-- After Full Launch, changing it to `true` exposes an optional rewarded 2× boost on the results screen and requests a midgame ad at a run-results break every fourth completed run.
+- After Full Launch, changing it to `true` exposes an optional rewarded 2× boost on the results screen and requests a midgame ad at a run-results break every fourth completed run, with a minimum three-minute interval.
 - All ad requests use the CrazyGames SDK. No third-party ad network is included.
 
 ## Local testing
 
-Serve the repository from `http://localhost` or `http://127.0.0.1` rather than opening `index.html` as a file. The SDK runs in its local demo environment there. Check the browser console for SDK events and verify that the game still works if the SDK is unavailable.
+Serve the repository from `http://localhost` or `http://127.0.0.1` rather than opening `index.html` as a file. From the repository folder, run `python -m http.server 8000` and open `http://localhost:8000/`. The SDK runs in its local demo environment there. Check the browser console for SDK events and verify that the game still works if the SDK is unavailable.
 
 ## Notes
 
