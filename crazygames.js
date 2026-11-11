@@ -141,12 +141,10 @@
     result.classList.add("open");syncGameplay();
     if(isRecord&&sdkReady){try{window.CrazyGames.SDK.game.happytime();}catch(e){}}
     if(ADS_ENABLED&&sdkReady&&state.arcadeRuns%4===0)requestMidgameAd();
-    if(ADS_ENABLED&&sdkReady&&state.arcadeRuns%4===0)requestMidgameAd();
     if(p.level>oldLevel)notify("Level up! You reached level "+p.level+".");else if(isRecord)notify("New personal best!");
   }
   function closeResult(){result.classList.remove("open");run=null;syncGameplay();}
   $("kpResultClose").addEventListener("click",closeResult);
-  skipBoost.addEventListener("click",closeResult);
   skipBoost.addEventListener("click",closeResult);
   $("kpRunAgain").addEventListener("click",function(){result.classList.remove("open");run=null;startRun();});
   document.addEventListener("keydown",function(e){
@@ -228,7 +226,6 @@
         }
       }
       if(sdkEnv!=="disabled"&&sdk.game){
-        try{sdk.game.loadingStop();}catch(e){}
         const applySettings=function(settings){sdkMuted=!!(settings&&settings.muteAudio);};
         applySettings(sdk.game.settings||{});
         if(typeof sdk.game.addSettingsChangeListener==="function")sdk.game.addSettingsChangeListener(applySettings);
