@@ -662,6 +662,13 @@ body[class*="cb-"] .key.selected{outline:3px solid var(--access-accent)!importan
 body[class*="cb-"] .key.placeTarget{outline:3px dashed var(--access-secondary)!important;outline-offset:2px}
 body[class*="cb-"] .stats b,body[class*="cb-"] .tab.active{color:var(--access-accent)!important}
 body[class*="cb-"] .charmBadge{border-width:3px!important;box-shadow:none!important}
+body[class*="cb-"] .charmBadge.common,body[class*="cb-"] .marketIcon.common{border-style:solid!important}
+body[class*="cb-"] .charmBadge.rare,body[class*="cb-"] .marketIcon.rare{border-style:dashed!important}
+body[class*="cb-"] .charmBadge.epic,body[class*="cb-"] .marketIcon.epic{border-style:double!important}
+body[class*="cb-"] .charmBadge.legendary,body[class*="cb-"] .marketIcon.legendary{border-style:dotted!important}
+body[class*="cb-"] .charmCell.rare{background-image:repeating-linear-gradient(45deg,transparent 0 6px,rgba(255,255,255,.12) 6px 8px)}
+body[class*="cb-"] .charmCell.epic{background-image:repeating-linear-gradient(135deg,transparent 0 5px,rgba(255,255,255,.14) 5px 7px)}
+body[class*="cb-"] .charmCell.legendary{background-image:repeating-linear-gradient(90deg,transparent 0 5px,rgba(255,255,255,.16) 5px 7px)}
 body.cb-high-contrast{filter:contrast(1.12)}
 body.cb-high-contrast .iconbtn,body.cb-high-contrast .tab,body.cb-high-contrast .item{border-color:#dbe8ff}
 @media(prefers-reduced-motion:reduce){body:not(.motion-override) *,body:not(.motion-override) *::before,body:not(.motion-override) *::after{animation:none!important;transition:none!important}}
