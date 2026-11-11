@@ -188,7 +188,8 @@
     const sdk=window.CrazyGames&&window.CrazyGames.SDK;
     if(!sdkReady||!sdk.ad||!["local","crazygames"].includes(sdkEnv)){notify("Reward videos are available on CrazyGames.");return;}
     adBusy=true;setGameplay(false);let settled=false;
-    function resume(){adBusy=false;adMuted=false;syncGameplay();}
+    const resultButtons=[$("kpRunAgain"),$("kpResultClose"),boostBtn];resultButtons.forEach(function(b){if(b)b.disabled=true;});
+    function resume(){adBusy=false;adMuted=false;resultButtons.forEach(function(b){if(b)b.disabled=false;});syncGameplay();}
     try{
       await sdk.ad.requestAd("rewarded",{
         adStarted:function(){adMuted=true;},
@@ -202,7 +203,7 @@
   async function requestMidgameAd(){
     if(!ADS_ENABLED||!sdkReady||!window.CrazyGames.SDK.ad||adBusy||Date.now()-lastMidgameAdAt<180000)return;
     lastMidgameAdAt=Date.now();adBusy=true;setGameplay(false);
-    const buttons=[$("kpRunAgain"),$("kpResultClose"),skipBoost];buttons.forEach(function(b){if(b)b.disabled=true;});
+    const buttons=[$("kpRunAgain"),$("kpResultClose"),boostBtn];buttons.forEach(function(b){if(b)b.disabled=true;});
     let settled=false;
     function resume(){adBusy=false;adMuted=false;buttons.forEach(function(b){if(b)b.disabled=false;});syncGameplay();}
     try{
