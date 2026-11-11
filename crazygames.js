@@ -92,7 +92,7 @@
 
   const oldRegisterPress=registerPress,oldSaveState=saveState,oldPlayClickSound=playClickSound,oldUpdateStats=updateStatsDisplay;
   Object.assign(state,{arcadeXP:0,arcadeRuns:0,arcadeBest:{sprint:0,endurance:0,precision:0},arcadeWins:0,rewardBoostUntil:0},state);
-  let mode="sprint",run=null,runTimer=null,sdkReady=false,sdkDataReady=false,sdkEnv="disabled",sdkMuted=false,adBusy=false,gameplayActive=false,lastMidgameAdAt=0;
+  let mode="sprint",run=null,runTimer=null,sdkReady=false,sdkDataReady=false,sdkEnv="disabled",platformMuted=false,adMuted=false,adBusy=false,gameplayActive=false,lastMidgameAdAt=0;
   let boostUntil=Number(state.rewardBoostUntil)||0;
   function xpLevel(xp){let level=1,rest=Math.max(0,Number(xp)||0),need=100;while(rest>=need&&level<999){rest-=need;level++;need=Math.round(100+level*30);}return{level:level,progress:rest,need:need};}
   function updateLevel(){const p=xpLevel(state.arcadeXP||0);levelHud.innerHTML="<strong>LV "+p.level+"</strong><span class=\"kp-level-track\"><i style=\"width:"+Math.min(100,p.progress/p.need*100)+"%\"></i></span><span>"+p.progress+"/"+p.need+" XP</span>";}
@@ -164,7 +164,7 @@
     }
     if(run&&!run.finished)tick();
   };
-  playClickSound=function(){if(!sdkMuted)oldPlayClickSound();};
+  playClickSound=function(){if(!platformMuted&&!adMuted)oldPlayClickSound();};
   updateStatsDisplay=function(){oldUpdateStats();updateLevel();};
 
   function updateBoost(){
@@ -178,10 +178,10 @@
     const sdk=window.CrazyGames&&window.CrazyGames.SDK;
     if(!sdkReady||!sdk.ad||!["local","crazygames"].includes(sdkEnv)){notify("Reward videos are available on CrazyGames.");return;}
     adBusy=true;setGameplay(false);let settled=false;
-    function resume(){adBusy=false;sdkMuted=false;syncGameplay();}
+    function resume(){adBusy=false;adMuted=false;syncGameplay();}
     try{
       await sdk.ad.requestAd("rewarded",{
-        adStarted:function(){sdkMuted=true;},
+        adStarted:function(){adMuted=true;},
         adError:function(error){if(settled)return;settled=true;resume();notify("No video available. Try again later.");console.warn("Reward ad",error);},
         adFinished:function(){if(settled)return;settled=true;boostUntil=Date.now()+60000;state.rewardBoostUntil=boostUntil;saveState();resume();updateBoost();notify("2× coins active for 60 seconds!");}
       });
@@ -243,7 +243,7 @@
         }catch(e){sdkDataReady=false;console.warn("CrazyGames Data module unavailable; local saving will continue.",e);}
       }
       if(sdkEnv!=="disabled"&&sdk.game){
-        const applySettings=function(settings){sdkMuted=!!(settings&&settings.muteAudio);};
+        const applySettings=function(settings){platformMuted=!!(settings&&settings.muteAudio);};
         applySettings(sdk.game.settings||{});
         if(typeof sdk.game.addSettingsChangeListener==="function")sdk.game.addSettingsChangeListener(applySettings);
       }
