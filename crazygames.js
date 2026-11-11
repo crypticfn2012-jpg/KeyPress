@@ -71,7 +71,7 @@
   const boostBtn=document.createElement("button");
   boostBtn.className="iconbtn";boostBtn.id="kpBoostBtn";boostBtn.textContent="2× Boost";
   const levelHud=document.createElement("div");levelHud.className="kp-level";levelHud.id="kpLevelHud";
-  const profileBtn=document.createElement("button");profileBtn.className="iconbtn";profileBtn.id="kpProfileBtn";profileBtn.textContent="Guest";profileBtn.title="Sign in with CrazyGames";
+  const profileBtn=document.createElement("button");profileBtn.className="iconbtn";profileBtn.id="kpProfileBtn";profileBtn.textContent="Login";profileBtn.title="Sign in with CrazyGames";profileBtn.style.display="none";
   if(topBtns){topBtns.insertBefore(arcadeBtn,topBtns.firstChild);topBtns.appendChild(levelHud);topBtns.appendChild(profileBtn);}
 
   const modal=document.createElement("div");modal.className="kp-modal";modal.id="kpArcadeModal";
@@ -91,7 +91,7 @@
 
   const oldRegisterPress=registerPress,oldSaveState=saveState,oldPlayClickSound=playClickSound,oldUpdateStats=updateStatsDisplay;
   Object.assign(state,{arcadeXP:0,arcadeRuns:0,arcadeBest:{sprint:0,endurance:0,precision:0},arcadeWins:0,rewardBoostUntil:0},state);
-  let mode="sprint",run=null,runTimer=null,sdkReady=false,sdkDataReady=false,sdkEnv="disabled",sdkMuted=false,adBusy=false,gameplayActive=false;
+  let mode="sprint",run=null,runTimer=null,sdkReady=false,sdkDataReady=false,sdkEnv="disabled",sdkMuted=false,adBusy=false,gameplayActive=false,lastMidgameAdAt=0;
   let boostUntil=Number(state.rewardBoostUntil)||0;
   function xpLevel(xp){let level=1,rest=Math.max(0,Number(xp)||0),need=100;while(rest>=need&&level<999){rest-=need;level++;need=Math.round(100+level*30);}return{level:level,progress:rest,need:need};}
   function updateLevel(){const p=xpLevel(state.arcadeXP||0);levelHud.innerHTML="<strong>LV "+p.level+"</strong><span class=\"kp-level-track\"><i style=\"width:"+Math.min(100,p.progress/p.need*100)+"%\"></i></span><span>"+p.progress+"/"+p.need+" XP</span>";}
@@ -192,8 +192,8 @@
   setInterval(updateBoost,250);updateBoost();
 
   async function requestMidgameAd(){
-    if(!ADS_ENABLED||!sdkReady||!window.CrazyGames.SDK.ad||adBusy)return;
-    adBusy=true;setGameplay(false);
+    if(!ADS_ENABLED||!sdkReady||!window.CrazyGames.SDK.ad||adBusy||Date.now()-lastMidgameAdAt<180000)return;
+    lastMidgameAdAt=Date.now();adBusy=true;setGameplay(false);
     const buttons=[$("kpRunAgain"),$("kpResultClose"),skipBoost];buttons.forEach(function(b){if(b)b.disabled=true;});
     let settled=false;
     function resume(){adBusy=false;sdkMuted=false;buttons.forEach(function(b){if(b)b.disabled=false;});syncGameplay();}
@@ -250,11 +250,14 @@
   async function refreshCrazyUser(existingUser){
     const sdk=window.CrazyGames&&window.CrazyGames.SDK;
     try{
+      const available=!!(sdk&&sdk.user&&sdk.user.isUserAccountAvailable);
+      profileBtn.style.display=available?"":"none";
+      if(!available)return;
       const user=existingUser===undefined&&sdk&&sdk.user&&typeof sdk.user.getUser==="function"?await sdk.user.getUser():existingUser;
       if(user&&user.username){profileBtn.textContent=String(user.username);profileBtn.title="Signed in with CrazyGames";}
-      else{profileBtn.textContent="Guest";profileBtn.title="Sign in with your CrazyGames account to sync progress";}
-      if(user&&user.profilePictureUrl)profileBtn.style.backgroundImage="url("+JSON.stringify(user.profilePictureUrl)+")";
-      else profileBtn.style.backgroundImage="";
+      else{profileBtn.textContent="Login";profileBtn.title="Sign in with your CrazyGames account";}
+      if(user&&user.profilePictureUrl){profileBtn.style.backgroundImage="url("+JSON.stringify(user.profilePictureUrl)+")";profileBtn.style.backgroundPosition="8px center";profileBtn.style.backgroundRepeat="no-repeat";profileBtn.style.backgroundSize="20px 20px";profileBtn.style.paddingLeft="34px";}
+      else{profileBtn.style.backgroundImage="";profileBtn.style.paddingLeft="8px";}
     }catch(e){profileBtn.textContent="Guest";console.debug("CrazyGames profile unavailable",e);}
   }
   profileBtn.addEventListener("click",async function(){
