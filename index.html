@@ -2234,7 +2234,7 @@ function init(){
   emailLoginBtn.onclick = handleLocalEmailLogin;
 
   // Save scheduling is handled by the CrazyGames-aware wrapper in crazygames.js.
-  window.addEventListener("beforeunload", saveState);
+  // The CrazyGames-aware save handler is registered in crazygames.js.
 }
 init();
 </script>
