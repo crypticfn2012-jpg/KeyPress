@@ -302,9 +302,9 @@
   // Remove the forced Google sign-in gate and let players enter immediately.
   if($("accountBtn"))$("accountBtn").classList.add("kp-hidden");
   if($("accountBadge"))$("accountBadge").classList.add("kp-hidden");
-  if($("loginModal"))$("loginModal").classList.remove("open");
-  if(typeof accountsModal!=="undefined"&&accountsModal)accountsModal.classList.remove("open");
-  if($("guestBanner"))$("guestBanner").classList.remove("show");
+  if($("loginModal")){$("loginModal").classList.remove("open");$("loginModal").classList.add("kp-hidden");}
+  if(typeof accountsModal!=="undefined"&&accountsModal){accountsModal.classList.remove("open");accountsModal.classList.add("kp-hidden");}
+  if($("guestBanner")){$("guestBanner").classList.remove("show");$("guestBanner").classList.add("kp-hidden");}
   // Keep the game hidden only while SDK/cloud data initializes; reveal it directly into gameplay.
   if($("startScreen")){$("startScreen").classList.add("hidden");$("startScreen").style.display="none";}
   if($("gameWrap")){$("gameWrap").classList.add("visible");$("gameWrap").style.visibility="hidden";$("gameWrap").style.pointerEvents="none";}
