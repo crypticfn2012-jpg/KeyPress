@@ -3,9 +3,21 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <script src="https://sdk.crazygames.com/crazygames-sdk-v3.js"></script>
+  <script>
+    window.__keyPressSdkInit = (async function () {
+      try {
+        if (!window.CrazyGames || !window.CrazyGames.SDK) return false;
+        await window.CrazyGames.SDK.init();
+        if (window.CrazyGames.SDK.environment !== "disabled") { try { window.CrazyGames.SDK.game.loadingStart(); } catch (e) {} }
+        return true;
+      } catch (error) {
+        console.warn("CrazyGames SDK initialization failed; using browser save fallback.", error);
+        return false;
+      }
+    })();
+  </script>
 <title>KeyPress</title>
-<script src="https://accounts.google.com/gsi/client" async defer></script>
-<script src="https://gamplo.com/sdk/gamplo.js"></script>
 <style>
 :root{
   --board-bg: linear-gradient(160deg,#12151c,#04050a);
@@ -1173,6 +1185,28 @@ let placingCharmId = null;
 let marketSort = "value";
 let antiCheatLockUntil = 0;
 let pressHistory = [];
+
+function showAntiCheat(message){
+  const banner = document.getElementById("antiCheatBanner");
+  if(!banner) return;
+  banner.textContent = message || "Input pattern flagged. Slow down for a moment.";
+  banner.classList.add("show");
+  clearTimeout(showAntiCheat.timer);
+  showAntiCheat.timer = setTimeout(() => banner.classList.remove("show"), 1600);
+}
+
+function recordInputStamp(){
+  const now = Date.now();
+  pressHistory = pressHistory.filter(stamp => now - stamp < 1000);
+  pressHistory.push(now);
+  if(pressHistory.length > 45){
+    antiCheatLockUntil = now + 1200;
+    pressHistory = [];
+    showAntiCheat("Input rate too high. Wait a moment, then continue.");
+    return false;
+  }
+  return true;
+}
 let dailyShopCache = [];
 let dailyShopKey = "";
 let googleProfile = null;
@@ -1503,7 +1537,7 @@ function registerPress(label){
     showAntiCheat("Input paused briefly after a suspicious pattern.");
     return;
   }
-  recordInputStamp();
+  if(!recordInputStamp()) return;
   state.totalPresses++;
 
   const chestBoost = getTotalBoostPercent();
@@ -1527,13 +1561,6 @@ function registerPress(label){
       setTimeout(() => el.classList.remove("pressed"), 70);
     }
   });
-
-  // legitimate Gamplo achievement hooks (create matching keys in your Gamplo dashboard)
-  if(window.Gamplo && typeof Gamplo.isReady === "function" && Gamplo.isReady() && Gamplo.getPlayer()){
-    if(state.totalPresses === 1) Gamplo.unlockAchievement("first_press").catch(()=>{});
-    if(state.totalPresses === 100) Gamplo.unlockAchievement("100_clicks").catch(()=>{});
-    if(state.totalPresses === 1000) Gamplo.unlockAchievement("1000_clicks").catch(()=>{});
-  }
 
   updateStatsDisplay();
   saveState();
@@ -1937,10 +1964,6 @@ function doPrestige(tier){
 
   showReveal({icon: tier.icon, name: tier.name + "!", sub: rewardSub || ("+" + tier.multAdd + "% permanent boost")}, true);
 
-  if(window.Gamplo && typeof Gamplo.isReady === "function" && Gamplo.isReady() && Gamplo.getPlayer()){
-    Gamplo.unlockAchievement("prestige_" + tier.level).catch(()=>{});
-    if(tier.level === 11) Gamplo.unlockAchievement("prestige_omega").catch(()=>{});
-  }
 }
 
 function updatePrestigeShortcut(){
@@ -1992,7 +2015,7 @@ muteBtn.onclick = () => {
 };
 
 /* =========================================================
-   PLAYER BADGE (Gamplo identity)
+   PLAYER BADGE
 ========================================================= */
 const BASIC_FILTER_WORDS = ["fuck","shit","bitch","nigger","faggot","retard","cunt"];
 function containsFlaggedWord(str){
@@ -2135,88 +2158,7 @@ playBtn.onclick = () => {
   gameWrap.classList.add("visible");
 };
 
-/* =========================================================
-   GAMPLO SDK INTEGRATION
-   (cloud saves are throttled to respect the platform's rate
-   limit of ~10 saves/minute; guests fall back to localStorage
-   only, since guest accounts get 403s on save/achievement calls)
-========================================================= */
-let cloudDirty = false;
-function markCloudDirty(){ cloudDirty = true; }
-
-function showAntiCheat(message){
-  antiCheatBanner.textContent = message;
-  antiCheatBanner.classList.add("show");
-  antiCheatLockUntil = Date.now() + 15000;
-  setTimeout(() => {
-    if(Date.now() >= antiCheatLockUntil) antiCheatBanner.classList.remove("show");
-  }, 15050);
-}
-
-function recordInputStamp(){
-  const now = performance.now();
-  pressHistory.push(now);
-  if(pressHistory.length > 24) pressHistory.shift();
-  if(pressHistory.length < 12) return;
-  const deltas = [];
-  for(let i = 1; i < pressHistory.length; i++) deltas.push(pressHistory[i] - pressHistory[i - 1]);
-  const avg = deltas.reduce((a,b) => a + b, 0) / deltas.length;
-  const variance = deltas.reduce((a,b) => a + Math.pow(b - avg, 2), 0) / deltas.length;
-  const tooFast = avg < 55;
-  const tooUniform = variance < 8;
-  if(tooFast && tooUniform){
-    showAntiCheat("Macro-like input detected. Rewards paused briefly.");
-  }
-}
-
-document.addEventListener("keydown", (e) => {
-  if(e.repeat) recordInputStamp();
-});
-document.addEventListener("pointerdown", () => {
-  recordInputStamp();
-}, {capture:true});
-
-if(window.Gamplo && typeof Gamplo.onReady === "function"){
-  Gamplo.onReady(async () => {
-    const player = Gamplo.getPlayer();
-
-    if(player){
-      guestBanner.classList.remove("show");
-      try{
-        const cloudSave = await Gamplo.getSave(0);
-        // only adopt the cloud save if this browser has no local progress yet,
-        // to avoid a fresh device silently overwriting real progress
-        if(cloudSave && state.totalPresses === 0){
-          state = Object.assign(defaultState(), cloudSave);
-          state.charms = (state.charms || []).map(normalizeCharm);
-          renderKeyboard();
-          updateStatsDisplay();
-          muteBtn.textContent = state.muted ? "🔇" : "🔊";
-          volumeSlider.value = Math.round(state.volume * 100);
-        }
-      }catch(e){ console.warn("Gamplo: no cloud save yet or failed to load", e); }
-
-      setInterval(async () => {
-        if(!cloudDirty) return;
-        cloudDirty = false;
-        try{ await Gamplo.setSave(state, 0); }catch(e){ console.warn("Gamplo cloud save failed", e); }
-      }, 8000);
-
-      window.addEventListener("beforeunload", () => { Gamplo.setSave(state, 0).catch(()=>{}); });
-    } else {
-      guestBanner.classList.add("show");
-    }
-
-    if(typeof Gamplo.onResize === "function"){
-      Gamplo.onResize((w,h) => {
-        document.body.style.width = w + "px";
-        document.body.style.height = h + "px";
-      });
-    }
-
-    renderPlayerBadge();
-  });
-}
+/* CrazyGames platform integration is loaded from crazygames.js. */
 
 function decodeJwtPayload(token){
   const payload = token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
@@ -2283,7 +2225,7 @@ function initGoogleSignIn(){
     return;
   }
   google.accounts.id.initialize({
-    client_id: 387562570914-f6slk74l4259c27o4p011ib002pa0fa0.apps.googleusercontent.com,
+    client_id: GOOGLE_CLIENT_ID,
     callback: handleGoogleCredential
   });
   google.accounts.id.renderButton(
@@ -2294,10 +2236,6 @@ function initGoogleSignIn(){
   googleReady = true;
   fallbackGoogleBtn.onclick = () => google.accounts.id.prompt();
 }
-
-// mark cloud saves dirty whenever we persist locally
-const _originalSaveState = saveState;
-saveState = function(){ _originalSaveState(); markCloudDirty(); };
 
 /* =========================================================
    INIT
@@ -2319,12 +2257,11 @@ function init(){
   };
   emailLoginBtn.onclick = handleLocalEmailLogin;
 
-  setInterval(saveState, 5000);
-  window.addEventListener("beforeunload", saveState);
-  initGoogleSignIn();
-  if(!googleProfile) accountsModal.classList.add("open");
+  // Save scheduling is handled by the CrazyGames-aware wrapper in crazygames.js.
+  // The CrazyGames-aware save handler is registered in crazygames.js.
 }
 init();
 </script>
+  <script src="./crazygames.js"></script>
 </body>
 </html>
