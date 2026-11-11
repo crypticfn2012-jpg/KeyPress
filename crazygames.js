@@ -100,7 +100,16 @@
   function notify(message){toast.textContent=message;toast.classList.add("show");clearTimeout(toastTimer);toastTimer=setTimeout(function(){toast.classList.remove("show");},2200);}
   function menuOpen(){return !!document.querySelector(".shop.open,#kpArcadeModal.open,#kpResult.open,#revealModal.show");}
   function setGameplay(active){if(!sdkReady||!window.CrazyGames||!window.CrazyGames.SDK.game||gameplayActive===active)return;gameplayActive=active;try{if(active)window.CrazyGames.SDK.game.gameplayStart();else window.CrazyGames.SDK.game.gameplayStop();}catch(e){console.debug("CrazyGames gameplay event",e);}}
-  function syncGameplay(){if(!sdkReady||!document.querySelector(".gameWrap.visible")||adBusy)return;setGameplay(!menuOpen()&&!(run&&run.finished));}
+  function syncGameplay(){
+    if(!document.querySelector(".gameWrap.visible"))return;
+    const paused=menuOpen()||adBusy;
+    if(run&&!run.finished){
+      if(paused&&!run.pausedAt){run.pausedAt=performance.now();clearInterval(runTimer);}
+      else if(!paused&&run.pausedAt){run.endsAt+=performance.now()-run.pausedAt;run.pausedAt=0;runTimer=setInterval(tick,50);}
+    }
+    if(!sdkReady)return;
+    setGameplay(!paused&&!(run&&run.finished));
+  }
   const observer=new MutationObserver(syncGameplay);
   document.querySelectorAll(".shop,.revealModal").forEach(function(el){observer.observe(el,{attributes:true,attributeFilter:["class"]});});
   observer.observe(modal,{attributes:true,attributeFilter:["class"]});observer.observe(result,{attributes:true,attributeFilter:["class"]});
@@ -269,6 +278,7 @@
   }
   profileBtn.addEventListener("click",async function(){
     const sdk=window.CrazyGames&&window.CrazyGames.SDK;
+    if(run&&!run.finished){notify("Finish your current run before opening account sign-in.");return;}
     if(!sdkReady||!sdk.user||!sdk.user.isUserAccountAvailable||typeof sdk.user.showAuthPrompt!=="function"){notify("CrazyGames accounts are available on the CrazyGames platform.");return;}
     setGameplay(false);
     try{const user=await sdk.user.showAuthPrompt();if(user){await refreshCrazyUser(user);saveState();notify("Your CrazyGames account is connected.");}}
