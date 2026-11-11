@@ -207,12 +207,13 @@
   }
 
   const loader=document.createElement("div");loader.className="kp-loader";loader.innerHTML="<i></i><span>KEYPRESS</span><small>Preparing your game...</small>";document.body.appendChild(loader);
-  let gameRevealed=false;
+  let gameRevealed=false,saveTimerStarted=false;
+  function startSaveTimer(){if(saveTimerStarted)return;saveTimerStarted=true;setInterval(function(){saveState();},5000);}
   function revealGame(){
     if(gameRevealed)return;gameRevealed=true;
     if($("startScreen")){$("startScreen").classList.add("hidden");$("startScreen").style.display="none";}
     if($("gameWrap")){$("gameWrap").classList.add("visible");$("gameWrap").style.visibility="visible";$("gameWrap").style.pointerEvents="auto";}
-    loader.remove();fitBoard();syncGameplay();
+    loader.remove();fitBoard();startSaveTimer();syncGameplay();
   }
 
   // Use SDK Data as the canonical save and migrate existing browser progress once.
@@ -285,7 +286,7 @@
     }catch(e){sdkDataReady=false;console.warn("CrazyGames Data save failed; switching to browser fallback.",e);try{baseSave();}catch(localError){console.error("Local save also failed.",localError);}}
   };
 
-  setInterval(function(){saveState();},5000);
+  // The periodic save timer starts only after SDK data has been loaded and gameplay is revealed.
 
   // Remove the forced Google sign-in gate and let players enter immediately.
   if($("accountBtn"))$("accountBtn").classList.add("kp-hidden");
