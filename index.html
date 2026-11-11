@@ -672,6 +672,60 @@ body[class*="cb-"] .charmCell.legendary{background-image:repeating-linear-gradie
 body.cb-high-contrast{filter:contrast(1.12)}
 body.cb-high-contrast .iconbtn,body.cb-high-contrast .tab,body.cb-high-contrast .item{border-color:#dbe8ff}
 @media(prefers-reduced-motion:reduce){body:not(.motion-override) *,body:not(.motion-override) *::before,body:not(.motion-override) *::after{animation:none!important;transition:none!important}}
+
+/* Refined top bar and Settings layout */
+.topbar{height:56px;padding:0 18px;background:rgba(8,13,22,.94);border-bottom:1px solid #26364b;box-shadow:0 8px 28px #0003}
+.stats{gap:15px;font-size:11px}
+.topbtns{gap:8px;align-items:center}
+.topbtns .iconbtn{border-radius:10px;padding:9px 13px;background:linear-gradient(160deg,#1b2738,#111a27);border-color:#2c4058}
+.topbtns #settingsBtn{background:linear-gradient(110deg,#087fa8,#1766bb);border-color:#2d9bd2;color:#fff;font-weight:800}
+.topbtns #shopBtn{background:linear-gradient(110deg,#293c57,#17283e);border-color:#3d5a7c}
+#settingsModal .shopPanel{width:min(500px,94vw);padding:22px;gap:14px;border-radius:18px;border-color:#30445f;background:linear-gradient(155deg,#131e2d,#090f18);box-shadow:0 24px 80px #0009}
+.settingsHeading{padding:2px 0 8px;border-bottom:1px solid #2b3b50}
+.settingsEyebrow{font-size:9px;letter-spacing:2.4px;font-weight:900;color:#6fcaff}
+.settingsMainTitle{font-size:25px;font-weight:900;letter-spacing:-.6px;margin-top:4px}
+.settingsHeading p{font-size:11px;color:#91a3bb;margin:5px 0 0}
+.settingsGroup{display:flex;flex-direction:column;gap:4px;padding:2px 0 8px;border-bottom:1px solid #26364b}
+.settingsGroupTitle{font-size:9px;font-weight:900;letter-spacing:1.6px;color:#76bfe8;margin-bottom:4px}
+.settingsRow{padding:10px 0;border-color:#26364b}
+.settingsRow>span:first-child{display:flex;flex-direction:column;gap:3px}
+.settingsRow small{display:block;color:#879bb4;font-size:10px;line-height:1.35}
+#settingsChangeKeySlot,#settingsMuteSlot,#settingsAccountSlot{display:flex;justify-content:flex-end;min-width:84px}
+#settingsChangeKeySlot .iconbtn,#settingsMuteSlot .iconbtn,#settingsAccountSlot .iconbtn{min-width:82px;border-radius:9px;padding:8px 11px}
+.settingsAccountRow{align-items:center}
+#settingsAccountStatus{max-width:245px}
+#settingsModal input[type=range]{accent-color:#22b6ed}
+#settingsModal .accessibilityBlock{padding:10px 0}
+#settingsModal .iconbtn{background:#1c2c40;border-color:#39516d}
+#settingsModal .dangerBtn{border-radius:9px}
+#settingsModal .saveStatus{padding:5px 0}
+#settingsModal #closeSettingsBtn{width:100%;padding:10px;border-radius:10px;background:linear-gradient(100deg,#087fa8,#1766bb);border:0;font-weight:800}
+#legalModal .shopPanel{width:min(560px,94vw)}
+/* New premium keycap styles */
+.key.carbon{background:repeating-linear-gradient(45deg,#151b24 0 4px,#202a37 4px 8px);color:#dce8f8;border:1px solid #506176;box-shadow:inset 0 1px 0 #ffffff25, inset 0 -7px 10px #0008}
+.key.sapphire{background:linear-gradient(145deg,#a7d9ff 0%,#2678d5 35%,#12346d 75%,#07182e 100%);color:#eff8ff;border:1px solid #78c5ff;box-shadow:inset 0 2px 0 #ffffff88,0 0 12px #278de055}
+.key.copper{background:linear-gradient(145deg,#ffd0a1 0%,#c77742 35%,#713b2b 78%,#3c2020);color:#fff1e5;border:1px solid #e8a274;box-shadow:inset 0 2px 0 #fff7}
+.key.obsidian{background:linear-gradient(145deg,#424958,#111722 48%,#05070c);color:#e7edfa;border:1px solid #78859b;box-shadow:inset 0 1px 0 #ffffff55,0 5px 10px #0008}
+.key.mint{background:linear-gradient(145deg,#d9fff1,#7ad9b6 45%,#247f72);color:#073b35;border:1px solid #b4ffe7;box-shadow:inset 0 2px 0 #ffffffaa,0 0 10px #5be1bf44}
+.key.forge{background:linear-gradient(145deg,#27364d 0%,#111c2c 52%,#080e18);color:#ffbd70;border:1px solid #168be4;box-shadow:inset 0 1px 0 #ffffff22,0 0 0 1px #ff9f4333,0 0 14px #087de344}
+.key.forge::after{content:"";position:absolute;inset:4px;border:1px solid #ff9f4366;border-radius:4px;pointer-events:none}
+@media(max-width:700px){.topbar{height:50px;padding:0 8px}.topbtns{gap:4px}.topbtns .iconbtn{padding:7px 9px;font-size:10px}}
+/* Calm, tactile loot reveal. The crate reveal is short and non-flashing. */
+.unboxIntro{display:none;flex-direction:column;align-items:center;gap:8px;padding:16px 0 10px}
+.revealCard.unboxing .unboxIntro{display:flex}
+.revealCard.unboxing .revealIcon,.revealCard.unboxing .revealName,.revealCard.unboxing .revealRarity,.revealCard.unboxing .revealSub,.revealCard.unboxing .closeReveal{display:none}
+.unboxCrate{width:88px;height:76px;position:relative;filter:drop-shadow(0 10px 12px #0008);animation:crateLift 1.1s cubic-bezier(.2,.7,.2,1) both}.crateBase{position:absolute;left:12px;bottom:0;width:64px;height:46px;display:flex;align-items:center;justify-content:center;border:2px solid #d58a43;border-radius:5px;background:linear-gradient(145deg,#9b5a2d,#4d2c27);box-shadow:inset 0 0 0 4px #ffffff12;color:#ffd08b;font-size:24px}.crateBase::before,.crateBase::after{content:"";position:absolute;top:0;bottom:0;width:5px;background:#e5a45c55}.crateBase::before{left:10px}.crateBase::after{right:10px}.crateLid{position:absolute;z-index:2;left:5px;top:9px;width:78px;height:19px;border:2px solid #f0b66e;border-radius:5px;background:linear-gradient(180deg,#d18a4b,#87502e);transform-origin:12% 90%;animation:crateLidOpen 1.1s .25s cubic-bezier(.2,.7,.2,1) both}@keyframes crateLidOpen{0%,30%{transform:rotate(0) translateY(0)}100%{transform:rotate(-24deg) translate(-8px,-12px)}}
+.unboxTitle{font-size:12px;font-weight:900;letter-spacing:2.6px;color:#f6bd73}
+.unboxHint{font-size:10px;color:#a8b8ce}
+.unboxTrack{width:150px;height:5px;border-radius:9px;background:#28384c;overflow:hidden;margin-top:4px}
+.unboxTrack i{display:block;width:0;height:100%;background:linear-gradient(90deg,#0789ff,#ffb451);animation:unboxProgress 1.15s ease-out forwards}
+@keyframes crateLift{0%{transform:translateY(8px) scale(.92)}45%{transform:translateY(-5px) scale(1.03)}100%{transform:translateY(0) scale(1)}}
+@keyframes unboxProgress{to{width:100%}}
+body.reduce-flash .unboxCrate,body.reduce-flash .unboxTrack i{animation:none!important}
+body.reduce-flash .unboxTrack i{width:100%}
+.revealCard{animation:none!important;box-shadow:0 16px 48px #0008}
+@media(prefers-reduced-motion:reduce){.unboxCrate,.unboxTrack i{animation:none!important}.unboxTrack i{width:100%}}
+
 </style>
 </head>
 <body>
@@ -783,11 +837,22 @@ body.cb-high-contrast .iconbtn,body.cb-high-contrast .tab,body.cb-high-contrast 
 <!-- SETTINGS -->
 <div class="shop" id="settingsModal">
   <div class="shopPanel" style="width:440px;max-width:94vw;">
-    <div class="title">Settings & Accessibility</div>
+    <div class="settingsHeading"><div class="settingsEyebrow">KEYPRESS / PREFERENCES</div><div class="settingsMainTitle">Settings</div><p>Make the game feel right for you.</p></div>
+    <div class="settingsGroup">
+      <div class="settingsGroupTitle">GAME & ACCOUNT</div>
+      <div class="settingsRow"><span>Active key <small id="settingsKeyHint">No key selected</small></span><span id="settingsChangeKeySlot"></span></div>
+      <div class="settingsRow"><span>Sound</span><span id="settingsMuteSlot"></span></div>
+      <div class="settingsRow settingsAccountRow"><span>CrazyGames account <small id="settingsAccountStatus">Continue as a guest, or sign in on CrazyGames.</small></span><span id="settingsAccountSlot"></span></div>
+    </div>
+    <div class="settingsGroup">
+      <div class="settingsGroupTitle">AUDIO</div>
     <div class="settingsRow">
       <span>Sound Volume</span>
       <input type="range" id="volumeSlider" min="0" max="100" value="50" />
     </div>
+    </div>
+    <div class="settingsGroup">
+    <div class="settingsGroupTitle">ACCESSIBILITY</div>
     <div class="accessibilityBlock">
       <strong>Motion & photosensitivity</strong>
       <label class="accessToggle"><input type="checkbox" id="reduceFlashingInput" checked /> <span><b>Reduce flashing and motion</b><small>Disables animated keycaps, pulsing glows, rapid colour changes, flicker and screen shake. Recommended for photosensitive players.</small></span></label>
@@ -804,6 +869,9 @@ body.cb-high-contrast .iconbtn,body.cb-high-contrast .tab,body.cb-high-contrast 
         <option value="high-contrast">High contrast</option>
       </select>
     </div>
+    </div>
+    <div class="settingsGroup">
+    <div class="settingsGroupTitle">ABOUT</div>
     <div class="settingsRow">
       <span>Legal & privacy information</span>
       <button class="iconbtn" id="openLegalBtn">View</button>
@@ -813,6 +881,7 @@ body.cb-high-contrast .iconbtn,body.cb-high-contrast .tab,body.cb-high-contrast 
       <button class="dangerBtn" id="resetBtn">Reset</button>
     </div>
     <div class="saveStatus" id="saveStatus">Settings save with your game progress.</div>
+    </div>
     <button class="iconbtn" id="closeSettingsBtn" style="margin-top:10px;">Close</button>
   </div>
 </div>
@@ -863,11 +932,12 @@ body.cb-high-contrast .iconbtn,body.cb-high-contrast .tab,body.cb-high-contrast 
 <!-- REVEAL MODAL -->
 <div class="revealModal" id="revealModal">
   <div class="revealCard" id="revealCard">
+    <div class="unboxIntro" id="unboxIntro"><div class="unboxCrate" aria-hidden="true"><div class="crateLid"></div><div class="crateBase"><span>✦</span></div></div><div class="unboxTitle">MYSTERY BOX</div><div class="unboxHint">Unsealing your reward...</div><div class="unboxTrack"><i></i></div></div>
     <div class="revealIcon" id="revealIcon"></div>
     <div class="revealName" id="revealName"></div>
     <div class="revealRarity" id="revealRarity"></div>
     <div class="revealSub" id="revealSub"></div>
-    <button class="closeReveal" id="closeRevealBtn">Nice!</button>
+    <button class="closeReveal" id="closeRevealBtn">Skip</button>
   </div>
 </div>
 
@@ -921,7 +991,13 @@ const cosmetics = [
   {id:"titan",  name:"Titan",  cost:6200, cls:"titan"},
   {id:"voidglass",  name:"Void Glass",  cost:6800, cls:"voidglass"},
   {id:"sunburst",  name:"Sunburst",  cost:7000, cls:"sunburst"},
-  {id:"prism",  name:"Prism",  cost:7400, cls:"prism"}
+  {id:"prism",  name:"Prism",  cost:7400, cls:"prism"},
+  {id:"carbon", name:"Carbon Fibre", cost:7800, cls:"carbon"},
+  {id:"sapphire", name:"Sapphire", cost:8600, cls:"sapphire"},
+  {id:"copper", name:"Copper Alloy", cost:9200, cls:"copper"},
+  {id:"obsidian", name:"Obsidian", cost:10800, cls:"obsidian"},
+  {id:"mint", name:"Mint Glass", cost:11500, cls:"mint"},
+  {id:"forge", name:"PixelForge", cost:14500, cls:"forge"}
 ];
 
 // prestige-exclusive cosmetics — never purchasable, only granted by prestiging
@@ -945,7 +1021,10 @@ const boardThemes = [
   {id:"aurora",      name:"Aurora Frame",     cost:1400, bg:"linear-gradient(120deg,#0a3d2e,#1a6b4a,#0a2d5a,#3a1a6b,#0a3d2e)", glow:"#3ae0a0", blur:"30px", extraCls:"themeAurora"},
   {id:"midnight",    name:"Midnight Frame",   cost:1800, bg:"linear-gradient(160deg,#050814,#0f1730,#050814)", glow:"#5c7bff", blur:"28px"},
   {id:"ember",       name:"Ember Frame",      cost:2000, bg:"linear-gradient(160deg,#1c0700,#4d1200,#1c0700)", glow:"#ff6c2f", blur:"32px"},
-  {id:"prismframe",  name:"Prism Frame",      cost:2400, bg:"linear-gradient(120deg,#ff0040,#ff9f1c,#ffe66d,#4ecdc4,#1a8cff,#a95fff)", glow:"#ffffff", blur:"36px"}
+  {id:"prismframe",  name:"Prism Frame",      cost:2400, bg:"linear-gradient(120deg,#ff0040,#ff9f1c,#ffe66d,#4ecdc4,#1a8cff,#a95fff)", glow:"#ffffff", blur:"36px"},
+  {id:"forgeframe", name:"PixelForge Studio", cost:3200, bg:"linear-gradient(145deg,#101c2d,#183d60 48%,#241b22)", glow:"#0789ff", blur:"22px"},
+  {id:"deepsea", name:"Deep Sea", cost:3600, bg:"linear-gradient(160deg,#031a2b,#07506a 48%,#03101e)", glow:"#18a8c5", blur:"24px"},
+  {id:"royalvelvet", name:"Royal Velvet", cost:4200, bg:"linear-gradient(145deg,#24112f,#4b1d50 50%,#110d20)", glow:"#a45be8", blur:"26px"}
 ];
 
 // prestige-exclusive board themes — never purchasable, only granted by prestiging
@@ -1286,15 +1365,53 @@ function showAntiCheat(message){
   showAntiCheat.timer = setTimeout(() => banner.classList.remove("show"), 1600);
 }
 
-function recordInputStamp(){
+let pressIntervals = [];
+let lastInputStamp = 0;
+let suspiciousRhythmWindows = 0;
+function recordInputStamp(inputEvent){
   const now = Date.now();
+  if(inputEvent && inputEvent.isTrusted === false){
+    antiCheatLockUntil = now + 1800;
+    pressHistory = [];
+    pressIntervals = [];
+    showAntiCheat("Automated or simulated input was blocked.");
+    return false;
+  }
   pressHistory = pressHistory.filter(stamp => now - stamp < 1000);
   pressHistory.push(now);
-  if(pressHistory.length > 45){
-    antiCheatLockUntil = now + 1200;
+  if(lastInputStamp){
+    const interval = now - lastInputStamp;
+    if(interval > 0 && interval < 180) pressIntervals.push(interval);
+    else if(interval >= 180) pressIntervals = [];
+  }
+  lastInputStamp = now;
+  if(pressIntervals.length > 24) pressIntervals.shift();
+  if(pressHistory.length > 38){
+    antiCheatLockUntil = now + 1800;
     pressHistory = [];
-    showAntiCheat("Input rate too high. Wait a moment, then continue.");
+    pressIntervals = [];
+    suspiciousRhythmWindows = 0;
+    showAntiCheat("Input rate is unusually high. Pause briefly before continuing.");
     return false;
+  }
+  if(pressIntervals.length >= 18){
+    const mean = pressIntervals.reduce((sum,value)=>sum+value,0)/pressIntervals.length;
+    const variance = pressIntervals.reduce((sum,value)=>sum+Math.pow(value-mean,2),0)/pressIntervals.length;
+    const coefficientOfVariation = Math.sqrt(variance)/Math.max(mean,1);
+    if(mean >= 45 && mean <= 125 && coefficientOfVariation < 0.015 && pressHistory.length >= 10){
+      suspiciousRhythmWindows++;
+      pressIntervals = pressIntervals.slice(-8);
+      if(suspiciousRhythmWindows >= 3){
+        antiCheatLockUntil = now + 2200;
+        pressHistory = [];
+        pressIntervals = [];
+        suspiciousRhythmWindows = 0;
+        showAntiCheat("Highly repetitive input timing detected. Auto-clicking is not allowed.");
+        return false;
+      }
+    }else{
+      suspiciousRhythmWindows = Math.max(0,suspiciousRhythmWindows-1);
+    }
   }
   return true;
 }
@@ -1472,6 +1589,10 @@ const fallbackGoogleBtn = document.getElementById("fallbackGoogleBtn");
 const emailLoginInput = document.getElementById("emailLoginInput");
 const emailLoginBtn = document.getElementById("emailLoginBtn");
 const antiCheatBanner = document.getElementById("antiCheatBanner");
+const settingsChangeKeySlot = document.getElementById("settingsChangeKeySlot");
+const settingsMuteSlot = document.getElementById("settingsMuteSlot");
+if(settingsChangeKeySlot) settingsChangeKeySlot.appendChild(changeKeyBtn);
+if(settingsMuteSlot) settingsMuteSlot.appendChild(muteBtn);
 
 const cosmeticsList = document.getElementById("cosmeticsList");
 const themesList = document.getElementById("themesList");
@@ -1507,7 +1628,7 @@ function createKeySlot(label){
   cap.className = "key";
   cap.textContent = label;
   cap.dataset.key = label;
-  cap.addEventListener("click", () => handleKeyClick(label));
+  cap.addEventListener("click", event => handleKeyClick(label, event));
 
   slot.appendChild(cap);
   return slot;
@@ -1526,7 +1647,7 @@ function renderKeyboard(){
   refreshKeyVisuals();
 }
 
-function handleKeyClick(label){
+function handleKeyClick(label, inputEvent){
   if(placingCharmId){
     state.keyCharms[label] = placingCharmId;
     placingCharmId = null;
@@ -1538,12 +1659,13 @@ function handleKeyClick(label){
   if(!state.mainKey || awaitingKeySelectMode){
     state.mainKey = label;
     awaitingKeySelectMode = false;
+    if(settingsKeyHint) settingsKeyHint.textContent = "Active key: " + label;
     saveState();
     refreshKeyVisuals();
     return;
   }
   if(label === state.mainKey){
-    registerPress(label);
+    registerPress(label, inputEvent);
   }
 }
 
@@ -1620,15 +1742,15 @@ window.addEventListener("keydown", e => {
   if(label !== state.mainKey) return;
   if(e.repeat) return;
 
-  registerPress(label);
+  registerPress(label, e);
 });
 
-function registerPress(label){
+function registerPress(label, inputEvent){
   if(Date.now() < antiCheatLockUntil){
     showAntiCheat("Input paused briefly after a suspicious pattern.");
     return;
   }
-  if(!recordInputStamp()) return;
+  if(!recordInputStamp(inputEvent)) return;
   state.totalPresses++;
 
   const chestBoost = getTotalBoostPercent();
@@ -1810,17 +1932,33 @@ function renderDailyShop(){
   });
 }
 
+let unboxTimer = 0;
+function finishUnboxing(){
+  clearTimeout(unboxTimer);
+  revealCard.classList.remove("unboxing");
+  document.getElementById("unboxIntro").classList.add("finished");
+  closeRevealBtn.textContent = "Nice!";
+}
 function showReveal(charm, isPrestige){
-  revealCard.className = "revealCard " + (isPrestige ? "prestige" : charm.rarity);
+  clearTimeout(unboxTimer);
+  revealCard.className = "revealCard " + (isPrestige ? "prestige" : charm.rarity) + " unboxing";
+  document.getElementById("unboxIntro").classList.remove("finished");
+  document.querySelector("#unboxIntro .unboxTitle").textContent = isPrestige ? "PRESTIGE REWARD" : "MYSTERY BOX";
+  document.querySelector("#unboxIntro .unboxHint").textContent = isPrestige ? "Your milestone reward is ready..." : "Unsealing your reward...";
   revealIcon.textContent = charm.icon;
   revealName.textContent = charm.name;
   revealRarity.textContent = isPrestige ? "prestige reward" : charm.rarity;
   revealSub.textContent = isPrestige
     ? (charm.sub || "")
     : "Worth " + charm.basePrice + " clicks · +" + charm.boost + "% boost";
+  closeRevealBtn.textContent = "Skip";
   revealModal.classList.add("show");
+  unboxTimer = setTimeout(finishUnboxing, state.reduceFlashing === false ? 900 : 1200);
 }
-closeRevealBtn.onclick = () => revealModal.classList.remove("show");
+closeRevealBtn.onclick = () => {
+  if(revealCard.classList.contains("unboxing")){ finishUnboxing(); return; }
+  revealModal.classList.remove("show");
+};
 
 /* =========================================================
    SHOP: CHARM COLLECTION (equip / unequip)
@@ -2097,11 +2235,19 @@ function toggleShop(forceOpen){
 }
 shopBtn.onclick = () => toggleShop();
 
-changeKeyBtn.onclick = () => { awaitingKeySelectMode = true; };
-
+changeKeyBtn.textContent = "Change";
+changeKeyBtn.onclick = () => {
+  awaitingKeySelectMode = true;
+  placingCharmId = null;
+  placeBanner.classList.remove("show");
+  refreshKeyVisuals();
+  if(settingsKeyHint) settingsKeyHint.textContent = "Click a key on the keyboard...";
+  settingsModal.classList.remove("open");
+};
+muteBtn.textContent = state.muted ? "🔇 Muted" : "🔊 On";
 muteBtn.onclick = () => {
   state.muted = !state.muted;
-  muteBtn.textContent = state.muted ? "🔇" : "🔊";
+  muteBtn.textContent = state.muted ? "🔇 Muted" : "🔊 On";
   saveState();
 };
 
@@ -2141,6 +2287,7 @@ function renderPlayerBadge(){
 /* =========================================================
    SETTINGS
 ========================================================= */
+const settingsKeyHint = document.getElementById("settingsKeyHint");
 const reduceFlashingInput = document.getElementById("reduceFlashingInput");
 const colorVisionSelect = document.getElementById("colorVisionSelect");
 const legalModal = document.getElementById("legalModal");
@@ -2156,6 +2303,8 @@ settingsBtn.onclick = () => {
   setSaveStatus(storageAvailable);
   renderNameCustomizationRow();
   applyAccessibilitySettings();
+  if(settingsKeyHint) settingsKeyHint.textContent = state.mainKey ? "Active key: " + state.mainKey : "No key selected";
+  muteBtn.textContent = state.muted ? "🔇 Muted" : "🔊 On";
 };
 closeSettingsBtn.onclick = () => settingsModal.classList.remove("open");
 document.getElementById("openLegalBtn").onclick = () => { legalModal.classList.add("open"); };

@@ -39,3 +39,10 @@ Serve the repository from `http://localhost` or `http://127.0.0.1` rather than o
 ## Notes
 
 The old Gamplo resize hook was removed because it could override the iframe dimensions. The old Google sign-in dependency and forced account modal were also removed; the CrazyGames platform account is optional and guest play starts immediately.
+
+
+## UI, cosmetics and anti-cheat update
+- The mute and change-key controls are placed inside Settings alongside the CrazyGames account sign-in/status control.
+- Added six purchasable keycap finishes and three board themes, including PixelForge Studio styling.
+- Mystery box rewards now use a short crate-opening reveal with a skip option. Reduced-flashing mode disables the crate motion.
+- Input checks reject untrusted synthetic events, throttle extreme press rates and look for sustained, unusually regular timing patterns. These are client-side heuristics only: they can deter basic autoclickers but cannot guarantee detection or stop a determined player modifying local browser code.
