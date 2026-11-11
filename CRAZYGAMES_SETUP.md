@@ -11,6 +11,10 @@ The CrazyGames build is served directly from `index.html`. No bundler or build s
 - Arcade modes: 30-second Sprint, 60-second Endurance and Precision Run.
 - XP, levels, personal bests, run rewards and a 2× rewarded-video boost integration.
 - Iframe-aware board scaling, anchored top controls, overflow prevention and reduced-motion support.
+- A photosensitivity setting enabled by default that disables flashing, pulsing, animated keycaps and reveal shake; calmer cosmetic animation defaults.
+- Colour-vision presets (protanopia, deuteranopia, tritanopia and high contrast) with clearer outlines and pattern cues.
+- In-game Terms of Service, privacy and accessibility information.
+- PixelForge Studios branded startup loader, styled to match PixelRoyale's navy-and-amber loading screen.
 
 ## CrazyGames Developer Portal settings
 
